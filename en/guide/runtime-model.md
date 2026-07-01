@@ -29,10 +29,10 @@ This path has two practical consequences:
 
 | Scenario | Key | Notes |
 |---|---|---|
-| Log in to CPAMP in Full Docker / Manager Server mode | CPAMP Admin Key | The `cmp_admin_...` key from startup logs. It only manages CPAMP. |
-| CPAMP connects to CPA | CPA Management Key | Saved during setup and encrypted server-side in SQLite. |
+| Log in to CPAMP in Full Docker / Manager Server mode | CPAMP Admin Key | The `cpamp_...` key from startup logs or the secret file. It only manages CPAMP. |
+| CPAMP connects to CPA | CPA Management Key | Setup/panel-saved connections are encrypted into SQLite; installer env/secret mode reads the key from the install directory. |
 | Normal model API request | CPA API Key | Used by clients calling `/v1/...`, `/backend-api/codex/...`, and similar model APIs. |
-| Log in in CPA Panel mode | CPA Management Key | CPA hosts the panel and the browser holds the CPA Management Key. |
+| Log in in the CPA-hosted panel | CPA Management Key | CPA hosts the panel and the browser holds the CPA Management Key. |
 
 When debugging 401s, read the path first. `/v1/...` belongs to the model API and uses a CPA API Key. `/v0/management/...` usually uses the CPAMP Admin Key in Manager Server mode.
 

@@ -15,7 +15,7 @@ hero:
 
 features:
   - title: 部署
-    details: 选择 Docker、原生包或 CPA Panel 模式，并完成第一次 setup。
+    details: 使用一键安装、Docker 或原生包完成第一次 setup。
   - title: 观测
     details: 看清请求、成本、失败、配额和 Codex 账号状态。
   - title: 运维
@@ -39,17 +39,18 @@ import homePreview from './images/home-zh.png';
     <p>还没有现成环境时，从这里启动 CPA 和 CPAMP，并完成第一次登录。</p>
     <ul>
       <li><a href="./guide/getting-started.html">快速开始</a></li>
+      <li><a href="./deployment/installer.html">一键安装脚本</a></li>
       <li><a href="./deployment/docker.html">Docker 部署</a></li>
       <li><a href="./deployment/native.html">原生包部署</a></li>
     </ul>
   </section>
   <section class="cpamp-doc-card">
-    <h3>部署形态选择</h3>
-    <p>已经有运行环境时，先确认面板应该由 Manager Server 还是 CPA 托管。</p>
+    <h3>进阶部署与兼容</h3>
+    <p>已有环境、反向代理或兼容访问路径，从这里确认入口和边界。</p>
     <ul>
-      <li><a href="./deployment/cpa-panel.html">CPA Panel 模式</a></li>
       <li><a href="./deployment/reverse-proxy.html">反向代理</a></li>
       <li><a href="./operations/manager-server.html">Manager Server 指南</a></li>
+      <li><a href="./deployment/cpa-panel.html">CPA 托管面板兼容模式</a></li>
     </ul>
   </section>
   <section class="cpamp-doc-card">
@@ -103,13 +104,13 @@ import homePreview from './images/home-zh.png';
     <a href="./deployment/docker.html">查看 Docker 部署</a>
   </section>
   <section class="cpamp-mode-card">
-    <h3>CPA Panel</h3>
-    <p>面板仍由 CPA 托管，适合沿用 CPA 端口访问；完整分析能力会受模式限制。</p>
-    <a href="./deployment/cpa-panel.html">查看 CPA Panel 模式</a>
-  </section>
-  <section class="cpamp-mode-card">
     <h3>原生包</h3>
     <p>不使用 Docker 时，直接在 Linux、macOS 或 Windows 上运行 Manager Server。</p>
     <a href="./deployment/native.html">查看原生包部署</a>
+  </section>
+  <section class="cpamp-mode-card">
+    <h3>兼容访问</h3>
+    <p>已有 CPA 端口面板仍可保留，但完整监控和分析能力来自 Manager Server。</p>
+    <a href="./deployment/cpa-panel.html">查看兼容模式</a>
   </section>
 </div>

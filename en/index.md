@@ -15,7 +15,7 @@ hero:
 
 features:
   - title: Deployment
-    details: Choose Docker, native packages, or CPA Panel mode, then finish the first setup.
+    details: Use the installer, Docker, or native packages to finish the first setup.
   - title: Observability
     details: Follow requests, cost, failures, quota, and Codex account state.
   - title: Operations
@@ -39,17 +39,18 @@ import homePreview from '../images/home.png';
     <p>Start CPA and CPAMP from a minimal Docker setup, then complete the first login.</p>
     <ul>
       <li><a href="./guide/getting-started.html">Get Started</a></li>
+      <li><a href="./deployment/installer.html">One-Click Installer</a></li>
       <li><a href="./deployment/docker.html">Docker Deployment</a></li>
       <li><a href="./deployment/native.html">Native Packages</a></li>
     </ul>
   </section>
   <section class="cpamp-doc-card">
-    <h3>Choose A Mode</h3>
-    <p>Decide whether the panel should be hosted by Manager Server or by CPA.</p>
+    <h3>Advanced Deployment</h3>
+    <p>For existing environments, reverse proxies, or compatibility access paths, check the entry point and boundary here.</p>
     <ul>
-      <li><a href="./deployment/cpa-panel.html">CPA Panel Mode</a></li>
       <li><a href="./deployment/reverse-proxy.html">Reverse Proxy</a></li>
       <li><a href="./operations/manager-server.html">Manager Server Guide</a></li>
+      <li><a href="./deployment/cpa-panel.html">CPA-Hosted Panel Compatibility</a></li>
     </ul>
   </section>
   <section class="cpamp-doc-card">
@@ -103,13 +104,13 @@ import homePreview from '../images/home.png';
     <a href="./deployment/docker.html">View Docker Deployment</a>
   </section>
   <section class="cpamp-mode-card">
-    <h3>CPA Panel</h3>
-    <p>CPA still hosts the panel. Use it when you want to keep opening the panel from the CPA port, with a smaller feature surface.</p>
-    <a href="./deployment/cpa-panel.html">View CPA Panel Mode</a>
-  </section>
-  <section class="cpamp-mode-card">
     <h3>Native Packages</h3>
     <p>Run Manager Server directly on Linux, macOS, or Windows when Docker is not part of the environment.</p>
     <a href="./deployment/native.html">View Native Packages</a>
+  </section>
+  <section class="cpamp-mode-card">
+    <h3>Compatibility Access</h3>
+    <p>You can keep an existing CPA-port panel, but full monitoring and analytics come from Manager Server.</p>
+    <a href="./deployment/cpa-panel.html">View Compatibility Mode</a>
   </section>
 </div>

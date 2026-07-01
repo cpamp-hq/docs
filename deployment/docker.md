@@ -2,13 +2,15 @@
 
 Docker 是新部署最省心的方式。CPAMP 镜像包含 Manager Server 和内置 `management.html` 面板；CPA / CLI Proxy API 仍是单独服务，可以和 CPAMP 放在同一个 Compose 文件里。
 
+想让脚本检查环境并生成 Compose 文件，可以先看 [一键安装脚本](./installer.md)。下面的内容适合手动维护 Compose 或把 CPAMP 合入已有部署。
+
 新部署建议使用 Manager Server 托管面板：
 
 ```text
 http://<host>:18317/management.html
 ```
 
-不要沿用旧 CPA-Manager 的“CPA 面板 + External Usage Service URL”思路。Plus 的完整能力来自 Manager Server；CPA Panel 模式只是由 CPA 托管面板，不读取 Manager Server 的 SQLite 监控数据。
+不要沿用旧 CPA-Manager 的“CPA 面板 + External Usage Service URL”思路。Plus 的完整能力来自 Manager Server；CPA 托管面板只是兼容访问方式，不读取 Manager Server 的 SQLite 监控数据。
 
 ## 前置要求
 
@@ -107,7 +109,7 @@ http://<host>:18317/management.html
 首次 setup 填写：
 
 ```text
-管理员密钥:         启动日志中的 cmp_admin_...
+管理员密钥:         启动日志或 secret 文件中的 cpamp_...
 CPA URL:            http://cli-proxy-api:8317
 CPA Management Key: CPA remote-management.secret-key
 ```
@@ -214,8 +216,9 @@ docker run --rm \
 `data.key` 很重要：
 
 - `usage.sqlite` 保存用量数据和加密后的 CPAMP 配置。
-- `data.key` 用来解密已保存的 CPA Management Key。
-- 如果 `data.key` 丢失，已保存的 CPA Management Key 无法恢复，只能重新保存 CPA 连接。
+- `data.key` 用来解密通过 setup / 面板保存到 SQLite 的 CPA Management Key。
+- 如果 `data.key` 丢失，保存到 SQLite 的 CPA Management Key 无法恢复，只能重新保存 CPA 连接。
+- 如果使用安装器 env/secret 管理连接，同时备份安装目录里的 `secrets/`。
 
 ## 采集路径
 
@@ -289,5 +292,5 @@ eventCount
 - 镜像变为 `seakee/cpa-manager-plus`。
 - 容器通常命名为 `cpa-manager-plus`。
 - Full Docker / Manager Server 模式登录使用 CPAMP 管理员密钥，不使用 CPA Management Key。
-- CPA Management Key 使用 `/data/data.key` 加密保存。
-- CPA Panel 模式是纯 CPA 面板，不配置外部 Manager Server 统计。
+- setup / 面板保存的 CPA Management Key 使用 `/data/data.key` 加密保存；安装器 env/secret 模式从安装目录读取。
+- CPA 托管面板只是兼容访问方式，不配置外部 Manager Server 统计。

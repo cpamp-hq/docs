@@ -2,6 +2,23 @@
 
 Start here for the shortest working setup: bring up the CPA gateway runtime, bring up CPAMP, then confirm that request monitoring can receive data. If CPA is already running, jump to [Deploy CPAMP Only](../deployment/docker.md#deploy-cpamp-only).
 
+## Use The Installer
+
+For a guided deployment, run the installer:
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/seakee/CPA-Manager-Plus/main/bin/install-cpamp.sh
+bash install-cpamp.sh
+```
+
+It checks your environment, lets you choose the operation language, chooses full stack or CPAMP-only install, generates minimal config, and asks for final confirmation before it deploys. To preview the plan first:
+
+```bash
+CPAMP_DRY_RUN=1 bash install-cpamp.sh
+```
+
+See [One-Click Installer](../deployment/installer.md) for all options.
+
 ## Recommended Deployment
 
 For a first deployment, use Docker Compose. It creates persistent volumes for both CPA and CPAMP:

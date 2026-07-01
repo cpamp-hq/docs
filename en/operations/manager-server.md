@@ -8,22 +8,22 @@ When you open this entry point, you are using Manager Server mode:
 http://<host>:18317/management.html
 ```
 
-When CPA itself serves this entry point, you are using CPA Panel mode:
+When CPA itself serves this entry point, you are using the CPA-hosted panel compatibility mode:
 
 ```text
 http://<cpa-host>:8317/management.html
 ```
 
-CPA Panel mode does not read Manager Server SQLite and does not provide the full historical monitoring, model prices, API Key aliases, import/export, or server inspection history.
+The CPA-hosted panel does not read Manager Server SQLite and does not provide the full historical monitoring, model prices, API Key aliases, import/export, or server inspection history.
 
 ## What Manager Server Does
 
 Manager Server:
 
 - Serves the embedded management panel.
-- Runs first setup and stores the bound CPA connection.
-- Authenticates users with the `cmp_admin_...` admin key.
-- Encrypts the saved CPA Management Key with `data.key`.
+- Runs first setup or reads an environment-managed CPA connection.
+- Authenticates users with the `cpamp_...` admin key.
+- Encrypts setup/panel-saved CPA Management Keys with `data.key`.
 - Proxies CPA Management API calls after setup.
 - Consumes CPA usage events.
 - Persists usage events in SQLite.
@@ -61,7 +61,7 @@ CPA_MANAGER_ADMIN_KEY='replace-with-a-long-random-admin-key'
 If not configured, Manager Server generates:
 
 ```text
-cmp_admin_...
+cpamp_...
 ```
 
 and prints it once in the startup logs.
@@ -80,8 +80,9 @@ Poll Interval
 After setup:
 
 - Browser login uses the CPAMP admin key.
-- CPA Management Key is stored server-side and encrypted.
-- Manager Server uses the saved CPA Management Key when calling CPA.
+- Setup/panel-saved CPA Management Keys are stored server-side and encrypted.
+- In installer env/secret mode, Manager Server reads the CPA URL and CPA Management Key from the deployment environment.
+- Manager Server uses the resolved CPA Management Key when calling CPA.
 - New browsers no longer need the CPA Management Key.
 
 ## CPA Prerequisites
@@ -259,10 +260,11 @@ data.key
 Security notes:
 
 - The admin key is not stored in plaintext; only a salted HMAC credential is stored.
-- The CPA Management Key is encrypted before being stored in SQLite.
+- CPA Management Keys saved through setup or the panel are encrypted before being stored in SQLite.
 - If `usage.sqlite` leaks without `data.key`, the saved CPA Management Key is not directly readable.
 - If both `usage.sqlite` and `data.key` leak, the saved CPA Management Key can be decrypted.
 - If `data.key` is lost, the saved CPA Management Key cannot be recovered.
+- If the CPA connection is env/secret-managed, also back up the secret files in the install directory.
 - Request metadata may contain model names, endpoints, account labels, project snapshots, token usage, latency, and failure summaries.
 - Raw failure bodies stay local in SQLite. Normal APIs and JSONL exports expose sanitized summaries instead of raw diagnostic bodies.
 

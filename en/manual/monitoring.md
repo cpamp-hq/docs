@@ -6,7 +6,7 @@ Account handling is documented separately in [Account Action Queue](./account-ac
 
 ## Availability
 
-Monitoring requires Manager Server collection and CPA usage publishing. Usage features may be unavailable in CPA Panel mode or before Manager Server is bound.
+Monitoring requires Manager Server collection and CPA usage publishing. Usage features may be unavailable in the CPA-hosted panel compatibility mode or before Manager Server is bound.
 
 If the page says request monitoring is disabled, enable it in [Configuration](./configuration.md) under Manager Server configuration.
 
@@ -59,4 +59,3 @@ See [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.m
 - Multiple Manager Servers consuming one CPA queue can cause missing data.
 - Cost is estimated from model prices, not provider billing.
 - Sanitized summaries are useful for troubleshooting, but do not share tokens, management keys, or auth files.
-

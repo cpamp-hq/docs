@@ -2,13 +2,15 @@
 
 Docker is the simplest path for a new deployment. The CPAMP image contains Manager Server and the embedded `management.html` panel. CPA / CLI Proxy API is still a separate service, and can run in the same Compose stack.
 
+If you want the script to check the environment and generate Compose files for you, start with [One-Click Installer](./installer.md). The rest of this page is for manual Compose maintenance or merging CPAMP into an existing deployment.
+
 For new deployments, use the Manager Server-hosted panel:
 
 ```text
 http://<host>:18317/management.html
 ```
 
-Do not carry over the old CPA-Manager "CPA panel + External Usage Service URL" workflow. In Plus, the full feature set comes from Manager Server. CPA Panel mode only means CPA hosts the panel; it does not read Manager Server SQLite monitoring data.
+Do not carry over the old CPA-Manager "CPA panel + External Usage Service URL" workflow. In Plus, the full feature set comes from Manager Server. The CPA-hosted panel is only a compatibility access path; it does not read Manager Server SQLite monitoring data.
 
 ## Requirements
 
@@ -107,7 +109,7 @@ http://<host>:18317/management.html
 On first setup, enter:
 
 ```text
-Admin Key:          cmp_admin_... from startup logs
+Admin Key:          cpamp_... from startup logs or the secret file
 CPA URL:            http://cli-proxy-api:8317
 CPA Management Key: CPA remote-management.secret-key
 ```
@@ -214,8 +216,9 @@ docker run --rm \
 Why `data.key` matters:
 
 - `usage.sqlite` stores usage data and encrypted CPAMP configuration.
-- `data.key` decrypts the saved CPA Management Key.
-- If `data.key` is lost, the saved CPA Management Key cannot be recovered; save the CPA connection again.
+- `data.key` decrypts CPA Management Keys saved to SQLite through setup or the panel.
+- If `data.key` is lost, CPA Management Keys saved to SQLite cannot be recovered; save the CPA connection again.
+- If the installer manages the connection through env/secrets, also back up `secrets/` in the install directory.
 
 ## Collection Paths
 
@@ -289,5 +292,5 @@ Old CPA-Manager Docker docs used `seakee/cpa-manager` and described an external 
 - Image is `seakee/cpa-manager-plus`.
 - Container is usually named `cpa-manager-plus`.
 - Full Docker / Manager Server mode login uses the CPAMP Admin Key, not the CPA Management Key.
-- The CPA Management Key is encrypted with `/data/data.key`.
-- CPA Panel mode is pure CPA-backed and does not configure external Manager Server analytics.
+- Setup/panel-saved CPA Management Keys are encrypted with `/data/data.key`; installer env/secret mode reads the key from the install directory.
+- The CPA-hosted panel is only a compatibility access path and does not configure external Manager Server analytics.

@@ -8,7 +8,7 @@ This guide uses a same-domain setup:
 - CPA / CLI Proxy API: `https://your-domain.com/v1/...`
 - CPA OAuth callbacks, Codex API, Amp routes, and other CPA-side endpoints
 
-This applies to Full Docker / Manager Server mode. In CPA Panel mode, CPA itself serves `/management.html`, so this mixed routing is usually unnecessary.
+This applies to Full Docker / Manager Server mode. In the CPA-hosted panel, CPA itself serves `/management.html`, so this mixed routing is usually unnecessary.
 
 ## Route Boundaries
 
@@ -278,7 +278,7 @@ https://your-domain.com/management.html
 During first setup, enter:
 
 ```text
-Admin Key:          cmp_admin_... from CPAMP startup logs
+Admin Key:          cpamp_... from CPAMP startup logs or the secret file
 CPA URL:            http://cli-proxy-api:8317
 CPA Management Key: CPA remote-management.secret-key
 ```

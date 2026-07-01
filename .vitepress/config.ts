@@ -51,9 +51,9 @@ const zhSidebar: DefaultTheme.Sidebar = [
   {
     text: '部署',
     items: [
+      { text: '一键安装脚本', link: '/deployment/installer' },
       { text: 'Docker 部署', link: '/deployment/docker' },
       { text: '原生包部署', link: '/deployment/native' },
-      { text: 'CPA Panel 模式', link: '/deployment/cpa-panel' },
       { text: '反向代理', link: '/deployment/reverse-proxy' },
     ],
   },
@@ -126,9 +126,9 @@ const enSidebar: DefaultTheme.Sidebar = [
   {
     text: 'Deployment',
     items: [
+      { text: 'One-Click Installer', link: '/en/deployment/installer' },
       { text: 'Docker Deployment', link: '/en/deployment/docker' },
       { text: 'Native Packages', link: '/en/deployment/native' },
-      { text: 'CPA Panel Mode', link: '/en/deployment/cpa-panel' },
       { text: 'Reverse Proxy', link: '/en/deployment/reverse-proxy' },
     ],
   },

@@ -2,7 +2,9 @@
 
 Use native packages when Docker is not part of your environment. They fit deployments already managed by systemd, launchd, Windows services, or another process supervisor.
 
-Native mode is still Manager Server mode: the binary serves `/management.html`, stores SQLite data locally, and uses the CPAMP Admin Key for login. It is not the old "external Usage Service for CPA Panel" workflow.
+Native mode is still Manager Server mode: the binary serves `/management.html`, stores SQLite data locally, and uses the CPAMP Admin Key for login. It is not the old "external Usage Service for the CPA-hosted panel" workflow.
+
+If you only want to install the CPAMP native package, you can use [One-Click Installer](./installer.md). The script does not install CPA natively; use Docker for a full new deployment.
 
 ## Requirements
 
@@ -79,7 +81,7 @@ Open:
 http://<host>:18317/management.html
 ```
 
-If no admin key is configured, the process prints a generated `cmp_admin_...` key once. Save it immediately.
+If no admin key is configured, the process prints a generated `cpamp_...` key once. Save it immediately.
 
 You can also set it explicitly.
 
@@ -193,7 +195,7 @@ http://<host>:18317/management.html
 Enter:
 
 ```text
-Admin Key:          cmp_admin_... from logs, or your configured admin key
+Admin Key:          cpamp_... from logs, or your configured admin key
 CPA URL:            http://127.0.0.1:8317, http://<cpa-host>:8317, or your CPA URL
 CPA Management Key: CPA remote-management.secret-key
 ```

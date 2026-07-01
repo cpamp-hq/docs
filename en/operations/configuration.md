@@ -9,7 +9,7 @@ CPAMP stores its core data locally. During deployment, identify three things fir
 | `usage.sqlite` | SQLite database for request events, configuration, prices, aliases, and related data. |
 | `usage.sqlite-wal` | SQLite WAL file. Back it up when present. |
 | `usage.sqlite-shm` | SQLite SHM file. Back it up when present. |
-| `data.key` | Data key used to encrypt the saved CPA Management Key. |
+| `data.key` | Data key used to encrypt sensitive configuration written to SQLite. |
 
 Docker defaults:
 
@@ -27,7 +27,7 @@ Native package defaults:
 
 ## Admin Key
 
-Full Docker and native Manager Server modes use a `cmp_admin_...` admin key for login.
+Full Docker and native Manager Server modes use a `cpamp_...` admin key for login.
 
 Configure it with:
 
@@ -42,9 +42,12 @@ If it is not configured, the first startup generates a random admin key and prin
 
 CPAMP uses the CPA Management Key to access the CPA management API.
 
-In Full Docker and native Manager Server modes, CPAMP encrypts the CPA Management Key with `data.key` before saving it to SQLite.
+Where it is stored depends on the configuration source:
 
-In CPA Panel mode, the browser holds the CPA Management Key, matching CPA-hosted panel access semantics.
+- CPA connections saved through setup or the panel are encrypted with `data.key` and written to SQLite.
+- CPA connections managed by the installer or environment variables come from `CPA_UPSTREAM_URL` and `CPA_MANAGEMENT_KEY` / `CPA_MANAGEMENT_KEY_FILE`. That connection is not written to SQLite; with the one-click installer, the key is usually in `secrets/cpa-management-key` under the install directory.
+
+In the CPA-hosted panel, the browser holds the CPA Management Key, matching CPA-port access semantics.
 
 ## Collection Configuration
 

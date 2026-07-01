@@ -6,7 +6,7 @@
 
 ## 可用条件
 
-请求监控需要 Manager Server 提供采集能力，并且 CPA 用量发布已经开启。CPA Panel 模式或未绑定 Manager Server 时，用量类功能可能不可用。
+请求监控需要 Manager Server 提供采集能力，并且 CPA 用量发布已经开启。CPA 托管面板兼容模式或未绑定 Manager Server 时，用量类功能可能不可用。
 
 如果页面提示请求监控未启用，请先到 [配置中心](./configuration.md) 的 Manager Server 配置里启用请求监控。
 

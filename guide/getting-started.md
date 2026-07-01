@@ -2,6 +2,23 @@
 
 这页带你从一套最小 Docker 环境跑起：先启动 CPA 网关运行时，再启动 CPAMP 面板，最后确认监控数据能进来。已经有 CPA 在运行的用户，可以直接跳到 [仅部署 CPAMP](../deployment/docker.md#仅部署-cpamp)。
 
+## 使用安装脚本
+
+如果想按向导部署，直接运行安装脚本：
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/seakee/CPA-Manager-Plus/main/bin/install-cpamp.sh
+bash install-cpamp.sh
+```
+
+脚本会检查环境、选择语言、选择完整安装或仅安装 CPAMP、生成最小配置，并在最后确认后执行部署。想先看它会做什么，可以使用：
+
+```bash
+CPAMP_DRY_RUN=1 bash install-cpamp.sh
+```
+
+更多选项见 [一键安装脚本](../deployment/installer.md)。
+
 ## 推荐部署方式
 
 第一次部署建议用 Docker Compose。它会同时创建 CPA 和 CPAMP 的持久化 volume：

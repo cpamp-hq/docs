@@ -8,7 +8,7 @@
 - CPA / CLI Proxy API：`https://your-domain.com/v1/...`
 - CPA OAuth 回调、Codex API、Amp 路由等 CPA 侧接口
 
-本文适用于 Full Docker / Manager Server 模式。CPA Panel 模式由 CPA 自己托管 `/management.html`，通常不需要这套混合分流。
+本文适用于 Full Docker / Manager Server 模式。CPA 托管面板由 CPA 自己托管 `/management.html`，通常不需要这套混合分流。
 
 ## 路径边界
 
@@ -278,7 +278,7 @@ https://your-domain.com/management.html
 首次 setup 填写：
 
 ```text
-管理员密钥:         CPAMP 启动日志中的 cmp_admin_...
+管理员密钥:         CPAMP 启动日志或 secret 文件中的 cpamp_...
 CPA URL:            http://cli-proxy-api:8317
 CPA Management Key: CPA remote-management.secret-key
 ```

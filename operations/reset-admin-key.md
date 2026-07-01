@@ -8,7 +8,7 @@
 
 `cpa-manager-plus reset-admin-key` 会替换 Manager Server SQLite 中的 `settings.admin_credential_v1`，写入新的盐和 HMAC 摘要。
 
-- 不指定密钥时，会生成一个长随机 `cmp_admin_...` 管理员密钥。
+- 不指定密钥时，会生成一个 `cpamp_...` 管理员密钥。
 - 指定密钥时，只保存摘要，命令不会把指定密钥回显到输出。
 - 命令不会启动 HTTP 服务、采集器或后台任务。
 - 命令不需要 CPA Management Key，也不需要 `data.key`。
@@ -36,7 +36,7 @@ docker compose -f docker-compose.manager.yml up -d cpa-manager-plus
 
 ```text
 CPA Manager Plus admin key reset.
-New admin key: cmp_admin_...
+New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 

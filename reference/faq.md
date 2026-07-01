@@ -1,6 +1,6 @@
 # 常见问题
 
-CPA Manager Plus 的完整监控和分析能力来自 Manager Server 托管面板。旧 CPA-Manager 里的 “CPA Panel mode 配置 External Usage Service” 不适用于 Plus。
+CPA Manager Plus 的完整监控和分析能力来自 Manager Server 托管面板。旧 CPA-Manager 通过 External Usage Service 接入用量服务的工作流不适用于 Plus。
 
 CPAMP 统计和监控能力应从 Manager Server 托管面板进入：
 
@@ -14,10 +14,10 @@ http://<host>:18317/management.html
 |---|---|
 | 新部署 | Full Docker / Manager Server 模式 |
 | 请求监控、历史统计、模型价格、别名、导入导出 | Full Docker / Manager Server 模式 |
-| 只使用 CPA 自带面板，不需要 Manager Server 统计 | CPA Panel 模式 |
+| 只保留已有 CPA 端口面板，不需要 Manager Server 统计 | [CPA 托管面板兼容模式](../deployment/cpa-panel.md) |
 | 不使用 Docker | 原生 Manager Server 模式 |
 
-CPA Panel 模式适合轻量访问 CPA 托管面板。它不配置 Manager Server，也不读取 Manager Server SQLite 数据。需要完整 CPAMP 能力时，使用 Docker 或原生包启动 Manager Server。
+CPA 托管面板只适合延续已有 CPA 端口访问习惯。它不配置 Manager Server，也不读取 Manager Server SQLite 数据。需要完整 CPAMP 能力时，使用 Docker 或原生包启动 Manager Server。
 
 ## 打开面板后应该访问哪个地址？
 
@@ -27,7 +27,7 @@ CPA Panel 模式适合轻量访问 CPA 托管面板。它不配置 Manager Serve
 http://<host>:18317/management.html
 ```
 
-CPA Panel 模式通常从 CPA 端口访问，常见是：
+CPA 托管面板通常从 CPA 端口访问，常见是：
 
 ```text
 http://<cpa-host>:8317/management.html
@@ -39,14 +39,14 @@ http://<cpa-host>:8317/management.html
 
 | 位置 | 使用的密钥 |
 |---|---|
-| CPAMP Full Docker / 原生登录 | CPAMP 管理员密钥，通常以 `cmp_admin_...` 开头 |
+| CPAMP Full Docker / 原生登录 | CPAMP 管理员密钥，通常以 `cpamp_...` 开头 |
 | CPAMP 首次 setup 连接 CPA | CPA Management Key |
-| CPA Panel 模式登录 | CPA Management Key |
+| CPA 托管面板登录 | CPA Management Key |
 | 普通模型 API 请求 | CPA API 密钥 |
 | `GET /v1/models` | CPA API 密钥 |
 | setup 后的 CPAMP Manager Server API | CPAMP 管理员密钥 |
 
-不要混用这些密钥。完整 Docker / 原生模式会把 CPA Management Key 加密后保存到 SQLite。CPA Panel 模式由浏览器持有 CPA Management Key。
+不要混用这些密钥。通过 setup 或面板保存的 CPA 连接会把 CPA Management Key 用 `data.key` 加密后写入 SQLite；安装器 env/secret 管理的连接从安装目录读取密钥，不写入 SQLite。CPA 托管面板由浏览器持有 CPA Management Key。
 
 ## Full Docker 打开的是登录页，不是 setup
 
@@ -55,7 +55,7 @@ http://<cpa-host>:8317/management.html
 请使用 CPAMP 管理员密钥：
 
 ```text
-cmp_admin_...
+cpamp_...
 ```
 
 不要在 CPAMP 登录表单中使用 CPA Management Key。如果管理员密钥丢失，阅读 [重置管理员密钥](../operations/reset-admin-key.md)。
@@ -279,7 +279,9 @@ usage.sqlite-shm
 data.key
 ```
 
-CPA Management Key 会使用 `data.key` 加密保存到 SQLite。丢失 `data.key` 后，已加密的 CPA Management Key 无法恢复，只能重新保存 CPA 连接。
+通过 setup 或面板保存的 CPA 连接会把 CPA Management Key 用 `data.key` 加密后写入 SQLite。丢失 `data.key` 后，已加密的 CPA Management Key 无法恢复，只能重新保存 CPA 连接。
+
+如果使用安装器 env/secret 管理连接，CPA Management Key 通常在安装目录的 `secrets/cpa-management-key`，不写入 SQLite。备份时要把安装目录里的 `secrets/` 和数据目录一起保存。
 
 ## Manager Server 返回 401
 
@@ -333,11 +335,11 @@ CPA 用量队列是内存队列，保留时间有限。
 
 如果 Manager Server 停机超过保留窗口，通常无法从 CPA 恢复那段时间的数据。请保持 Manager Server 持续运行。
 
-## CPA Panel 模式缺少监控或模型价格
+## CPA 托管面板缺少监控或模型价格
 
 这是预期行为。
 
-CPA Panel 模式不使用 Manager Server 分析能力。需要监控、仪表盘、模型价格、API 密钥别名、用量导入导出和服务端巡检时，请打开：
+CPA 托管面板不使用 Manager Server 分析能力。需要监控、仪表盘、模型价格、API 密钥别名、用量导入导出和服务端巡检时，请打开：
 
 ```text
 http://<cpamp-host>:18317/management.html
@@ -369,4 +371,4 @@ rm static/management.html
 
 ## release 里的 management.html 是什么？
 
-`management.html` 是 release 包中的单文件管理面板，可被 Manager Server 或 CPA Panel 托管。在线文档仍通过 GitHub Pages 访问，不随安装包分发。
+`management.html` 是 release 包中的单文件管理面板，可被 Manager Server 或 CPA 托管面板加载。在线文档仍通过 GitHub Pages 访问，不随安装包分发。

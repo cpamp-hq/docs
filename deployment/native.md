@@ -2,7 +2,9 @@
 
 不想使用 Docker 时，可以直接运行 CPAMP 原生包。它适合已有进程管理、systemd、launchd 或 Windows 服务托管习惯的环境。
 
-原生包模式仍然是 Manager Server 模式：二进制会托管 `/management.html`，本地保存 SQLite 数据，并使用 CPAMP 管理员密钥登录。它不是旧 CPA-Manager 的“给 CPA Panel 外接 Usage Service”工作流。
+原生包模式仍然是 Manager Server 模式：二进制会托管 `/management.html`，本地保存 SQLite 数据，并使用 CPAMP 管理员密钥登录。它不是旧 CPA-Manager 的“给 CPA 托管面板外接 Usage Service”工作流。
+
+如果只想安装 CPAMP 原生包，可以使用 [一键安装脚本](./installer.md)。脚本不会原生安装 CPA；完整新部署仍建议用 Docker。
 
 ## 前置要求
 
@@ -79,7 +81,7 @@ cd .\cpa-manager-plus_vX.Y.Z_windows_amd64
 http://<host>:18317/management.html
 ```
 
-如果没有配置管理员密钥，进程会在日志中输出一次生成的 `cmp_admin_...`。请立即保存。
+如果没有配置管理员密钥，进程会在日志中输出一次生成的 `cpamp_...`。请立即保存。
 
 也可以显式设置：
 
@@ -191,7 +193,7 @@ http://<host>:18317/management.html
 填写：
 
 ```text
-管理员密钥:         日志中的 cmp_admin_... 或你配置的管理员密钥
+管理员密钥:         日志中的 cpamp_... 或你配置的管理员密钥
 CPA URL:            http://127.0.0.1:8317、http://<cpa-host>:8317 或你的 CPA 地址
 CPA Management Key: CPA remote-management.secret-key
 ```

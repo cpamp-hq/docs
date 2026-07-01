@@ -1,6 +1,6 @@
 # FAQ
 
-CPA Manager Plus provides full monitoring and analytics through the Manager Server-hosted panel. The old CPA-Manager "External Usage Service" setup for CPA Panel mode is not supported in Plus.
+CPA Manager Plus provides full monitoring and analytics through the Manager Server-hosted panel. The old CPA-Manager workflow that attached an External Usage Service is not supported in Plus.
 
 Use the Manager Server-hosted panel for CPAMP analytics:
 
@@ -14,10 +14,10 @@ http://<host>:18317/management.html
 |---|---|
 | New deployment | Full Docker / Manager Server mode |
 | Request monitoring, historical statistics, model prices, aliases, import/export | Full Docker / Manager Server mode |
-| Existing CPA panel only, without Manager Server analytics | CPA Panel mode |
+| Keep an existing CPA-port panel without Manager Server analytics | [CPA-hosted panel compatibility mode](../deployment/cpa-panel.md) |
 | No Docker | Native Manager Server mode |
 
-CPA Panel mode is for lightweight access to the CPA-hosted panel. It does not configure Manager Server and does not read Manager Server SQLite data. Use Docker or native packages when you need the full CPAMP feature set.
+The CPA-hosted panel is for preserving an existing CPA-port workflow. It does not configure Manager Server and does not read Manager Server SQLite data. Use Docker or native packages when you need the full CPAMP feature set.
 
 ## Which Address Should I Open?
 
@@ -27,7 +27,7 @@ Full Docker or native Manager Server mode:
 http://<host>:18317/management.html
 ```
 
-CPA Panel mode is usually accessed from the CPA port:
+The CPA-hosted panel is usually accessed from the CPA port:
 
 ```text
 http://<cpa-host>:8317/management.html
@@ -39,14 +39,14 @@ If you see login instead of setup, Manager Server is already configured. Use the
 
 | Place | Key |
 |---|---|
-| CPAMP Full Docker / native login | CPAMP Admin Key, usually starting with `cmp_admin_...` |
+| CPAMP Full Docker / native login | CPAMP Admin Key, usually starting with `cpamp_...` |
 | CPAMP first setup CPA connection | CPA Management Key |
-| CPA Panel mode login | CPA Management Key |
+| CPA-hosted panel login | CPA Management Key |
 | Normal model API calls | CPA API Key |
 | `GET /v1/models` | CPA API Key |
 | CPAMP Manager Server APIs after setup | CPAMP Admin Key |
 
-Do not mix these keys. Full Docker and native modes encrypt the CPA Management Key and save it to SQLite. In CPA Panel mode, the browser holds the CPA Management Key.
+Do not mix these keys. CPA connections saved through setup or the panel are encrypted with `data.key` and written to SQLite. Installer env/secret-managed connections read the key from the install directory and are not written to SQLite. In the CPA-hosted panel, the browser holds the CPA Management Key.
 
 ## Full Docker Opens Login Instead Of Setup
 
@@ -55,7 +55,7 @@ Manager Server is already configured.
 Use the CPAMP Admin Key:
 
 ```text
-cmp_admin_...
+cpamp_...
 ```
 
 Do not use the CPA Management Key on the CPAMP login form. If the admin key is lost, follow [Reset Admin Key](../operations/reset-admin-key.md).
@@ -279,7 +279,9 @@ usage.sqlite-shm
 data.key
 ```
 
-The CPA Management Key is encrypted with `data.key` before being saved to SQLite. If `data.key` is lost, the encrypted CPA Management Key cannot be recovered and the CPA connection must be saved again.
+CPA connections saved through setup or the panel are encrypted with `data.key` before being written to SQLite. If `data.key` is lost, the encrypted CPA Management Key cannot be recovered and the CPA connection must be saved again.
+
+If the installer manages the connection through env/secrets, the CPA Management Key is usually stored in `secrets/cpa-management-key` under the install directory and is not written to SQLite. Back up `secrets/` together with the data directory.
 
 ## 401 From Manager Server
 
@@ -333,11 +335,11 @@ Maximum:
 
 If Manager Server is down longer than the retention window, that period usually cannot be recovered from CPA. Keep Manager Server running continuously.
 
-## CPA Panel Mode Is Missing Monitoring Or Model Prices
+## CPA-Hosted Panel Is Missing Monitoring Or Model Prices
 
 This is expected.
 
-CPA Panel mode does not use Manager Server analytics. Open:
+The CPA-hosted panel does not use Manager Server analytics. Open:
 
 ```text
 http://<cpamp-host>:18317/management.html
@@ -345,7 +347,7 @@ http://<cpamp-host>:18317/management.html
 
 for monitoring, dashboard analytics, model prices, API key aliases, usage import/export, and server inspection.
 
-## CPA Panel Still Shows An Old Panel
+## CPA-Hosted Panel Still Shows An Old Panel
 
 Check that CPA configuration points at this project:
 
@@ -371,4 +373,4 @@ No. The live demo uses frontend mock data and does not need CPA, Manager Server,
 
 ## What Is management.html In A Release?
 
-`management.html` is the single-file management panel shipped in release packages. It can be hosted by Manager Server or CPA Panel. The online documentation remains on GitHub Pages and is not distributed with install packages.
+`management.html` is the single-file management panel shipped in release packages. It can be hosted by Manager Server or loaded by the CPA-hosted panel. The online documentation remains on GitHub Pages and is not distributed with install packages.

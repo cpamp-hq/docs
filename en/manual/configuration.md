@@ -10,7 +10,7 @@ The configuration page normally has three editing modes:
 - **Source configuration**: direct `config.yaml` editing. Useful, but easier to break with bad YAML.
 - **Manager Server configuration**: available when Manager Server hosts the panel. Use it to bind CPA, control request monitoring, and save CPAMP runtime settings.
 
-If a tab is not available, check the runtime mode first. Full Docker, CPA Panel, native packages, and demo mode expose different capabilities.
+If a tab is not available, check the runtime mode first. Full Docker, the CPA-hosted panel, native packages, and demo mode expose different capabilities.
 
 ## Manager Server Configuration
 
@@ -48,4 +48,3 @@ Before saving source configuration, check indentation, arrays, and quoted string
 - Stopping the CPAMP collector does not clear CPA's usage queue.
 - Model prices only affect CPAMP cost estimation. They do not change provider billing.
 - Environment-sourced settings must be changed in the deployment environment and then restarted. A panel save will not override them.
-

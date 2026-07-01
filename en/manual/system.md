@@ -11,7 +11,7 @@ Use [Logs](./logs.md) for log content. Use [Monitoring](./monitoring.md), [Usage
 - **Clear login storage**: remove saved panel connection state from the browser.
 - **Connection state**: confirm whether the panel is connected to a usable CPA or Manager Server.
 
-The exact content depends on runtime mode. Full Docker, CPA Panel, native packages, and demo mode expose different capabilities.
+The exact content depends on runtime mode. Full Docker, the CPA-hosted panel, native packages, and demo mode expose different capabilities.
 
 ## Model List
 
@@ -40,9 +40,8 @@ Before reporting a problem, record:
 
 - CPAMP version and runtime mode.
 - CPA version.
-- Access mode: Full Docker, CPA Panel, native package, or development.
+- Access mode: Full Docker, CPA-hosted panel, native package, or development.
 - Whether the model list loads.
 - Whether login storage was recently cleared or the address changed.
 
 Then combine it with sanitized evidence from [Logs](./logs.md) and [Monitoring](./monitoring.md) for the same time window.
-

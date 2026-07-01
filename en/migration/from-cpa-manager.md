@@ -7,7 +7,7 @@ Use this guide when migrating from the old `seakee/cpa-manager` / CPA-Manager pr
 - The image name changed from `seakee/cpa-manager` to `seakee/cpa-manager-plus`.
 - Native packages and binaries changed from `cpa-manager` to `cpa-manager-plus`.
 - The backend directory changed from the old project's `usage-service` to `apps/manager-server`; compatibility endpoints under `/usage-service/*` are still kept.
-- Full Docker login changed from CPA Management Key to the Manager Server admin key `cmp_admin_...`.
+- Full Docker login changed from CPA Management Key to the Manager Server admin key `cpamp_...`.
 - The CPA Management Key is encrypted with `/data/data.key` before being saved to SQLite.
 - Old `settings.setup` data is migrated to `settings.manager_config_v1` and kept as compatibility data.
 

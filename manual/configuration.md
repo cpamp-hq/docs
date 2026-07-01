@@ -10,7 +10,7 @@
 - **源文件配置**：适合熟悉 `config.yaml` 的用户。改动更直接，但也更容易写错格式。
 - **Manager Server 配置**：只在 Manager Server 托管面板时可用，用于绑定 CPA、启停采集器和保存 CPAMP 自己的运行设置。
 
-如果某个 Tab 不可用，先确认当前是 Full Docker、CPA Panel 还是原生包模式。CPA Panel 模式下，一些 Manager Server 能力不会出现。
+如果某个 Tab 不可用，先确认当前是 Full Docker、CPA 托管面板兼容模式还是原生包模式。CPA 托管面板下，一些 Manager Server 能力不会出现。
 
 ## Manager Server 配置
 
