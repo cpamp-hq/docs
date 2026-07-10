@@ -195,6 +195,7 @@ Saving CPAMP configuration does not rewrite the full CPA `config.yaml`.
 | `USAGE_BATCH_SIZE` | `100` | Max records per batch. |
 | `USAGE_POLL_INTERVAL_MS` | `500` | Idle poll interval. |
 | `USAGE_QUERY_LIMIT` | `50000` | Max recent usage events. |
+| `USAGE_DASHBOARD_HOURLY_ROLLUP_ENABLED` | `true` | Enable the Dashboard hourly rollup worker and query path. Temporarily set it to `false` when diagnosing SQLite write contention or rollup failures; Dashboard falls back to raw events. |
 | `USAGE_CORS_ORIGINS` | `*` | CORS origins for compatibility endpoints. |
 | `USAGE_RESP_TLS_SKIP_VERIFY` | `false` | Skip TLS verification for RESP connection. |
 | `USAGE_QUOTA_COOLDOWN_ENABLED` | `false` | Enable the Codex usage-limit cooldown worker. |
@@ -216,6 +217,14 @@ go tool pprof http://127.0.0.1:6060/debug/pprof/heap
 ```
 
 The equivalent config-file field is `pprofAddr`. The service is disabled by default and should not be exposed through Docker port mappings or a reverse proxy.
+
+Dashboard hourly rollup is enabled by default. The worker catches up historical events in bounded batches. While its checkpoint is pending, or if a rollup read fails, Dashboard automatically falls back to raw events and records the reason through rate-limited logs. To stop background rollup temporarily, set:
+
+```bash
+USAGE_DASHBOARD_HOURLY_ROLLUP_ENABLED=false
+```
+
+Restart Manager Server after changing it. Dashboard will always use raw events while disabled, and existing rollup tables are left intact.
 
 When `USAGE_QUOTA_COOLDOWN_ENABLED`, `USAGE_ACCOUNT_ACTIONS_ENABLED`, or `USAGE_ACCOUNT_ACTIONS_AUTO_DISABLE` is set through the environment, the matching panel switch is shown as environment-sourced and locked. Remove the environment variable and restart Manager Server if you want the setting to be editable from the panel.
 
