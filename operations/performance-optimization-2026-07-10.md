@@ -259,7 +259,7 @@ Raw analytics 与 rollup reader 共用同一个时区 bucket 规则。每个 UTC
 USAGE_DASHBOARD_HOURLY_ROLLUP_ENABLED=false
 ```
 
-修改后重启 Manager Server。Dashboard 和 Usage Analytics 会回退 raw events，已有 rollup 表不会删除。该开关不接入 UI。
+修改后重启 Manager Server。Dashboard 和 Usage Analytics 会回退 raw events。除 Manager Server 指南说明的启动时一次性格式升级外，关闭该运行时开关本身不会删除当前格式的 rollup 数据。该开关不接入 UI。
 
 更多配置见 [Manager Server 指南](./manager-server.md)。
 

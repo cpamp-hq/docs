@@ -259,7 +259,7 @@ Hourly rollup is enabled by default. To disable it temporarily:
 USAGE_DASHBOARD_HOURLY_ROLLUP_ENABLED=false
 ```
 
-Restart Manager Server after changing the variable. Dashboard and Usage Analytics will use raw events while disabled, and existing rollup tables remain intact. The switch is intentionally not exposed in the UI.
+Restart Manager Server after changing the variable. Dashboard and Usage Analytics will use raw events while disabled. Except for the one-time startup format upgrade documented in the Manager Server guide, disabling this runtime switch does not delete current-format rollup data. The switch is intentionally not exposed in the UI.
 
 See the [Manager Server Guide](./manager-server.md) for the full runtime reference.
 
