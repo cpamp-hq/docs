@@ -2,7 +2,7 @@
 
 OAuth Login adds or reauthorizes accounts. It answers "how do I get a usable credential saved?" Account enablement, batch maintenance, and status decisions belong in [Accounts](./accounts.md).
 
-## Available Entries
+## Available entries
 
 The page shows login methods based on CPA and plugin capabilities. Common entries include:
 
@@ -17,7 +17,7 @@ The page shows login methods based on CPA and plugin capabilities. Common entrie
 
 Some entries appear only when the runtime supports them. If an entry is missing, check CPA version, plugin status, and configuration.
 
-## Standard Flow
+## Standard flow
 
 1. Click the provider login button.
 2. Complete login and authorization in the provider page.
@@ -27,7 +27,7 @@ Some entries appear only when the runtime supports them. If an entry is missing,
 
 OAuth success does not guarantee request success. After saving, still check provider configuration, auth-file binding, model rules, and quota state.
 
-## Remote Browser Callback
+## Remote browser callback
 
 If CPAMP runs on a remote server, the provider may redirect to `http://localhost:...`. In that case:
 

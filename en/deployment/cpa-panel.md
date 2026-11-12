@@ -7,7 +7,7 @@ description: Let CPA host CPA Manager Plus directly on port 8317 as a lightweigh
 
 The CPAMP Lightweight Panel is hosted directly by CPA and replaces the official Management Center UI with CPA Manager Plus. It requires no Manager Server, SQLite database, additional container, or new port, making it suitable when you want a different management UI without a heavier deployment.
 
-## Shortest Installation Path
+## Shortest installation path
 
 - **Try the v2 Beta lightweight panel (for this Beta docs channel)**: CPA's automatic updater reads `releases/latest` only (which stays on **1.x Stable** during Beta), so trying the v2 Beta panel requires manually downloading `management.html` from a published v2 Beta prerelease, setting `disable-auto-update-panel: true`, and placing it at `static/management.html` — jump to [Try The v2 Beta Panel On CPA](#try-the-v2-beta-panel-on-cpa) below.
 - **Track `releases/latest` automatically via `panel-github-repository` (serves the 1.x Stable panel during Beta)**:
@@ -26,7 +26,7 @@ Browser
       -> CPA Management API
 ```
 
-## When To Use It
+## When to use it
 
 - CPA / CLIProxyAPI is already running.
 - You prefer a different interface or clearer information hierarchy than the official panel.
@@ -40,9 +40,9 @@ Browser
 - Configure `remote-management.secret-key`; otherwise the Management API and panel are disabled.
 - Keep `remote-management.disable-control-panel` set to `false`.
 - CPA must be able to reach GitHub Releases, directly or through its configured proxy, to download `management.html`.
-- CPA v8 works: the v2 Beta lightweight panel runs on the `/v0/management` API that CPA v8 still serves; see "v2 Beta And The Lightweight Panel" below.
+- CPA v8 works: the v2 Beta lightweight panel runs on the `/v0/management` API that CPA v8 still serves; see "v2 Beta and The Lightweight Panel" below.
 
-## Configure CPA (Base Hosting And 1.x Auto-Update Baseline)
+## Configure CPA (base hosting and 1.x auto-update baseline)
 
 Edit CPA `config.yaml` (note: `disable-auto-update-panel: false` below keeps pulling the 1.x Stable panel from `releases/latest`; set `disable-auto-update-panel: true` as shown further below when manually placing a v2 Beta prerelease panel):
 
@@ -70,7 +70,7 @@ remote-management:
 
 CPA v8 also reads its new configuration layout: `config-version: 8` with a top-level `management:` section holding the same fields as `remote-management` above. Both spellings have been verified on CPA v8.
 
-## Start And Log In
+## Start and log in
 
 1. Save the configuration and restart or reload CPA.
 2. Open:
@@ -84,7 +84,7 @@ http://<cpa-host>:8317/management.html
 
 CPA looks for an asset named `management.html` in `releases/latest` of the configured GitHub repository (the newest non-prerelease Release) and caches it as `static/management.html`, in the `static/` folder next to CPA's `config.yaml` (`MANAGEMENT_STATIC_PATH` or `WRITABLE_PATH`, when set, take precedence).
 
-## Updates And Cache
+## Updates and cache
 
 With `disable-auto-update-panel: false`, CPA periodically checks for a newer panel. If an upgrade still shows the old interface:
 
@@ -100,7 +100,7 @@ rm static/management.html
 
 With `disable-auto-update-panel: true`, CPA downloads the panel only when the cached file is missing and does not perform periodic updates.
 
-## v2 Beta And The Lightweight Panel
+## V2 Beta and the Lightweight Panel
 
 This is the CPAMP v2 Beta publication contract for the lightweight panel. Until the first v2 Beta prerelease is published, the Releases page has no matching file.
 
@@ -109,7 +109,7 @@ This is the CPAMP v2 Beta publication contract for the lightweight panel. Until 
 - **The Management API stays `/v0/management`.** The v2 Beta lightweight panel reads and writes CPA configuration through `/v0/management`, which CPA v8 still serves, and signs in with the CPA v8 Management Key. Moving to `/v8/management` is post-Stable work and is outside the first Beta.
 - **Pre-release acceptance.** `bin/ci/panel-lite-cpa-v8.mjs` verifies on the pinned CPA v8 that the `static/management.html` CPA obtains is byte-identical to the build, `/management.html` answers 200, the Management Key authenticates `/v0/management/config` and a changed configuration field is written to `config.yaml`, and `/management.html` answers 404 when `disable-control-panel: true`.
 
-### Try The v2 Beta Panel On CPA
+### Try the v2 Beta Panel on CPA
 
 Automatic updates through `panel-github-repository` use `releases/latest`, not a Beta Prerelease selector. Do not put a prerelease Tag URL in that setting to change channels:
 
@@ -126,10 +126,10 @@ Install the v2 Beta panel manually, retaining the cache location and automatic-u
 
 To return to the 1.x panel, delete `static/management.html`, set `disable-auto-update-panel` back to `false`, and restart CPA.
 
-External Full Mode is not this backend-free lightweight panel: it needs Manager while the operator independently runs, upgrades, and backs up external CPA. CPAMP does not take over its host lifecycle; see [Runtime Model](../guide/runtime-model.md). v2 Embedded instead delivers the full console through the digest-pinned `seakee/cpa-manager-plus` single image (`slim` or `full` variant; see [v2 Docker Installation](./docker.md)); copying only `management.html` does not upgrade Full Web. See [Releases And Licensing](../reference/releases.md) for current project MIT, official CPA MIT, and image third-party notice inspection paths.
+External Full Mode is not this backend-free lightweight panel: it needs Manager while the operator independently runs, upgrades, and backs up external CPA. CPAMP does not take over its host lifecycle; see [Runtime Model](../guide/runtime-model.md). v2 Embedded instead delivers the full console through the digest-pinned `seakee/cpa-manager-plus` single image (`slim` or `full` variant; see [v2 Docker Installation](./docker.md)); copying only `management.html` does not upgrade Full Web. See [Releases and Licensing](../reference/releases.md) for current project MIT, official CPA MIT, and image third-party notice inspection paths.
 
 
-## Lightweight Panel Capabilities
+## Lightweight Panel capabilities
 
 | Capability                                                   | CPAMP Lightweight Panel                             |
 | ------------------------------------------------------------ | --------------------------------------------------- |
@@ -143,7 +143,7 @@ External Full Mode is not this backend-free lightweight panel: it needs Manager 
 
 The lightweight panel does not connect to or read a separately running Manager Server. Starting Manager Server does not add full features to `:8317/management.html`.
 
-## Upgrade To CPAMP Full Mode
+## Upgrade to CPAMP Full Mode
 
 When you need request history, cost analytics, or server-side automation:
 
@@ -161,6 +161,6 @@ Fresh Full Web is not served at `/management.html`; instances upgraded offline f
 - The old 1.x interface returns after installing the v2 Beta panel: confirm `disable-auto-update-panel: true`; otherwise CPA overwrites the manually placed file with the 1.x panel from `releases/latest`.
 - Monitoring is missing: this is expected in Lightweight Mode; use the Manager Server panel.
 
-## 1.x (Before Upgrading)
+## 1.X (before upgrading)
 
 For 1.x Stable lightweight panel notes and 1.x Full Mode (`:18317/management.html`), see the 1.x Stable documentation at [CPAMP Lightweight Panel (1.x Stable)](https://cpamp-docs.seakee.dev/en/deployment/cpa-panel.html).

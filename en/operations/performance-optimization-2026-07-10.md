@@ -1,8 +1,8 @@
-# Performance Optimization Report — July 10, 2026
+# Performance optimization report — july 10, 2026
 
 This report documents the Manager Server, Dashboard, Request Monitoring, Usage Analytics, and Model Prices performance work started on July 10 and completed on July 15, 2026. It covers the causes, implementation strategy, benchmark methodology, and measured results. The report was updated on July 16 with the later stages and fresh measurements from current `main`.
 
-## Executive Summary
+## Executive summary
 
 The work was delivered in ten stages:
 
@@ -26,7 +26,7 @@ Using the effective work required to open Usage Analytics Overview on a 100,000-
 
 The legacy path requested every tab and the complete filter dataset. The current path executes only the main Overview query and selector request. Three fresh current-main runs measured about 1.119–1.126s and 5.23MB/op. This comparison represents the user-visible Overview workload rather than two identical SQL workloads.
 
-## Benchmark Interpretation
+## Benchmark interpretation
 
 - `ns/op` or duration is the execution time for one benchmark operation.
 - `B/op` is total allocation during one operation; it is not the final process RSS.
@@ -34,7 +34,7 @@ The legacy path requested every tab and the complete filter dataset. The current
 - pprof `inuse_space` shows heap objects still alive after GC and is more useful for identifying retained event slices or leaks.
 - Core benchmarks use 100,000 synthetic usage events across 12 models, multiple accounts and API keys, successes and failures, tokens, and latency samples.
 
-## Stage 1: Memory Pressure Controls
+## Stage 1: Memory pressure controls
 
 ### Cause
 
@@ -63,13 +63,13 @@ The growth from a small initial RSS to hundreds of megabytes was not traced to o
 | Model Prices | Download up to 50,000 complete events | Return model-level usage summaries |
 | Summary P95 | Retain a full Go sample window | Calculate with a SQLite window query |
 
-### Why Memory Improved
+### Why memory improved
 
 The import working set changed from `O(total events)` to `O(256)`. Frontend events, presentation snapshots, and SQLite connections now have explicit limits. Complete JSON payloads, full event arrays, and an expanding set of connection caches no longer amplify RSS after large operations.
 
 On the current 100,000-event benchmark dataset with 12 models, the Model Prices result shape changes from up to 50,000 complete event rows to about 12 model summary rows—roughly 4,167 times fewer rows. This stage did not preserve one unified end-to-end before/after benchmark, so the report does not claim an unsupported fixed RSS reduction.
 
-## Stage 2: Dashboard Hourly Rollup
+## Stage 2: Dashboard hourly rollup
 
 ### Cause
 
@@ -102,7 +102,7 @@ raw leading edge
 
 Cost is calculated from current model prices at read time. Pending checkpoints, disabled rollups, or read errors safely fall back to raw events.
 
-### 100k Results
+### 100K results
 
 | Path | Duration | Change |
 |---|---:|---:|
@@ -112,7 +112,7 @@ Cost is calculated from current model prices at read time. Pending checkpoints, 
 
 Twenty consecutive rollup runs remained near 2.66ms/op and 556KB/op. The ending heap profile showed about 2.9MB in use with no retained 100,000-event slice.
 
-## Stage 3: Active-Tab Usage Analytics Requests
+## Stage 3: Active-Tab Usage Analytics requests
 
 ### Cause
 
@@ -127,7 +127,7 @@ Before this change, opening Overview, Trends, Models, API Keys, Credentials, or 
 - Selector failure does not block the main content.
 - Compatibility flags preserve behavior with older Manager Server versions.
 
-### 100k Results
+### 100K results
 
 | Request | Duration | Allocation |
 |---|---:|---:|
@@ -138,7 +138,7 @@ Before this change, opening Overview, Trends, Models, API Keys, Credentials, or 
 
 Overview time decreased by about 48% and allocation by about 84%. Specialized tab time decreased by approximately 56%–67%.
 
-## Stage 4: Usage Analytics Hourly Rollup Phase 2B
+## Stage 4: Usage Analytics Hourly rollup phase 2B
 
 ### Cause
 
@@ -176,7 +176,7 @@ Metrics intentionally left on raw events:
 - API key, credential, channel, account, and heatmap dimensions.
 - Every searched or filtered request.
 
-### Timezone Correctness
+### Timezone correctness
 
 Raw Analytics and the rollup reader use one shared timezone bucket rule. Every complete UTC hour is checked to ensure its first and last millisecond map to the same target bucket:
 
@@ -186,7 +186,7 @@ Raw Analytics and the rollup reader use one shared timezone bucket rule. Every c
 
 Tests cover UTC, Asia/Shanghai, Asia/Kolkata, America/New_York DST spring/fall, partial hours, price changes, pending checkpoints, disabled rollups, and empty-model semantics.
 
-### 100k Overview — Three Runs
+### 100K overview — three runs
 
 | Path | Average duration | B/op | allocs/op |
 |---|---:|---:|---:|
@@ -194,7 +194,7 @@ Tests cover UTC, Asia/Shanghai, Asia/Kolkata, America/New_York DST spring/fall, 
 | Rollup | about 2.48s | 20.24MB | about 0.97 million |
 | Change | about 23% lower | about 41% lower | about 64% lower |
 
-### 100k Rollup-Owned Core Path — Three Runs
+### 100K rollup-owned core path — three runs
 
 This scope includes only the aggregate, model-stat, and timeline work owned by Phase 2B:
 
@@ -219,7 +219,7 @@ Usage Analytics already scoped the main dataset by tab, but the original Summary
 - Only Overview requests P95 latency and P95 TTFT; other tabs skip percentile queries.
 - Request Monitoring and existing consumers continue using the full Summary contract.
 
-### Fresh 100k Results On Current main, Three Runs
+### Fresh 100k results on current main, three runs
 
 | Path | Average duration | B/op | allocs/op |
 |---|---:|---:|---:|
@@ -229,7 +229,7 @@ Usage Analytics already scoped the main dataset by tab, but the original Summary
 
 With percentiles retained, duration fell about 53% and allocation about 99%. Tabs that do not need percentiles reduced Summary duration by about 98.7%.
 
-## Stage 6: Credential Timeline SQL Preaggregation And On-Demand Loading
+## Stage 6: Credential timeline SQL preaggregation and on-demand loading
 
 ### Cause
 
@@ -243,7 +243,7 @@ The Credentials tab previously read credential events and constructed timelines 
 - The frontend loads credential rankings first and requests a timeline only for the selected credential.
 - Cancellation, stale-response protection, loading state, and error feedback remain intact.
 
-### Fresh 100k Results On Current main, Three Runs
+### Fresh 100k results on current main, three runs
 
 | Request | Average duration | B/op | allocs/op |
 |---|---:|---:|---:|
@@ -253,7 +253,7 @@ The Credentials tab previously read credential events and constructed timelines 
 
 Opening the tab executes only the first row. The second request runs only when a selected credential needs a timeline, avoiding timeline construction for credentials the user does not inspect.
 
-## Stage 7: Hourly Rollup Projected Read
+## Stage 7: Hourly rollup projected read
 
 ### Cause
 
@@ -266,7 +266,7 @@ Phase 2B replaced many raw scans with hourly rollups, but the reader still loade
 - Preserved partial raw edges, current-price calculation, checkpoint checks, and timezone fallback.
 - No schema or API changes were required.
 
-### Fresh 100k Core Results On Current main, Three Runs
+### Fresh 100k core results on current main, three runs
 
 | Path | Average duration | B/op | allocs/op |
 |---|---:|---:|---:|
@@ -276,13 +276,13 @@ Phase 2B replaced many raw scans with hourly rollups, but the reader still loade
 
 Compared with the Phase 2B rollup result of about 39ms and 9.51MB/op, projected reads reduced duration by another 38% and allocation by about 94%.
 
-## Stage 8: Latency Percentile Compact Read
+## Stage 8: Latency percentile compact read
 
 ### Cause
 
 Nullable latency and TTFT samples read through `database/sql` created per-row integer-to-string-to-float conversions and temporary objects. Percentile paths in Trends, Models, and Overview retained unnecessary allocations.
 
-### Changes And Results
+### Changes and results
 
 - SQLite projects only valid integer latency and TTFT samples.
 - Go reads compact integers directly while preserving nearest-rank semantics.
@@ -291,13 +291,13 @@ Nullable latency and TTFT samples read through `database/sql` created per-row in
 
 Fresh current-main runs kept Trends near 532–544ms and 4.81MB/op, and Models near 543–560ms and 4.80MB/op.
 
-## Stage 9: Dashboard Refresh Bounded Concurrency
+## Stage 9: Dashboard refresh bounded concurrency
 
 ### Cause
 
 Hourly rollups made Dashboard core metrics cheap, but rolling 30m, health timeline, recent failures, channel stats, and failure sources still ran serially. These recent/raw queries became the refresh critical path as data volume grew.
 
-### Changes And Results
+### Changes and results
 
 - Independent Dashboard queries run concurrently within the existing four-connection SQLite pool.
 - Context cancellation and first-error propagation are preserved.
@@ -313,7 +313,7 @@ Fresh single-operation runs on current `main`:
 
 Allocation remains nearly flat as event count grows; time is still dominated by queries that must scan recent/raw ranges.
 
-## Stage 10: Complete Monitoring Request Deduplication And Bounded Concurrency
+## Stage 10: Complete monitoring request deduplication and bounded concurrency
 
 ### Cause
 
@@ -334,7 +334,7 @@ In the 100k, 30-day UTC Monitoring include profile:
 - Cancel sibling work after the first query error and assemble the response on one goroutine only after all reads complete.
 - Add no schema, rollup table, resident cache, or API field. Requests with dimension or status filters that the filter-options base scope clears continue to calculate those options independently, preserving the original option semantics. Search-only requests remain reusable because search is retained in that base scope.
 
-### 100k Monitoring Include-Profile Results
+### 100K monitoring include-profile results
 
 | Path | Duration | B/op | allocs/op |
 |---|---:|---:|---:|
@@ -346,7 +346,7 @@ Twenty consecutive runs remained near 1.69s/op and 15.14MB/op. The change adds n
 
 A separate post-change benchmark using the curl scope (`from_ms=1`, `Asia/Shanghai`, and the same include payload) completed at about 1.815s/op, 26.02MB/op, and 1.093 million allocs/op. The wider time range increases allocation, but not elapsed time materially on this dataset.
 
-### 58,686-Event Real-Data Validation
+### 58,686-Event real-data validation
 
 On a disposable SQLite backup of `bin/tmp/db/data`, after completing the cache-accounting migration and dashboard-rollup catch-up:
 
@@ -356,7 +356,7 @@ On a disposable SQLite backup of `bin/tmp/db/data`, after completing the cache-a
 - Serializing the 7.58MB JSON response took only about 16ms, so SQLite reads still dominate the remaining time.
 - The original `bin/tmp/db/data` was not modified.
 
-## Memory And Stability Validation
+## Memory and stability validation
 
 - Ten-run and 200-run 100k rollup benchmarks remained stable.
 - The 200-run benchmark stayed near 38–40ms/op.
@@ -366,7 +366,7 @@ On a disposable SQLite backup of `bin/tmp/db/data`, after completing the cache-a
 
 `B/op` measures cumulative request allocation and does not mean the memory remains resident. The pprof in-use result is the more relevant leak signal.
 
-## Why The Combined System Is Faster
+## Why the combined system is faster
 
 The main cost previously resembled:
 
@@ -407,7 +407,7 @@ The final implementation passed:
 - Timezone, DST, fallback, and price-change tests.
 - Multiple code-review passes with no blocking findings remaining.
 
-## Runtime And Rollback
+## Runtime and rollback
 
 Hourly rollup is enabled by default. To disable it temporarily:
 
@@ -419,7 +419,7 @@ Restart Manager Server after changing the variable. Dashboard and Usage Analytic
 
 See the [Manager Server Guide](./manager-server.md) for the full runtime reference.
 
-## Recommended Next Step
+## Recommended next step
 
 Compact Summary, Credential Timeline SQL preaggregation and on-demand loading, projected hourly rollup reads, compact latency-percentile reads, bounded Dashboard/Monitoring concurrency, and high-dimensional request shaping are now implemented. The remaining time depends primarily on queries that must preserve raw-event semantics:
 

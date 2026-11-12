@@ -1,4 +1,4 @@
-# Manager Server Guide
+# Manager Server guide
 
 Manager Server is the backend for the full CPAMP experience. In 1.x Stable it hosts the `management.html` panel; in v2 Beta it hosts the console, whose browser entry is the **Control Base Path** chosen at installation (the wizard defaults to `/console` and accepts another valid path, with the frontend API following at `<control-base-path>/api/v2/*`). v2 does not serve `/management.html` (404). It stores local SQLite data, consumes the CPA usage queue through the collector, and protects management capabilities with the CPAMP Admin Key.
 
@@ -9,7 +9,7 @@ Most users do not need to read this page from top to bottom. Start with the docu
 | Install Full Mode for the first time    | [Quick Start](../guide/getting-started.md)                         |
 | Change the CPA connection or Monitoring | [Configuration](../manual/configuration.md)                        |
 | Monitoring has no data                  | [Monitoring Has No Data](../troubleshooting/request-monitoring.md) |
-| Upgrade or back up                      | [Upgrade CPAMP](./update.md), [Backup And Restore](./backup.md)    |
+| Upgrade or back up                      | [Upgrade CPAMP](./update.md), [Backup and Restore](./backup.md)    |
 
 This page is mainly for advanced deployments that need environment variables, custom collection networking, runtime endpoints, or data-directory control.
 
@@ -30,7 +30,7 @@ http://<cpa-host>:8317/management.html
 
 The CPAMP Lightweight Panel does not connect to or read Manager Server SQLite and does not provide full historical monitoring, model prices, API key aliases, import/export, or server inspection history.
 
-## What Manager Server Does
+## What Manager Server does
 
 Manager Server:
 
@@ -68,7 +68,7 @@ CPA still runs separately. CPAMP does not bundle CPA.
 
 :::
 
-## First Setup And Login
+## First setup and login
 
 On first startup, CPAMP needs an admin key. You can provide one:
 
@@ -103,7 +103,7 @@ After setup:
 - Manager Server uses the resolved CPA Management Key when calling CPA.
 - New browsers no longer need the CPA Management Key.
 
-## CPA Prerequisites
+## CPA prerequisites
 
 Request monitoring requires CPA usage publishing and the CPA usage queue.
 
@@ -164,7 +164,7 @@ auto -> RESP Pub/Sub -> HTTP usage queue -> RESP pop fallback
 
 RESP transports cannot pass through a normal HTTP reverse proxy. If you see `unsupported RESP prefix 'H'`, the RESP client is probably connecting to an HTTP endpoint.
 
-## Configuration Boundary
+## Configuration boundary
 
 Managed by Manager Server:
 
@@ -190,7 +190,7 @@ Still managed by CPA:
 
 Saving CPAMP configuration does not rewrite the full CPA `config.yaml`.
 
-## Environment Variables
+## Environment variables
 
 | Variable                                | Default                                                     | Description                                                                                                                                                                                                                        |
 | --------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -306,7 +306,7 @@ When `USAGE_QUOTA_COOLDOWN_ENABLED`, `USAGE_ACCOUNT_ACTIONS_ENABLED`, or `USAGE_
 
 ::: details Advanced: runtime endpoints
 
-## Runtime Endpoints
+## Runtime endpoints
 
 | Endpoint                                                         | Purpose                                                                                                      |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -346,7 +346,7 @@ Authorization: Bearer <CPAMP_ADMIN_KEY>
 
 :::
 
-## Data And Security
+## Data and security
 
 Back up:
 
@@ -368,7 +368,7 @@ Security notes:
 - Request metadata may contain model names, endpoints, account labels, project snapshots, token usage, latency, and failure summaries.
 - Raw failure bodies stay local in SQLite. Normal APIs and JSONL exports expose sanitized summaries instead of raw diagnostic bodies.
 
-## Import And Export
+## Import and export
 
 Manager Server exports JSONL / NDJSON usage events.
 

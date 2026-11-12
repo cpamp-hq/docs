@@ -1,6 +1,6 @@
 # Upgrade CPA Manager Plus
 
-## v2 Beta: Upgrade From 1.x, Not An In-Place Image Change
+## V2 Beta: upgrade from 1.x, not an in-place image change
 
 ::: warning Exact baseline and stop conditions
 The minimum direct upgrade version is **`v1.14.10`**; the current CLI accepts only that exact declaration, not every later 1.x release automatically. For `<= v1.14.9`, first upgrade using the original deployment method to `v1.14.10`, verify it, then stop it. Merely changing `--source-version` is not an upgrade. Target CPA requires at least **`v8.0.55`** (Embedded pins that version). Version differences, unknown/newer schemas, a busy source, evidence mismatches, or history differences require operator action; never edit SQLite markers to proceed.
@@ -10,9 +10,9 @@ The minimum direct upgrade version is **`v1.14.10`**; the current CLI accepts on
 2. Save the exact 1.x image/binary, Compose, environment, and volume mapping. Stop the old Manager; also stop the old CPA when migrating a managed CPA. Back up `usage.sqlite`, WAL/SHM, `data.key`, `usage-archives/` when present, configuration, and secrets; see [Backup](./backup.md). Prevent all other source writers.
 3. Give v2 a **separate new `/data` volume** (`cpamp-data`). Keep the original 1.x volume unchanged and mounted read-only at `/legacy:ro` only during upgrade/rollback steps. Source roots must not overlap target/backup roots; scratch snapshots must be outside source and target. Follow the preflight disk-space report.
 
-Image tags are examples for versions actually published; current v2 release producers are rehearsal-only, so single-image build support does not establish an available Release, tag, or multi-architecture publication. See [Release Assets And Gates](../reference/releases.md). `cpamp-data` is a Compose logical key; the actual Docker volume is normally `<project>_cpamp-data`. Reuse the same project's `docker compose run/exec` rather than substituting `docker run` with bare `cpamp-data`.
+Image tags are examples for versions actually published; current v2 release producers are rehearsal-only, so single-image build support does not establish an available Release, tag, or multi-architecture publication. See [Release Assets and Gates](../reference/releases.md). `cpamp-data` is a Compose logical key; the actual Docker volume is normally `<project>_cpamp-data`. Reuse the same project's `docker compose run/exec` rather than substituting `docker run` with bare `cpamp-data`.
 
-### Docker: Offline Preflight, Copy-In, And Four-Domain Reconciliation
+### Docker: offline preflight, copy-in, and four-domain reconciliation
 
 Run from the v2 `docker-compose.yml` directory. `LEGACY_MOUNT` is the **actual old volume name** (check `docker inspect`), not a new empty volume. For a bind-mounted source, set both `LEGACY_MOUNT` and `LEGACY_ROOT` to the same actual absolute host path so the container and rollback plan agree. Replace the example volume name. One-shot CLI runs invoke `--entrypoint cpa-manager-plus` directly (defaulting to `0:0` so they can read the `0:0`-owned read-only 1.x `/legacy` mount without modifying it), and `fix_manager_ownership` transfers only Manager-owned files under `/data` to `10002:10002` before service startup (never touching `/data/runtime`):
 
@@ -52,7 +52,7 @@ upgrade_cli reconcile --legacy "$LEGACY_ROOT" \
 
 Continue only after each step succeeds. `run` performs backup/copy-in, not the complete upgrade; its default backup is the target's `upgrade-backup/`. `reconcile` compares **`retained`, `pricing`, `coverage`, and `history`**; inapplicable domains must state why. Review permanently incomplete UTC days individually before repeating the same `reconcile` command with `--acknowledge YYYY-MM-DD` for each day. `--acknowledge-parity-gaps` accepts only reported parity days already lost by old versions, not other measured mismatches. Do not add acknowledgements blindly or interpret them as restoring lost history.
 
-### Finish CPA Connection And Final Verification
+### Finish CPA connection and final verification
 
 **External path**: the CPA operator independently upgrades/configures CPA to at least `v8.0.55` and makes it reachable from the CLI container. Put the real Management Key in a private host file `upgrade-secrets/cpa-management-key`, not a command argument. Replace the example URL; if the external CPA URL or Management Key changed compared with the 1.x source, also run `store-cpa-connection` once before `verify`:
 
@@ -126,7 +126,7 @@ docker compose up -d
 
 Retain original 1.x data and upgrade backups until full acceptance. After completion and restart, open `http://<host>:18317/management.html` (or `/`) and sign in with the original 1.x Admin Key; this upgrade path does not automatically establish Fresh's `/console`. Check public origin, Client Key, history/coverage, account state, and real model requests; `/health` cannot replace these checks.
 
-### Exact Rollback To Original 1.x Data
+### Exact rollback to original 1.x data
 
 Rollback never mounts v2 SQLite into the old image. Stop the **whole v2 service**, retain v2 data for diagnosis, and prepare under the same Compose project and identical read-only source mount:
 
@@ -160,7 +160,7 @@ upgrade_cli status --db-path /data/usage.sqlite --json
 
 For custom backup/port settings, retain the emitted `--backup` and use the actual port. `rolled_back` records only the CLI's successful health-identity, source-directory, backup-integrity, and retained-data checks; **it contains neither automatic Docker container/mount proof nor a manual-confirmation field**. Consider rollback complete only together with the operator's saved container/mount inspection record above. An ordinary HTTP request exiting `0` is insufficient too. If refused, do not recreate the source volume or delete upgrade records to proceed.
 
-### Native And Common Diagnostics
+### Native and common diagnostics
 
 linux/amd64 Native uses the matching package's `bin/cpa-manager-plus upgrade ...`, but **not every step runs with the whole stack stopped**:
 
@@ -180,7 +180,7 @@ linux/amd64 Native uses the matching package's `bin/cpa-manager-plus upgrade ...
 | `upgrade_rollback_image_unpinned` / `upgrade_rollback_volume_unbound` | Provide the exact old image and original volume mapping, not a new empty volume |
 | `source_ownership_unavailable` (`/.well-known/cpamp-bootstrap`) | A 1.x data volume was mounted at `/data` (lock/key files are `0:0` while v2 Manager runs as `10002:10002`): stop the container and remount with a fresh `/data` plus read-only `/legacy:ro`; for read-only Upgrade entry inspection only, `chown 10002:10002` on `usage.sqlite*` and `data.key` only — never `chown -R /data` (`/data/runtime` must remain `0:0`) |
 
-### If A 1.x Volume Was Mounted At `/data`
+### If a 1.x volume was mounted at `/data`
 
 1.x containers write `/data/usage.sqlite.manager.lock` and `/data/data.key` (`0600`) as `root` (`0:0`), whereas the v2 single-image Manager runs as unprivileged `10002:10002` and Runtime Supervisor requires `/data/runtime` to stay owned by `0:0`. If a 1.x volume is mounted at `/data`, v2 stays in read-only guidance mode (`/.well-known/cpamp-bootstrap/ui`) with `source_ownership_unavailable` and did not modify the 1.x database and key files:
 
@@ -196,7 +196,7 @@ linux/amd64 Native uses the matching package's `bin/cpa-manager-plus upgrade ...
 
    Only `usage.sqlite*` and `data.key` change owner; ownership is file metadata, not the database content. Never run `chown -R 10002:10002 /data`, which invalidates the `0:0` owner requirement on `/data/runtime`.
 
-## Offline Derived Index And Data Maintenance (`cleanup-derived`)
+## Offline derived index and data maintenance (`cleanup-derived`)
 
 To keep startup bounded on large stores, missing large-table query indexes and legacy-derived cleanup jobs are deferred rather than blocking HTTP startup indefinitely. When the console displays the database maintenance banner (`databaseMaintenance.required = true`), stop the v2 service and run `cleanup-derived` as the Manager identity (`10002:10002`); it never deletes or rewrites authoritative `usage_events`:
 
@@ -213,6 +213,6 @@ For the `linux/amd64` Native package, stop the complete launcher / `systemd` ser
 sudo ./bin/cpa-manager-plus cleanup-derived --db-path "$PWD/data/usage.sqlite"
 ```
 
-## 1.x (Before Upgrading)
+## 1.X (before upgrading)
 
 Deployments on `<= v1.14.9` must first update within their original 1.x setup to the exact **`v1.14.10`** baseline and verify health before starting the v2 offline copy-in on this page. For 1.x-to-1.x update procedures, see the 1.x Stable documentation at [Upgrade CPA Manager Plus (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/update.html).

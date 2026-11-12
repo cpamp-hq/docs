@@ -8,7 +8,7 @@ Configuration changes connections, request monitoring, and CPA system settings. 
 | View or edit the complete `config.yaml` | Source configuration                     |
 | Connect CPA or enable Monitoring        | Manager Server configuration (Full Mode) |
 
-## Page Areas
+## Page areas
 
 The configuration page normally has three editing modes:
 
@@ -18,7 +18,7 @@ The configuration page normally has three editing modes:
 
 If a tab is unavailable, first check whether you are using the CPAMP Lightweight Panel or Full Mode. Manager Server-only features do not appear in Lightweight Mode; Full Mode can be installed with Docker or a native package. The Live Demo only shows fictional data and cannot configure a real CPA instance or validate its runtime state.
 
-## Manager Server Configuration
+## Manager Server configuration
 
 Most users only need to confirm three fields:
 
@@ -38,7 +38,7 @@ Keep automatic mode and default values unless your network has a known restricti
 
 :::
 
-## Visual And Source Configuration
+## Visual and source configuration
 
 Use the visual editor for normal operations. Use source mode when you need to:
 
@@ -49,7 +49,7 @@ Use the visual editor for normal operations. Use source mode when you need to:
 
 Before saving source configuration, check indentation, arrays, and quoted strings. If a saved change does not appear to take effect, check whether CPA supports hot reload or needs a restart.
 
-## Saving Semantics On The Gateway Page
+## Saving semantics on the gateway page
 
 The gateway page edits CPA's own `config.yaml` and always saves one group at a time:
 
@@ -64,7 +64,7 @@ The proxy URL refuses a URL that embeds credentials. Every other bound stays CPA
 
 The read-only ownership area lists configuration owned by the API key, provider, account, log and system workspaces. Do not re-edit those fields here.
 
-## Weighted Round-Robin Routing
+## Weighted round-robin routing
 
 To distribute requests proportionally across credentials in the same priority tier, select Weighted Round Robin in Visual Configuration. The equivalent source configuration is:
 
@@ -77,7 +77,7 @@ CPA first selects the highest currently available `priority` tier, then applies 
 
 The strategy and weight fields require a CPA build that supports weighted routing. Older CPA versions may ignore or reject them. After upgrading CPA, set credential weights in [AI Providers](./ai-providers.md) or [Accounts](./accounts.md). Use multiple independent requests when checking the distribution; session affinity can keep one session bound to an existing credential.
 
-## Verify After Saving
+## Verify after saving
 
 1. Return to Dashboard and check connection and collector state.
 2. Open [AI Providers](./ai-providers.md) and confirm provider entries are still present.
@@ -85,7 +85,7 @@ The strategy and weight fields require a CPA build that supports weighted routin
 4. Open [Monitoring](./monitoring.md) and confirm the event appears.
 5. If the change affects usage data, refresh [Usage Analytics](./usage-analytics.md).
 
-## Common Mistakes
+## Common mistakes
 
 - CPAMP Admin Key, CPA Management Key, client API keys, and provider API keys are different secrets.
 - Stopping the CPAMP collector does not clear CPA's usage queue.

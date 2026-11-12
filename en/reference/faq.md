@@ -12,7 +12,7 @@ v2 Beta:      http://<host>:18317/console     (default control base path)
 1.x Stable:   http://<host>:18317/management.html
 ```
 
-## Which Usage Option Should I Choose?
+## Which usage option should I choose?
 
 | Goal                                                                            | Recommended mode                                      |
 | ------------------------------------------------------------------------------- | ----------------------------------------------------- |
@@ -23,7 +23,7 @@ v2 Beta:      http://<host>:18317/console     (default control base path)
 
 The CPAMP Lightweight Panel is an enhanced alternative to the official Management Center and is hosted directly by CPA. It does not configure Manager Server or read Manager Server SQLite data. Use Docker or native packages to run Manager Server and open its browser entry: the control base path chosen at installation for v2 Beta (default `/console`), `:18317/management.html` for 1.x Stable.
 
-## Which Address Should I Open?
+## Which address should I open?
 
 The CPAMP Full Mode entry depends on the version.
 
@@ -49,7 +49,7 @@ http://<cpa-host>:8317/management.html
 
 If you see login instead of setup, Manager Server is already configured. Use the CPAMP Admin Key to log in.
 
-## What Is The Difference Between Admin Key And CPA Management Key?
+## What is the difference between Admin Key and CPA Management Key?
 
 | Place                                 | Key                                                |
 | ------------------------------------- | -------------------------------------------------- |
@@ -62,7 +62,7 @@ If you see login instead of setup, Manager Server is already configured. Use the
 
 Do not mix these keys. CPA connections saved through setup or the panel are encrypted with `data.key` and written to SQLite. The one-click installer uses env/secret input only for a one-time import; after a successful import it is encrypted into SQLite and removed from the final runtime configuration. Manual env/secret deployments still read the key from their deployment environment. In the CPAMP Lightweight Panel, the browser holds the CPA Management Key.
 
-## Full Docker Opens Login Instead Of Setup
+## Full Docker opens login instead of setup
 
 Manager Server is already configured.
 
@@ -74,11 +74,11 @@ cpamp_...
 
 Do not use the CPA Management Key on the CPAMP login form. If the admin key is lost, follow [Reset Admin Key](../operations/reset-admin-key.md).
 
-## What If I Forget The Admin Key?
+## What if I forget the Admin Key?
 
 Stop Manager Server, back up the data directory, then follow [Reset Admin Key](../operations/reset-admin-key.md).
 
-## Startup Or Import Reports Conflicting CPA Connection Records
+## Startup or import reports conflicting CPA connection records
 
 The message means the connection resolver cannot safely derive one connection from the historical SQLite rows, usually because partial records without a complete authority conflict. A complete `manager_config_v1` always wins; if it differs from stale legacy `setup`, Manager keeps the manager connection and canonicalizes setup without repair. A complete compatible legacy setup can also complete a partial manager row. If the resolver reports an unresolvable conflict, stop Manager Server, confirm the correct CPA URL and CPA Management Key, then repair explicitly:
 
@@ -93,7 +93,7 @@ cpa-manager-plus store-cpa-connection \
 
 The repair canonicalizes both rows to the connection you provide, keeps it encrypted at rest, and preserves collector settings and other data; startup then proceeds normally. See [backup and migration](../operations/backup.md).
 
-## I Changed CPA Panel Repository, But Monitoring Is Empty
+## I changed CPA Panel repository, but monitoring is empty
 
 Changing the CPA panel repository only changes the frontend served by CPA.
 
@@ -124,7 +124,7 @@ CPA Management Key
 
 Do not look for the old "External Usage Service" setting in Plus.
 
-## Setup Shows The Wrong Default CPA URL
+## Setup shows the wrong default CPA URL
 
 The setup form can suggest a default CPA URL from the frontend build.
 
@@ -149,7 +149,7 @@ http://cli-proxy-api:8317
 
 Linux host CPA + Docker CPAMP needs `--add-host=host.docker.internal:host-gateway`. See [Docker Deployment](../deployment/docker.md).
 
-## What If The Monitoring Page Is Empty?
+## What if the monitoring page is empty?
 
 Start with [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.md) to inspect `/status`, collector, usage queue, and retention.
 
@@ -205,7 +205,7 @@ If `lastConsumedAt` changes but `lastInsertedAt` does not, SQLite writes are fai
 
 If both change but the page is empty, check browser filters, time range, hard-refresh the page, and verify `/v0/management/usage`.
 
-## What Is `unsupported RESP prefix 'H'`?
+## What is `unsupported RESP prefix 'H'`?
 
 This usually means a RESP collector connected to an HTTP endpoint.
 
@@ -225,7 +225,7 @@ http://cli-proxy-api:8317
 
 Do not use a public HTTPS reverse proxy domain.
 
-## Can An HTTP Reverse Proxy Proxy RESP?
+## Can an HTTP Reverse Proxy proxy RESP?
 
 No. RESP Pub/Sub and RESP pop must connect directly to the CPA API port. HTTP queue can go through an HTTP proxy.
 
@@ -243,7 +243,7 @@ Fallback routes          -> CPA
 
 Use CPAMP Admin Key for CPAMP management paths and normal API keys for `/v1/*`.
 
-## Container Cannot Connect To Host CPA
+## Container cannot connect to host CPA
 
 Inside a Docker container, `127.0.0.1` means the container itself.
 
@@ -272,7 +272,7 @@ docker exec -it cpa-manager-plus sh
 wget -qO- http://host.docker.internal:8317/healthz
 ```
 
-## Docker Rebuild Lost Data
+## Docker rebuild lost data
 
 Most likely `/data` was not mounted, or Plus started with a new empty volume.
 
@@ -297,7 +297,7 @@ Plus examples:     cpa-manager-plus-data
 
 If you expect old data, mount the old volume or copy the old data.
 
-## Why Do Backups Need data.key?
+## Why do backups need data.key?
 
 Back up the full data directory:
 
@@ -334,7 +334,7 @@ curl -H "Authorization: Bearer <CPAMP_ADMIN_KEY>" \
 
 The CPA Management Key is not accepted for CPAMP Manager Server-only APIs.
 
-## `/models` Returns 428 Or 503
+## `/models` returns 428 or 503
 
 1.x Stable: `/models` and `/v1/models` are compatibility-proxied by Manager Server. Before setup completes (no usable usage-service configuration) they return `428 Precondition Required` with the body `usage service is not configured`. Open:
 
@@ -346,7 +346,7 @@ Finish setup first. `412` is not this path's status code.
 
 v2 Beta: while installation is unfinished or the Gateway is not admitted, `/v1/models` is answered by the public ingress with `503 gateway pending configuration`. After completing the wizard, check Gateway status and the Client Key in the console on the public origin (default `/console`; trust the wizard's completion page). Once admitted, `/v1/*` is forwarded to CPA and the status is CPA's own; this page does not promise a specific code. `:18317/management.html` returns 404 in v2.
 
-## Usage From A Downtime Window Is Missing
+## Usage from a downtime window is missing
 
 CPA usage queue is memory-backed and has limited retention.
 
@@ -364,7 +364,7 @@ Maximum:
 
 If Manager Server is down longer than the retention window, that period usually cannot be recovered from CPA. Keep Manager Server running continuously.
 
-## CPAMP Lightweight Panel Is Missing Monitoring Or Model Prices
+## CPAMP Lightweight Panel is missing monitoring or Model Prices
 
 This is expected.
 
@@ -375,7 +375,7 @@ v2 Beta:      http://<cpamp-host>:18317/console     (default control base path)
 1.x Stable:   http://<cpamp-host>:18317/management.html
 ```
 
-## CPAMP Lightweight Panel Still Shows The Official Or An Older UI
+## CPAMP Lightweight Panel still shows the official or an older UI
 
 Check that CPA configuration points at this project:
 
@@ -392,14 +392,14 @@ rm static/management.html
 
 If `Disable Panel Auto Updates` is enabled, CPA only downloads the panel again when the cached file is missing.
 
-## Does CPAMP Upload Data?
+## Does CPAMP upload data?
 
 No telemetry is uploaded. CPAMP does not include analytics SDKs and does not require a cloud account. By default it connects only to the CPA Gateway you configure; optional features such as model price sync, OAuth, and provider checks call external services only when you explicitly configure or trigger them.
 
-## Does The Demo Site Connect To A Real Backend?
+## Does the Demo site connect to a real backend?
 
 No. The live demo uses frontend mock data and does not need CPA, Manager Server, CPA Management Key, tokens, or SQLite.
 
-## What Is management.html In A Release?
+## What is management.html in a release?
 
 `management.html` is the single-file management panel shipped in release packages and loaded by CPA as the CPAMP Lightweight Panel; each v2 Beta prerelease ships it too. The 1.x Stable Manager Server hosts it at `:18317/management.html`; v2 Beta Full Mode instead serves the console under the Control Base Path (default `/console`) and does not serve `/management.html` (404). The online documentation remains on GitHub Pages and is not distributed with install packages.

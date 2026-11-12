@@ -1,16 +1,16 @@
 # Reset Admin Key
 
-Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize And Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade And Rollback](./update.md) (exact baseline `v1.14.10`, minimum target CPA `v8.0.55`).
+Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize and Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade and Rollback](./update.md) (exact baseline `v1.14.10`, minimum target CPA `v8.0.55`).
 
-## Before You Run It
+## Before you run it
 
 1. Stop the entire v2 service (`docker compose stop` for Docker, or stop the complete launcher / `systemd` unit for `linux/amd64` Native) so the SQLite process lock is released.
-2. Back up the single `/data` volume (Manager's `usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present, plus Embedded `/data/runtime` and `/data/runtime-secret/token`) following [Backup And Restore](./backup.md).
+2. Back up the single `/data` volume (Manager's `usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present, plus Embedded `/data/runtime` and `/data/runtime-secret/token`) following [Backup and Restore](./backup.md).
 3. Never delete volumes, `usage.sqlite.manager.lock`, or installation records.
 4. If Fresh setup has not yet accepted an initial Admin Key, do not run `reset-admin-key`; use `initialize` to obtain another Handoff and continue the wizard. Reset does not update Fresh's `AdminInitialized` state, so writing a credential early makes Fresh state inconsistent.
 5. If startup config sets `CPA_MANAGER_ADMIN_KEY` or `CPA_MANAGER_ADMIN_KEY_FILE`, update it to the reset key or remove that startup setting before restarting. A Fresh instance with a startup key differing from the database reports `Fresh authority conflict` and stays unready; it **does not overwrite the database**. An instance upgraded from 1.x retains the existing database credential, which startup environment settings do not overwrite either.
 
-## Docker Compose (Single Image)
+## Docker Compose (single image)
 
 From the `docker-compose.yml` directory/project, retaining the digest-pinned `seakee/cpa-manager-plus:<tag>@sha256:<digest>` single image:
 
@@ -34,7 +34,7 @@ Save the key immediately and keep terminal output out of public logs or chat tra
 docker compose up -d
 ```
 
-## Provide A Specific Admin Key (`--admin-key-file`)
+## Provide a specific Admin Key (`--admin-key-file`)
 
 To set a chosen key explicitly, pass `--admin-key-file` (cannot be combined with `--admin-key`, and keeps plaintext out of shell history). Because the one-shot Docker container runs as `10002:10002`, make the temporary host file readable by UID `10002` and mount it read-only:
 
@@ -52,7 +52,7 @@ docker compose up -d
 
 When a key is provided, only its digest is stored and the plaintext is never echoed (`Use the provided admin key to log in after restarting Manager Server.`). Remove `/srv/new-cpamp-admin-key.txt` after verifying console login and the CPA connection.
 
-## linux/amd64 Native Package
+## Linux/amd64 Native Package
 
 Stop the complete launcher / `systemd` service and back up `data/` first, then run from the extracted package root:
 
@@ -72,6 +72,6 @@ With `--admin-key-file`, pass a restricted private host file; after success rest
 - `SQLite database not found at ...` / `is empty` / `does not look like a CPA Manager Plus Manager Server database`: `--db-path` points to the wrong path or a newly created empty volume. Leave services stopped and inspect the actual volume mapping.
 - The generated key was not saved: run the same command again while the service remains stopped to generate a fresh random key.
 
-## 1.x (Before Upgrading)
+## 1.X (before upgrading)
 
 1.x Stable deployments (`docker-compose.manager.yml`, `install-cpamp.sh` with `CPAMP_OPERATION=repair`, or multi-platform 1.x native binaries) use a different recovery procedure; see the 1.x Stable documentation at [Reset Admin Key (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/reset-admin-key.html).

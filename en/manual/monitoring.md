@@ -1,9 +1,9 @@
 ---
-title: CPA Request Monitoring And Failure Diagnosis
+title: CPA request monitoring and failure diagnosis
 description: Persist and filter CPA requests by account, caller API key, provider, model, trace, latency, cache, and status while inspecting sanitized failure evidence.
 ---
 
-# CPA Request Monitoring And Failure Diagnosis
+# CPA request monitoring and failure diagnosis
 
 Monitoring is the main entry point for request failures. Dashboard tells you something is wrong. Monitoring tells you which request type, account, model, or caller is involved.
 
@@ -27,7 +27,7 @@ If the page says request monitoring is disabled, enable it in [Configuration](./
 
 Failure summaries are sanitized. Raw failure bodies stay in local SQLite and are not exposed through normal APIs or JSONL exports.
 
-## Common Investigation Flow
+## Common investigation flow
 
 1. Select the time range first. Use a short range for active incidents and a larger range for trend review.
 2. Check summary cards to see whether failures concentrate on a status code or model.
@@ -49,7 +49,7 @@ Filters should lead to the next action. Cost issues go to [Usage Analytics](./us
 
 Caller API keys remain masked. Copy appears only when the key still exists in the current configuration and can be read safely; historical or deleted keys are not restored.
 
-## Empty Monitoring
+## Empty monitoring
 
 If Monitoring has no data, check this order:
 
@@ -62,7 +62,7 @@ If Monitoring has no data, check this order:
 
 See [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.md).
 
-## Data Boundaries
+## Data boundaries
 
 - Monitoring only shows events CPAMP collected. Expired queue data cannot be recovered.
 - Multiple Manager Servers consuming one CPA queue can cause missing data.

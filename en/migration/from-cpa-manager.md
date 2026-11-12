@@ -1,10 +1,10 @@
-# Migrate From CPA-Manager
+# Migrate from CPA-Manager
 
 Use this guide when migrating from the old `seakee/cpa-manager` / CPA-Manager project to `seakee/cpa-manager-plus`. The goal is to keep historical request statistics, model prices, API Key aliases, and saved CPA connection configuration.
 
 If you never used the old `seakee/cpa-manager`, skip this page and use [Quick Start](../guide/getting-started.md).
 
-## Key Changes
+## Key changes
 
 - The image name changed from `seakee/cpa-manager` to `seakee/cpa-manager-plus`.
 - Native packages and binaries changed from `cpa-manager` to `cpa-manager-plus`.
@@ -12,7 +12,7 @@ If you never used the old `seakee/cpa-manager`, skip this page and use [Quick St
 - The CPA Management Key is encrypted with `/data/data.key` before being saved to SQLite.
 - Existing data receives the required compatibility migration during the first startup.
 
-## Before Migration
+## Before migration
 
 1. Check the CPA version: `v7.1.0+` is recommended, and HTTP usage queue needs at least `v6.10.8+`.
 2. Locate the old Manager Server data:
@@ -26,7 +26,7 @@ If you never used the old `seakee/cpa-manager`, skip this page and use [Quick St
    - `usage.sqlite-shm`
 5. Decide the admin key strategy. During migration, explicitly setting `CPA_MANAGER_ADMIN_KEY` or `CPA_MANAGER_ADMIN_KEY_FILE` is recommended.
 
-## Docker Volume Migration
+## Docker volume migration
 
 A typical old Compose service looks like:
 
@@ -66,7 +66,7 @@ volumes:
 
 Note: the Plus example Compose file creates `cpa-manager-plus-data` by default. If you use that new empty volume, the panel will look like a fresh install and will not show old data.
 
-## Host Directory Migration
+## Host directory migration
 
 ```bash
 docker stop cpa-manager
@@ -83,7 +83,7 @@ docker run -d \
 
 After startup, open (1.x Stable) `http://<host>:18317/management.html` and log in with the admin key.
 
-## Native Package Migration
+## Native Package migration
 
 1. Stop the old `cpa-manager` process.
 2. Back up the old program directory, especially `data/usage.sqlite*`.
@@ -95,7 +95,7 @@ After startup, open (1.x Stable) `http://<host>:18317/management.html` and log i
 CPA_MANAGER_ADMIN_KEY='replace-with-a-long-random-admin-key' ./cpa-manager-plus
 ```
 
-## Verify After First Startup
+## Verify after first startup
 
 1. Check startup logs and confirm there are no `decrypt secret`, `open sqlite`, or `bootstrap manager server` errors.
 2. Open the panel and go to the configuration page.
