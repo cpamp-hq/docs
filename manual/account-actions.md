@@ -9,7 +9,7 @@ description: 使用 CPA Manager Plus 根据脱敏认证证据集中复核、禁�
 
 如果你要看失败请求本身，请先去 [请求监控](./monitoring.md)。
 
-打开[账号处理队列演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/monitoring/account-actions)可以查看虚构候选项和处理动作。
+打开[账号处理队列演示](https://cpamp-demo.seakee.dev/#/demo/monitoring/account-actions)可以查看虚构候选项和处理动作。
 
 ## 什么时候会出现候选项
 

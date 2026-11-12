@@ -7,7 +7,7 @@ description: Manage Gemini, Codex, Claude, Vertex, xAI, and OpenAI-compatible CP
 
 The AI Providers page controls how CPA routes client requests to upstream model services. These are CPA provider settings, not the CPAMP admin login or CPA Management Key.
 
-Open the [AI Providers Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/ai-providers) to inspect fictional configuration without contacting a real provider.
+Open the [AI Providers Demo](https://cpamp-demo.seakee.dev/#/demo/ai-providers) to inspect fictional configuration without contacting a real provider.
 
 ## Most Common Workflow
 

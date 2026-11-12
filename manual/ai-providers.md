@@ -7,7 +7,7 @@ description: 在 CPA Manager Plus 中管理 Gemini、Codex、Claude、Vertex、x
 
 AI 提供商页面决定 CPA 如何把客户端请求路由到上游模型服务。这里配置的是 CPA Provider，不是 CPAMP 管理员登录，也不是 CPA Management Key。
 
-打开 [AI Providers Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/ai-providers) 可以查看虚构配置，不会连接真实 Provider。
+打开 [AI Providers Demo](https://cpamp-demo.seakee.dev/#/demo/ai-providers) 可以查看虚构配置，不会连接真实 Provider。
 
 ## 最常用流程
 

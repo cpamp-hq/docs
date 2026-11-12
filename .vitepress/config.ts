@@ -1,11 +1,21 @@
 import { defineConfig, type DefaultTheme } from 'vitepress';
+import { channel } from './channel';
+
+const versionNav = (english: boolean): DefaultTheme.NavItem => ({
+  text: channel.beta ? 'v2 Beta' : english ? '1.x Stable' : '1.x 稳定版',
+  items: [
+    { text: english ? '1.x Stable' : '1.x 稳定版', link: `https://cpamp-docs.seakee.dev/${english ? 'en/' : ''}` },
+    { text: 'v2 Beta', link: `https://cpamp-docs.seakee.dev/next/${english ? 'en/' : ''}` },
+  ],
+});
 
 const zhNav: DefaultTheme.NavItem[] = [
   { text: '首页', link: '/' },
   { text: '选择面板', link: '/guide/choosing-a-panel' },
   { text: '轻量面板', link: '/deployment/cpa-panel' },
   { text: '快速开始', link: '/guide/getting-started' },
-  { text: '在线演示', link: 'https://seakee.github.io/CPA-Manager-Plus/' },
+  { text: '在线演示', link: 'https://cpamp-demo.seakee.dev/' },
+  versionNav(false),
 ];
 
 const enNav: DefaultTheme.NavItem[] = [
@@ -13,7 +23,8 @@ const enNav: DefaultTheme.NavItem[] = [
   { text: 'Choose A Panel', link: '/en/guide/choosing-a-panel' },
   { text: 'Lightweight Panel', link: '/en/deployment/cpa-panel' },
   { text: 'Get Started', link: '/en/guide/getting-started' },
-  { text: 'Live Demo', link: 'https://seakee.github.io/CPA-Manager-Plus/' },
+  { text: 'Live Demo', link: 'https://cpamp-demo.seakee.dev/' },
+  versionNav(true),
 ];
 
 const zhSidebar: DefaultTheme.Sidebar = [
@@ -24,8 +35,8 @@ const zhSidebar: DefaultTheme.Sidebar = [
       { text: '选择适合的模式', link: '/guide/choosing-a-panel' },
       { text: '快速开始', link: '/guide/getting-started' },
       { text: '安装轻量面板', link: '/deployment/cpa-panel' },
-      { text: '安装完整模式（1.x 安装器）', link: '/deployment/installer' },
-      { text: '安装 v2 Beta（Docker）', link: '/deployment/docker' },
+      { text: channel.beta ? '安装完整模式（1.x 安装器）' : '安装完整模式', link: '/deployment/installer' },
+      ...(channel.beta ? [{ text: '安装 v2 Beta（Docker）', link: '/deployment/docker' }] : []),
     ],
   },
   {
@@ -91,8 +102,8 @@ const enSidebar: DefaultTheme.Sidebar = [
       { text: 'Choose A Mode', link: '/en/guide/choosing-a-panel' },
       { text: 'Quick Start', link: '/en/guide/getting-started' },
       { text: 'Install Lightweight Panel', link: '/en/deployment/cpa-panel' },
-      { text: 'Install Full Mode (1.x installer)', link: '/en/deployment/installer' },
-      { text: 'Install v2 Beta (Docker)', link: '/en/deployment/docker' },
+      { text: channel.beta ? 'Install Full Mode (1.x installer)' : 'Install Full Mode', link: '/en/deployment/installer' },
+      ...(channel.beta ? [{ text: 'Install v2 Beta (Docker)', link: '/en/deployment/docker' }] : []),
     ],
   },
   {
@@ -190,7 +201,7 @@ const enSearchTranslations = {
   },
 };
 
-const editLinkPattern = 'https://github.com/seakee/CPA-Manager-Plus/edit/main/apps/docs/:path';
+const editLinkPattern = `https://github.com/cpamp-hq/docs/edit/${channel.branch}/:path`;
 
 const commonThemeConfig: DefaultTheme.Config = {
   search: {
@@ -217,11 +228,12 @@ export default defineConfig({
   title: 'CPA Manager Plus Docs',
   description:
     'CPA and CLIProxyAPI management panel documentation for request monitoring, usage analytics, cost, quota, account health, plugins, deployment, and operations.',
-  base: '/CPA-Manager-Plus/docs/',
+  base: channel.base,
+  srcExclude: ['README.md', 'tests/**'],
+  ignoreDeadLinks: false,
   lastUpdated: true,
-  sitemap: {
-    hostname: 'https://seakee.github.io/CPA-Manager-Plus/docs/',
-  },
+  head: channel.beta ? [['meta', { name: 'robots', content: 'noindex' }]] : [],
+  sitemap: channel.beta ? undefined : { hostname: 'https://cpamp-docs.seakee.dev/' },
   transformPageData(pageData) {
     const isEnglish = pageData.relativePath.startsWith('en/');
     const siteTitle = 'CPA Manager Plus';
@@ -232,7 +244,7 @@ export default defineConfig({
         ? 'CPA / CLIProxyAPI management panel and observability documentation for requests, cost, quota, failures, and account health.'
         : 'CPA / CLIProxyAPI 管理面板与可观测性文档，覆盖请求监控、成本、配额、失败诊断和账号健康。');
     const pagePath = pageData.relativePath.replace(/index\.md$/, '').replace(/\.md$/, '.html');
-    const canonical = `https://seakee.github.io/CPA-Manager-Plus/docs/${pagePath}`;
+    const canonical = `https://cpamp-docs.seakee.dev${channel.base}${pagePath}`;
 
     pageData.frontmatter.head ??= [];
     pageData.frontmatter.head.push(

@@ -9,7 +9,7 @@ description: 使用 CPA Manager Plus 按账号、调用方 API Key、Provider、
 
 账号处理已经拆到 [账号处理队列](./account-actions.md)。这里先专注于请求事件本身。
 
-打开[请求监控演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/monitoring)可以浏览虚构的账号概览、API Key 汇总和实时请求。
+打开[请求监控演示](https://cpamp-demo.seakee.dev/#/demo/monitoring)可以浏览虚构的账号概览、API Key 汇总和实时请求。
 
 ## 可用条件
 

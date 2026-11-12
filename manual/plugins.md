@@ -7,7 +7,7 @@ description: 使用 CPA Manager Plus 安装、选择版本、启用、配置和�
 
 插件页面用于安装、升级、启用、配置和排查 CPA 插件。CPAMP 提供管理入口和插件页面容器，插件实际运行能力仍由 CPA runtime 和插件自身决定。
 
-打开[插件管理演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/plugins)可以查看虚构插件与商店数据。
+打开[插件管理演示](https://cpamp-demo.seakee.dev/#/demo/plugins)可以查看虚构插件与商店数据。
 
 ## 页面入口
 

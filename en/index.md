@@ -16,7 +16,7 @@ hero:
       link: /en/guide/choosing-a-panel
     - theme: alt
       text: Live Demo
-      link: https://seakee.github.io/CPA-Manager-Plus/
+      link: https://cpamp-demo.seakee.dev/
 
 features:
   - title: Install With Confidence
@@ -101,4 +101,4 @@ import homePreview from '../images/home.png';
 
 The Live Demo only previews the interface with fictional data. It is not a deployment or runtime mode and cannot connect to, manage, or monitor a real CPA instance.
 
-[Open Live Demo](https://seakee.github.io/CPA-Manager-Plus/)
+[Open Live Demo](https://cpamp-demo.seakee.dev/)

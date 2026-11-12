@@ -9,7 +9,7 @@ Account Action Queue centralizes auth-related candidates detected from Monitorin
 
 If you need the failed request itself, start with [Monitoring](./monitoring.md).
 
-Open the [Account Action Queue Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/monitoring/account-actions) to inspect fictional candidates and actions.
+Open the [Account Action Queue Demo](https://cpamp-demo.seakee.dev/#/demo/monitoring/account-actions) to inspect fictional candidates and actions.
 
 ## When Candidates Appear
 

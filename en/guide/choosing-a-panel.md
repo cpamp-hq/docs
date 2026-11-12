@@ -71,7 +71,7 @@ Both use the CPAMP Admin Key. The entry depends on the version: v2 Beta uses the
 
 ## Preview Before Choosing
 
-The [Live Demo](https://seakee.github.io/CPA-Manager-Plus/) lets you preview the interface and navigation with fictional data. It is not a panel, deployment option, or runtime mode. It cannot connect to, manage, or monitor a real CPA instance and cannot validate whether real features are working.
+The [Live Demo](https://cpamp-demo.seakee.dev/) lets you preview the interface and navigation with fictional data. It is not a panel, deployment option, or runtime mode. It cannot connect to, manage, or monitor a real CPA instance and cannot validate whether real features are working.
 
 ## Recommended Upgrade Path
 

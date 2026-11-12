@@ -9,7 +9,7 @@ description: Manage CPA credentials, account health, quota windows, inspection r
 
 Use [OAuth Login](./oauth.md) to add OAuth accounts. Import, editing, status decisions, and troubleshooting after the credential is saved belong in Accounts.
 
-Open the unified [Accounts Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/accounts) to inspect fictional credentials, quota, inspection, and automation state.
+Open the unified [Accounts Demo](https://cpamp-demo.seakee.dev/#/demo/accounts) to inspect fictional credentials, quota, inspection, and automation state.
 
 ## What To Check First
 

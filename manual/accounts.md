@@ -9,7 +9,7 @@ description: 在统一 Accounts 工作区管理 CPA 凭证、账号健康、配�
 
 添加 OAuth 账号请使用 [OAuth 登录](./oauth.md)。账号保存后的导入、编辑、状态判断和排障都在凭证管理中完成。
 
-打开统一的[凭证管理演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/accounts)可以查看虚构账号、配额、巡检和自动化状态。
+打开统一的[凭证管理演示](https://cpamp-demo.seakee.dev/#/demo/accounts)可以查看虚构账号、配额、巡检和自动化状态。
 
 ## 先看哪些信息
 

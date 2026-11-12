@@ -7,7 +7,7 @@ description: Install, select versions, enable, configure, and troubleshoot CPA p
 
 The Plugins page installs, upgrades, enables, configures, and troubleshoots CPA plugins. CPAMP provides the management UI and plugin-page container; actual runtime capability depends on CPA and the plugin.
 
-Open the [Plugin Management Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/plugins) to inspect fictional plugin and store data.
+Open the [Plugin Management Demo](https://cpamp-demo.seakee.dev/#/demo/plugins) to inspect fictional plugin and store data.
 
 ## Page Areas
 
