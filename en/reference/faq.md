@@ -410,6 +410,6 @@ If `Disable Panel Auto Updates` is enabled, CPA only downloads the panel again w
 
 `management.html` is the single-file management panel shipped in release packages and loaded by CPA as the CPAMP Lightweight Panel; each v2 Beta prerelease ships it too. The 1.x Stable Manager Server hosts it at `:18317/management.html`; v2 Beta Full Mode instead serves the console under the Control Base Path (default `/console`) and does not serve `/management.html` (404). The online documentation remains on GitHub Pages and is not distributed with install packages.
 
-### Does the Demo site connect to a real backend?
+### Does the demo site connect to a real backend?
 
 No. The live demo uses frontend mock data and does not need CPA, Manager Server, CPA Management Key, tokens, or SQLite.

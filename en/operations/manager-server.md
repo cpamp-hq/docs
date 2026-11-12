@@ -141,7 +141,7 @@ redis-usage-queue-retention-seconds: 60
 
 Default retention is 60 seconds and the maximum is 3600 seconds. Keep Manager Server running continuously.
 
-## Collection Mode
+## Collection mode
 
 Default:
 

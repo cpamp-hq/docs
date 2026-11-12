@@ -1,6 +1,6 @@
-# Native Packages
+# Native packages
 
-## V2 Beta: linux/amd64 only
+## v2 Beta: linux/amd64 only
 
 The first v2 Beta native asset is **`cpa-manager-plus-native-v2_<ver>_linux_amd64.tar.gz`**. Download it manually from the matching GitHub Prerelease and verify it against that release's `checksums.txt`. Do not derive a v2 download URL from the 1.x `cpa-manager-plus_<ver>_<os>_<arch>` names. v2 Beta ships **no** `darwin_amd64`, `darwin_arm64`, `linux_arm64`, `windows_amd64`, or `windows_arm64` native packages. Those platforms can stay on 1.x Stable or use [Embedded Beta](./docker.md) on a Docker host meeting the `linux/amd64` requirement. External is a CPA operating mode, not a native package for unsupported platforms.
 

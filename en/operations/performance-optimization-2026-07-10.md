@@ -112,7 +112,7 @@ Cost is calculated from current model prices at read time. Pending checkpoints, 
 
 Twenty consecutive rollup runs remained near 2.66ms/op and 556KB/op. The ending heap profile showed about 2.9MB in use with no retained 100,000-event slice.
 
-## Stage 3: Active-Tab Usage Analytics requests
+## Stage 3: active-tab Usage Analytics requests
 
 ### Cause
 
@@ -138,7 +138,7 @@ Before this change, opening Overview, Trends, Models, API Keys, Credentials, or 
 
 Overview time decreased by about 48% and allocation by about 84%. Specialized tab time decreased by approximately 56%–67%.
 
-## Stage 4: Usage Analytics Hourly rollup phase 2B
+## Stage 4: Usage Analytics hourly rollup phase 2B
 
 ### Cause
 
@@ -206,7 +206,7 @@ This scope includes only the aggregate, model-stat, and timeline work owned by P
 
 The rollup-owned path is about 20 times faster, while the complete Overview request is about 23% faster because P95, TTFT, task, active-day, API key, and channel queries remain on raw events and now dominate the remaining time.
 
-## Stage 5: Usage Analytics Compact Summary
+## Stage 5: Usage Analytics compact summary
 
 ### Cause
 

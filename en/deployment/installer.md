@@ -1,10 +1,10 @@
-# One-Click Installer
+# One-click installer
 
 ::: warning `bin/install-cpamp.sh` Is 1.x Stable Only — Not For v2 Beta
 `bin/install-cpamp.sh` resolves GitHub `releases/latest` and therefore **installs or maintains 1.x Stable only** (`:18317/management.html`). It never selects v2 Beta prereleases and cannot migrate 1.x data to v2.
 :::
 
-## V2 Beta installation and migration paths
+## v2 Beta installation and migration paths
 
 For v2 Beta (`next`), choose the matching guide below instead of running `install-cpamp.sh`:
 

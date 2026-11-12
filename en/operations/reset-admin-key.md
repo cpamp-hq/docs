@@ -52,7 +52,7 @@ docker compose up -d
 
 When a key is provided, only its digest is stored and the plaintext is never echoed (`Use the provided admin key to log in after restarting Manager Server.`). Remove `/srv/new-cpamp-admin-key.txt` after verifying console login and the CPA connection.
 
-## Linux/amd64 Native Package
+## Linux/amd64 native package
 
 Stop the complete launcher / `systemd` service and back up `data/` first, then run from the extracted package root:
 

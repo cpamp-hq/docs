@@ -1,9 +1,9 @@
 ---
-title: Accounts and Credential Health
+title: Accounts and credential health
 description: Manage CPA credentials, account health, quota windows, inspection results, cooldowns, and safe bulk actions in the unified Accounts workspace.
 ---
 
-# Accounts and Credential Health
+# Accounts and credential health
 
 `/accounts` is CPAMP's unified credential-management entry. It combines the former auth-file, account-quota, and inspection state into one workspace that answers: which accounts exist, whether they are enabled, whether they can serve requests now, and which accounts need reauthentication or manual review.
 
@@ -83,6 +83,6 @@ Quota cooldown is for clear quota exhaustion, not expired login, upstream bans, 
 
 Use [Usage Analytics](./usage-analytics.md) for cost breakdowns; cost is not part of credential management.
 
-## Security Notes
+## Security notes
 
 Credential files contain sensitive data. Do not share full JSON, OAuth tokens, API keys, Management Keys, `Set-Cookie`, or unredacted Authorization Headers. For troubleshooting, share sanitized request summaries, account-state screenshots, and log timestamps.
