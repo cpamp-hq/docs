@@ -1,4 +1,4 @@
-# Docker Deployment
+# Docker deployment
 
 Docker is the simplest path for a new deployment. The CPAMP image contains Manager Server and the embedded `management.html` panel. CPA / CLI Proxy API is still a separate service, and can run in the same Compose stack.
 

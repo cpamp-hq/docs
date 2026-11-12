@@ -83,7 +83,7 @@ docker run -d \
 
 After startup, open `http://<host>:18317/management.html` and log in with the admin key.
 
-## Native Package migration
+## Native package migration
 
 1. Stop the old `cpa-manager` process.
 2. Back up the old program directory, especially `data/usage.sqlite*`.

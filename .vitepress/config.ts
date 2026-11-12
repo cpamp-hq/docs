@@ -144,7 +144,7 @@ const enSidebar: DefaultTheme.Sidebar = [
     items: [
       { text: 'Upgrade CPAMP', link: '/en/operations/update' },
       { text: 'Backup and restore', link: '/en/operations/backup' },
-      { text: 'Reset the admin key', link: '/en/operations/reset-admin-key' },
+      { text: 'Reset the Admin Key', link: '/en/operations/reset-admin-key' },
       { text: 'Manager Server', link: '/en/operations/manager-server' },
       { text: 'Configuration and data directory', link: '/en/operations/configuration' },
       { text: 'Monitoring has no data', link: '/en/troubleshooting/request-monitoring' },

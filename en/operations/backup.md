@@ -50,7 +50,7 @@ cp -a /srv/cpa-manager-plus-data /srv/cpa-manager-plus-data.backup
 docker start cpa-manager-plus
 ```
 
-## Native Package backup
+## Native package backup
 
 Stop the process, then copy the data directory:
 

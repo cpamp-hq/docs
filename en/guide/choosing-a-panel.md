@@ -1,9 +1,9 @@
 ---
-title: Choosing a CPA / CLIProxyAPI Management Panel
+title: Choosing a CPA / CLIProxyAPI management panel
 description: Compare the official Management Center, CPAMP Lightweight Panel, and CPAMP Full Mode for CPA administration, monitoring, cost analytics, and account operations.
 ---
 
-# Choosing a CPA / CLIProxyAPI Management Panel
+# Choosing a CPA / CLIProxyAPI management panel
 
 CPA / CLIProxyAPI users do not have to choose only between the official UI and a full additional service. CPAMP provides both a lightweight panel hosted directly by CPA and a full mode backed by Manager Server.
 

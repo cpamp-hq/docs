@@ -1,4 +1,4 @@
-# One-Click Installer
+# One-click installer
 
 Use the installer for a first deployment, or when CPA is already running and you only want to bring up CPAMP. It does not overwrite existing config files by default. Before it writes files or starts services, it shows a summary and asks for confirmation.
 
@@ -147,7 +147,7 @@ http://host.docker.internal:8317
 
 On Linux it also writes `host.docker.internal:host-gateway`, so the container can reach the host CPA process. If CPA runs on another machine, use that address instead.
 
-## Native Package Mode
+## Native package mode
 
 For CPAMP-only installs, you can choose the native package. The script downloads the matching GitHub Release asset for your OS and architecture, then creates:
 

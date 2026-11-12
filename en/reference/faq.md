@@ -399,6 +399,6 @@ If `Disable Panel Auto Updates` is enabled, CPA only downloads the panel again w
 
 `management.html` is the single-file management panel shipped in release packages. Manager Server can host it, or CPA can load it as the CPAMP Lightweight Panel. The online documentation remains on GitHub Pages and is not distributed with install packages.
 
-### Does the Demo site connect to a real backend?
+### Does the demo site connect to a real backend?
 
 No. The live demo uses frontend mock data and does not need CPA, Manager Server, CPA Management Key, tokens, or SQLite.

@@ -1,9 +1,9 @@
 ---
-title: Model Prices and Cost Estimation
+title: Model Prices and cost estimation
 description: Configure model prices, service tiers, long-context multipliers, and cache read/write/creation billing for local CPAMP cost estimates.
 ---
 
-# Model Prices and Cost Estimation
+# Model Prices and cost estimation
 
 Model Prices maintains CPAMP's local cost-estimation rules. It affects Dashboard, Monitoring, and Usage Analytics; it does not change provider billing or CPA routing.
 

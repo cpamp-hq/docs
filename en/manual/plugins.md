@@ -1,9 +1,9 @@
 ---
-title: CPA Plugin Management and store
+title: CPA plugin management and store
 description: Install, select versions, enable, configure, and troubleshoot CPA plugins with GitHub Releases, prereleases, manual tags, and plugin pages.
 ---
 
-# CPA Plugin Management and store
+# CPA plugin management and store
 
 The Plugins page installs, upgrades, enables, configures, and troubleshoots CPA plugins. CPAMP provides the management UI and plugin-page container; actual runtime capability depends on CPA and the plugin.
 
@@ -44,7 +44,7 @@ Before installing or upgrading:
 
 If the UI says a restart is required, restart CPA or Manager Server for the deployment mode; a browser refresh is not enough.
 
-## Plugin pages and Reverse Proxies
+## Plugin pages and reverse proxies
 
 Plugin pages use `/v0/resource/plugins/*`. A custom reverse proxy must route that path to CPAMP or the page may be blank.
 

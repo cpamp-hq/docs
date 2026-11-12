@@ -51,7 +51,7 @@ cpa-manager-plus cleanup-derived --db-path /path/to/usage.sqlite
 
 Stop Manager Server first because the offline command requires the exclusive SQLite process lock. The web UI does not run cleanup automatically, spawn a cleanup subprocess, or create large-table indexes online. The global warning reads bounded metadata through `/status?scope=database-maintenance`, so maintenance polling does not scan or count `usage_events`. After the command completes and Manager Server restarts, `/status.databaseMaintenance` recovers from the real metadata automatically. `cleanup-derived` never deletes, rebuilds, or rewrites authoritative `usage_events`.
 
-## Docker Deployment created by the installer
+## Docker deployment created by the installer
 
 Do not rerun the installer. Enter the original installation directory and update the images:
 
@@ -162,9 +162,9 @@ Do not overwrite the running version directory:
 
 Do not copy only `usage.sqlite` and omit WAL/SHM. Back up while the process is stopped or use a safe SQLite method from [Backup and Restore](./backup.md).
 
-## Manual Native Packages
+## Manual native packages
 
-### MacOS or Linux, foreground or control script
+### macOS or Linux, foreground or control script
 
 1. Run `./cpa-manager-plusctl stop`, or stop your process supervisor.
 2. Back up the data directory and `data.key`.

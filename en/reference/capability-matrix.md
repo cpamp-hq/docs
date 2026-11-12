@@ -1,9 +1,9 @@
 ---
-title: CPA Manager Plus Capability Matrix
+title: CPA Manager Plus capability matrix
 description: Compare management, monitoring, cost, quota, inspection, automation, and plugin support across the CPAMP Lightweight Panel and Full Mode, then choose Docker or a native package for Full Mode.
 ---
 
-# CPA Manager Plus Capability Matrix
+# CPA Manager Plus capability matrix
 
 Use this page to confirm which features each usage option provides and what evidence each provider can expose. Missing fields remain unknown; CPAMP does not convert missing data into a healthy state, unlimited quota, or success.
 
