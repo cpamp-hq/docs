@@ -16,7 +16,7 @@ hero:
       link: /guide/choosing-a-panel
     - theme: alt
       text: 在线演示
-      link: https://seakee.github.io/CPA-Manager-Plus/
+      link: https://cpamp-demo.seakee.dev/
 
 features:
   - title: 快速完成安装
@@ -101,4 +101,4 @@ import homePreview from './images/home-zh.png';
 
 在线演示只用于浏览使用虚构数据的界面，不是部署或运行模式，也不能连接、管理或监控真实 CPA。
 
-[打开在线演示](https://seakee.github.io/CPA-Manager-Plus/)
+[打开在线演示](https://cpamp-demo.seakee.dev/)

@@ -9,7 +9,7 @@ description: 使用 CPA Manager Plus 仪表盘查看 CPA/Manager Server 连接�
 
 如果你已经知道要处理哪个账号或哪条请求，可以直接进入 [请求监控](./monitoring.md)、[凭证管理](./accounts.md) 或 [Codex 账号巡检](./codex-inspection.md)。
 
-打开[仪表盘演示](https://seakee.github.io/CPA-Manager-Plus/#/demo)可以查看随当前日期生成的虚构请求、成本、失败和 Provider 状态。
+打开[仪表盘演示](https://cpamp-demo.seakee.dev/#/demo)可以查看随当前日期生成的虚构请求、成本、失败和 Provider 状态。
 
 ## 先看哪些数字
 

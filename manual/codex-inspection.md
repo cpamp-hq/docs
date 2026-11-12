@@ -7,7 +7,7 @@ description: 使用 CPA Manager Plus 在本地或 Manager Server 定时巡检 Co
 
 账号巡检用于判断账号为什么不能稳定服务请求。当前页面路由和部分 UI 仍保留 `Codex Inspection` 名称，但巡检目标已经覆盖 Codex 和 xAI。
 
-打开[账号巡检演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/codex-inspection)可以查看虚构结果，不会向 Provider 发送请求。
+打开[账号巡检演示](https://cpamp-demo.seakee.dev/#/demo/codex-inspection)可以查看虚构结果，不会向 Provider 发送请求。
 
 如果只是排查某一条请求，先看[请求监控](./monitoring.md)；确认问题集中在账号、凭证或额度后再进入巡检。
 

@@ -7,7 +7,7 @@ description: 配置 CPA Manager Plus 模型价格、service tier、长上下文�
 
 模型价格页面维护 CPAMP 的本地成本估算规则。它影响 Dashboard、请求监控和用量分析中的成本，不会修改 Provider 账单或 CPA 路由。
 
-打开[模型价格演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/model-prices)可以查看虚构价格和模型调用统计。
+打开[模型价格演示](https://cpamp-demo.seakee.dev/#/demo/model-prices)可以查看虚构价格和模型调用统计。
 
 ## 价格来源
 

@@ -7,7 +7,7 @@ description: Configure model prices, service tiers, long-context multipliers, an
 
 Model Prices maintains CPAMP's local cost-estimation rules. It affects Dashboard, Monitoring, and Usage Analytics; it does not change provider billing or CPA routing.
 
-Open the [Model Prices Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/model-prices) to inspect fictional prices and model usage.
+Open the [Model Prices Demo](https://cpamp-demo.seakee.dev/#/demo/model-prices) to inspect fictional prices and model usage.
 
 ## Price Sources
 

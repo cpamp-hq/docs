@@ -7,7 +7,7 @@ description: Analyze requests, tokens, cache, cost, latency, and failures by mod
 
 Usage Analytics answers "where did the money go?" and "which requests caused the abnormal pattern?" It uses request-monitoring events and [Model Prices](./model-prices.md). It does not change provider billing.
 
-Open the [Usage Analytics Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/usage-analytics) to browse fictional Overview, trends, models, API keys, credentials, and heatmap data.
+Open the [Usage Analytics Demo](https://cpamp-demo.seakee.dev/#/demo/usage-analytics) to browse fictional Overview, trends, models, API keys, credentials, and heatmap data.
 
 ## Pick The Range First
 

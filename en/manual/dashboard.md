@@ -9,7 +9,7 @@ The dashboard is the first page to check after opening CPAMP. It does not replac
 
 If you already know which account or request is involved, go directly to [Monitoring](./monitoring.md), [Accounts](./accounts.md), or [Codex Inspection](./codex-inspection.md).
 
-Open the [Dashboard Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo) to inspect fictional request, cost, failure, and provider state generated for the current date.
+Open the [Dashboard Demo](https://cpamp-demo.seakee.dev/#/demo) to inspect fictional request, cost, failure, and provider state generated for the current date.
 
 ## What To Check First
 

@@ -7,7 +7,7 @@ description: 使用 CPA Manager Plus 按模型、账号、API Key、Provider、�
 
 用量分析用来回答“钱花到哪里去了”和“哪些请求造成了异常”。它基于请求监控采集到的事件和 [模型价格](./model-prices.md) 计算，不会改变提供商的真实计费。
 
-打开[用量分析演示](https://seakee.github.io/CPA-Manager-Plus/#/demo/usage-analytics)可以浏览虚构的 Overview、趋势、模型、API Key、凭证和热力图数据。
+打开[用量分析演示](https://cpamp-demo.seakee.dev/#/demo/usage-analytics)可以浏览虚构的 Overview、趋势、模型、API Key、凭证和热力图数据。
 
 ## 先选范围
 

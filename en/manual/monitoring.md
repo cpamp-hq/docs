@@ -9,7 +9,7 @@ Monitoring is the main entry point for request failures. Dashboard tells you som
 
 Account handling is documented separately in [Account Action Queue](./account-actions.md). This page focuses on request events.
 
-Open the [Monitoring Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/monitoring) to browse fictional account overview, API key summary, and realtime request data.
+Open the [Monitoring Demo](https://cpamp-demo.seakee.dev/#/demo/monitoring) to browse fictional account overview, API key summary, and realtime request data.
 
 ## Availability
 

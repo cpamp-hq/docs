@@ -7,7 +7,7 @@ description: Inspect Codex and xAI accounts locally or on a Manager Server sched
 
 Account inspection explains why an account cannot reliably serve requests. The route and parts of the UI still use the `Codex Inspection` name, but inspection targets now include Codex and xAI.
 
-Open the [Account Inspection Demo](https://seakee.github.io/CPA-Manager-Plus/#/demo/codex-inspection) to inspect fictional results without contacting a provider.
+Open the [Account Inspection Demo](https://cpamp-demo.seakee.dev/#/demo/codex-inspection) to inspect fictional results without contacting a provider.
 
 For a single failed request, start with [Monitoring](./monitoring.md). Use inspection after the problem is narrowed to an account, credential, or quota signal.
 
