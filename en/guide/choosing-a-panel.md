@@ -58,7 +58,7 @@ Full Mode adds Manager Server and local SQLite for server-backed capabilities th
 | CPAMP Full Mode (v2 Beta)        | `http://<cpamp-host>:18317/console` (default) | Monitoring, cost, inspection, and automation |
 | CPAMP Full Mode (1.x Stable)     | `http://<cpamp-host>:18317/management.html` | Monitoring, cost, inspection, and automation |
 
-The Full Mode entry depends on the version: v2 Beta uses the Control Base Path chosen at installation (the wizard defaults to `/console`, for example `http://<cpamp-host>:18317/console`; a custom path moves both the console and its frontend API) and does not serve `/management.html`, which returns 404; 1.x Stable still uses `:18317/management.html`. The CPA-hosted `:8317` panel does not connect to or read Manager Server. Even when Manager Server runs separately, open its own Full Mode entry to use request history, cost analytics, model prices, and server-side inspection.
+The Full Mode entry depends on the version: v2 Beta uses the Control Base Path chosen at installation (the wizard defaults to `/console`, for example `http://<cpamp-host>:18317/console`; a custom path moves both the console and its frontend API) and a Fresh installation does not serve `/management.html`, which returns 404; 1.x Stable and instances upgraded offline from 1.x still use `:18317/management.html`. The CPA-hosted `:8317` panel does not connect to or read Manager Server. Even when Manager Server runs separately, open its own Full Mode entry to use request history, cost analytics, model prices, and server-side inspection.
 
 ## Full Mode installation options
 

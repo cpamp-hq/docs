@@ -36,7 +36,7 @@ Docker 和原生包提供相同的完整模式能力，只是安装方式不同�
 | Docker 部署（推荐） | 大多数新用户和服务器部署 | v2 Beta：`http://<cpamp-host>:18317/console`（默认控制台地址）<br>1.x Stable：`http://<cpamp-host>:18317/management.html` |
 | 原生包部署          | 不使用 Docker 的主机     | 同上                                                                                                    |
 
-v2 Beta 不提供 `/management.html`，访问返回 404；不要把它当作 v2 入口。
+Fresh 全新安装的 v2 Beta 不提供 `/management.html`，访问返回 404；不要把它当作全新安装的 v2 入口。从 1.x 离线升级的实例仍使用原 1.x 面板入口。
 
 - Docker 用户查看 [Docker 部署](../deployment/docker.md)。
 - Linux、macOS 或 Windows 用户查看 [原生包部署](../deployment/native.md)。

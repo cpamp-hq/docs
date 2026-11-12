@@ -4,7 +4,7 @@ CPA Manager Plus 的完整监控和分析能力来自 Manager Server。旧 CPA-M
 
 CPAMP 的统计和监控能力来自 Manager Server，浏览器入口按版本区分：
 
-- **v2 Beta**：安装时设置的控制台地址（Control Base Path），向导默认 `/console`，例如 `http://<host>:18317/console`；以向导完成页“登录并进入 CPAMP”指向的地址为准。v2 不提供 `/management.html`，访问返回 404。
+- **v2 Beta**：安装时设置的控制台地址（Control Base Path），向导默认 `/console`，例如 `http://<host>:18317/console`；以向导完成页“登录并进入 CPAMP”指向的地址为准。Fresh 全新安装不提供 `/management.html`，访问返回 404；从 1.x 离线升级的实例仍用它或 `/`。
 - **1.x Stable**：Manager Server 托管的面板，例如 `http://<host>:18317/management.html`。
 
 ```text
@@ -35,7 +35,7 @@ v2 Beta（公开 origin 下、安装时设置的控制台地址，向导默认 `
 http://<host>:18317/console     （默认值；改过控制台地址就换成新路径）
 ```
 
-控制台和它的前端 API 一起移动：前端调用 `<控制台路径>/api/v2/*`。v2 不提供 `/management.html`，访问该路径返回 404。
+控制台和它的前端 API 一起移动：前端调用 `<控制台路径>/api/v2/*`。Fresh 全新安装不提供 `/management.html`，访问该路径返回 404；从 1.x 离线升级的实例保留原入口。
 
 1.x Stable（Manager Server 托管的面板）：
 
@@ -190,7 +190,7 @@ docker run -d \
   seakee/cpa-manager-plus:latest
 ```
 
-打开：
+打开（1.x Stable）：
 
 ```text
 http://<host>:18317/management.html
@@ -328,7 +328,7 @@ http://<cpamp-host>:18317/management.html
 
 先完成 setup。`412` 不是这条路径的状态码。
 
-v2 Beta：安装未完成或网关尚未放行时，`/v1/models` 由公开 ingress 返回 `503 gateway pending configuration`。完成向导后到公开 origin 的控制台（默认 `/console`，以向导完成页为准）核对网关状态与 Client Key；放行后 `/v1/*` 直接转发给 CPA，返回什么由 CPA 决定，本文不承诺具体状态码。`:18317/management.html` 在 v2 返回 404。
+v2 Beta：安装未完成或网关尚未放行时，`/v1/models` 由公开 ingress 返回 `503 gateway pending configuration`。完成向导后到公开 origin 的控制台（默认 `/console`，以向导完成页为准）核对网关状态与 Client Key；放行后 `/v1/*` 直接转发给 CPA，返回什么由 CPA 决定，本文不承诺具体状态码。Fresh 全新安装下 `:18317/management.html` 返回 404；从 1.x 离线升级的实例仍用原入口。
 
 ## 数据与备份
 
@@ -408,7 +408,7 @@ rm static/management.html
 
 ### release 里的 management.html 是什么？
 
-`management.html` 是 release 包中的单文件管理面板，作为 CPAMP 轻量面板由 CPA 加载；每个 v2 Beta 预发布同样附带该文件。1.x Stable 的 Manager Server 会托管它，入口是 `:18317/management.html`；v2 Beta 的完整模式改用控制台（安装时设置的控制台地址，默认 `/console`），不提供 `/management.html`（返回 404）。在线文档仍通过 GitHub Pages 访问，不随安装包分发。
+`management.html` 是 release 包中的单文件管理面板，作为 CPAMP 轻量面板由 CPA 加载；每个 v2 Beta 预发布同样附带该文件。1.x Stable 的 Manager Server 会托管它，入口是 `:18317/management.html`；v2 Beta 的 Fresh 全新安装改用控制台（安装时设置的控制台地址，默认 `/console`），不提供 `/management.html`（返回 404），从 1.x 离线升级的实例仍由 Manager 托管该面板。在线文档仍通过 GitHub Pages 访问，不随安装包分发。
 
 ### 在线演示站会连接真实后端吗？
 

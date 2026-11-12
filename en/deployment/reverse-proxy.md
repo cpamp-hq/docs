@@ -3,7 +3,7 @@
 Use a reverse proxy when one domain needs to serve both the CPAMP panel and CPA APIs. HTTP panels and HTTP APIs can be proxied; RESP Pub/Sub and RESP pop cannot go through a normal HTTP reverse proxy.
 
 ::: warning The v2 Beta entry differs from 1.x
-The v2 Beta single image publishes only port `18317`, routed by Ingress: the console lives under the **Control Base Path** chosen at installation (the wizard defaults to `/console`, for example `https://your-domain.com/console`) and its frontend calls `/api/v2/*` under the same path; installing with another valid path moves both. The console path itself has no trailing slash (`/console/` returns 404 under the default), returns a page only on browser-style navigation (`Accept: text/html`), and `/management.html` returns 404 in v2. v2 therefore does not need the 1.x path split on this page; forward the whole domain to `18317`, and the reverse proxy does not need to rewrite the console path. The table, Nginx example, and troubleshooting entries below describe the 1.x Stable `/management.html` panel.
+The v2 Beta single image publishes only port `18317`, routed by Ingress: the console lives under the **Control Base Path** chosen at installation (the wizard defaults to `/console`, for example `https://your-domain.com/console`) and its frontend calls `/api/v2/*` under the same path; installing with another valid path moves both. The console path itself has no trailing slash (`/console/` returns 404 under the default), returns a page only on browser-style navigation (`Accept: text/html`), and a Fresh installation answers `/management.html` with 404. v2 therefore does not need the 1.x path split on this page; forward the whole domain to `18317`, and the reverse proxy does not need to rewrite the console path. The table, Nginx example, and troubleshooting entries below describe the 1.x Stable `/management.html` panel.
 :::
 
 This guide uses a 1.x Stable same-domain setup:
@@ -43,7 +43,7 @@ The table below is the 1.x Stable split (v2 Beta forwards the whole origin to `1
 | New paths without explicit ownership         | CPA `:8317`         | Avoid blocking future CPA endpoints, except `/v8/management/*` (see above).                                                                             |
 | RESP Pub/Sub / RESP pop                      | Direct CPA `:8317`  | Cannot go through an HTTP reverse proxy.                                                                                                               |
 
-This `/v8/management/config/api-keys[/*]` read-only route belongs to the 1.x Stable `/management.html` management surface. v2 Beta does not serve `/management.html`, and the public Ingress refuses the whole `/v8/management/*` namespace; a sandboxed plugin iframe is a cross-site fetch client, so neither can reach it.
+This `/v8/management/config/api-keys[/*]` read-only route belongs to the 1.x Stable `/management.html` management surface. A Fresh v2 Beta installation does not serve `/management.html`, and the public Ingress refuses the whole `/v8/management/*` namespace; a sandboxed plugin iframe is a cross-site fetch client, so neither can reach it.
 
 1.x Stable recommended architecture:
 

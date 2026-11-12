@@ -47,7 +47,7 @@ sudo systemctl restart cpa-manager-plus.service
 sudo systemctl status cpa-manager-plus.service
 ```
 
-在浏览器将公开 origin 与完整 Handoff 路径拼接，设置 Admin Key、选择 New Managed / Adopt / External 并完成资格检查；New Managed 保存首次 Client Key 并验证公开入口。安装完成后，后续登录打开安装时设置的控制台地址（向导默认 `/console`，例如 `https://cpamp.example.com/console`；改了路径就换成新路径，前端 API 随之变化）；v2 不提供 `/management.html`，访问返回 404。重新签发 `initialize`、重置管理员密钥、备份或迁移前先停止整个服务；不要并行运行 systemd 和 `cpa-manager-plusctl start`。升级已有 1.x 必须使用 [v1.14.10 离线迁移和回滚手册](../operations/update.md)，不得指向原 1.x 目录直接启动 v2。
+在浏览器将公开 origin 与完整 Handoff 路径拼接，设置 Admin Key、选择 New Managed / Adopt / External 并完成资格检查；New Managed 保存首次 Client Key 并验证公开入口。安装完成后，后续登录打开安装时设置的控制台地址（向导默认 `/console`，例如 `https://cpamp.example.com/console`；改了路径就换成新路径，前端 API 随之变化）；Fresh 全新安装的 v2 不提供 `/management.html`，访问返回 404，沿用原 1.x 数据目录的实例仍使用原面板入口，见 [升级与回滚](../operations/update.md)。重新签发 `initialize`、重置管理员密钥、备份或迁移前先停止整个服务；不要并行运行 systemd 和 `cpa-manager-plusctl start`。升级已有 1.x 必须使用 [v1.14.10 离线迁移和回滚手册](../operations/update.md)，不得指向原 1.x 目录直接启动 v2。
 
 当前 Native 包的许可证查验以实际包内 `LICENSE` 与 `share/licenses/cli-proxy-api/LICENSE` 为准；镜像的第三方清单与 Provenance 路径不适用于 Native，见 [发布与许可证](../reference/releases.md)。
 
