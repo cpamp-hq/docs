@@ -54,7 +54,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-### One-Click Installer Docker deployments
+### One-click installer Docker deployments
 
 If `install-cpamp.sh` created the Docker deployment, prefer letting the installer stop the service, reset the credential, restart, and verify login:
 
@@ -106,7 +106,7 @@ docker run --rm \
 docker start cpa-manager-plus
 ```
 
-## Native Packages
+## Native packages
 
 macOS / Linux:
 

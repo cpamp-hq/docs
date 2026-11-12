@@ -1,9 +1,9 @@
 ---
-title: CPA usage and Cost Analytics
+title: CPA usage and cost analytics
 description: Analyze requests, tokens, cache, cost, latency, and failures by model, account, API key, provider, project, and time range.
 ---
 
-# CPA usage and Cost Analytics
+# CPA usage and cost analytics
 
 Usage Analytics answers "where did the money go?" and "which requests caused the abnormal pattern?" It uses request-monitoring events and [Model Prices](./model-prices.md). It does not change provider billing.
 

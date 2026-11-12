@@ -1,4 +1,4 @@
-# Native Packages
+# Native packages
 
 Use native packages when Docker is not part of your environment. They fit deployments already managed by systemd, launchd, Windows services, or another process supervisor.
 

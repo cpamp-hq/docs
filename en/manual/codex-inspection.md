@@ -1,9 +1,9 @@
 ---
-title: Account Inspection (Codex / xAI)
+title: Account inspection (Codex / xAI)
 description: Inspect Codex and xAI accounts locally or on a Manager Server schedule, including quota, credentials, workspace, billing evidence, and controlled actions.
 ---
 
-# Account Inspection (Codex / xAI)
+# Account inspection (Codex / xAI)
 
 Account inspection explains why an account cannot reliably serve requests. The route and parts of the UI still use the `Codex Inspection` name, but inspection targets now include Codex and xAI.
 

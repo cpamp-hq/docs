@@ -1,4 +1,4 @@
-# Native Background Control
+# Native background control
 
 Native release packages include small control scripts for running CPA Manager Plus in the background without keeping a terminal open.
 
@@ -70,7 +70,7 @@ $env:CPA_MANAGER_PLUS_LOG_DIR = 'C:\cpamp\logs'
 .\cpa-manager-plusctl.ps1 start
 ```
 
-## Security Notes
+## Security notes
 
 The Manager Server can print the generated first-start admin key to stdout. In background mode, stdout and stderr are written to log files, so treat the log directory as sensitive.
 

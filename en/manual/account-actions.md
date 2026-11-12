@@ -1,9 +1,9 @@
 ---
-title: Account Action Queue and Safe Auto-Disable
+title: Account Action Queue and safe auto-disable
 description: Review, disable, re-enable, resolve, or delete problem accounts from sanitized credential evidence without treating every 401/403 as invalid credentials.
 ---
 
-# Account Action Queue and Safe Auto-Disable
+# Account Action Queue and safe auto-disable
 
 Account Action Queue centralizes auth-related candidates detected from Monitoring. It is not a request-details page. It lists accounts that may need human action.
 
