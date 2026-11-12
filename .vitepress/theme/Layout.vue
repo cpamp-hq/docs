@@ -29,7 +29,7 @@ html:has(.beta-banner) { --vp-layout-top-height: 64px; }
   z-index: 40;
   inset: 0 0 auto;
   min-height: 64px;
-  padding: 8px 16px;
+  padding: 6px 16px;
   display: flex;
   flex-wrap: wrap;
   align-content: center;
@@ -43,4 +43,9 @@ html:has(.beta-banner) { --vp-layout-top-height: 64px; }
   border-bottom: 1px solid var(--vp-c-divider);
 }
 .beta-banner a { color: var(--vp-c-brand-1); text-decoration: underline; }
+@media (max-width: 640px) {
+  html:has(.beta-banner) .VPHome .VPHero {
+    padding-top: calc(var(--vp-nav-height) + var(--vp-layout-top-height) + 54px);
+  }
+}
 </style>
