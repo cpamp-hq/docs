@@ -1,18 +1,42 @@
 :root {
-  --vp-c-brand-1: #2f56d9;
-  --vp-c-brand-2: #4768e6;
-  --vp-c-brand-3: #6d83f2;
+  --vp-c-brand-1: #0050e0;
+  --vp-c-brand-2: #005cff;
+  --vp-c-brand-3: #2f7bff;
+  --vp-c-brand-soft: rgba(0, 92, 255, 0.12);
+  --vp-button-brand-bg: #005cff;
+  --vp-button-brand-hover-bg: #0050e0;
+  --vp-button-brand-active-bg: #0047d6;
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(100deg, #005cff 10%, #38c8ff 90%);
   --cpamp-c-accent: #0f8b72;
   --cpamp-c-warning: #9a6b10;
-  --cpamp-c-panel: rgba(246, 247, 249, 0.92);
+  --cpamp-c-panel: rgba(246, 248, 251, 0.92);
   --cpamp-c-panel-border: rgba(60, 60, 67, 0.12);
-  --cpamp-c-panel-shadow: rgba(23, 31, 56, 0.08);
+  --cpamp-c-panel-shadow: rgba(0, 59, 184, 0.1);
 }
 
 .dark {
+  --vp-c-brand-1: #8db4ff;
+  --vp-c-brand-2: #6ea0ff;
+  --vp-c-brand-3: #3d82ff;
+  --vp-c-brand-soft: rgba(61, 130, 255, 0.16);
+  --vp-button-brand-bg: #3d82ff;
+  --vp-button-brand-hover-bg: #2f74f0;
+  --vp-button-brand-active-bg: #2566dc;
   --cpamp-c-panel: rgba(32, 34, 42, 0.86);
   --cpamp-c-panel-border: rgba(235, 235, 245, 0.14);
   --cpamp-c-panel-shadow: rgba(0, 0, 0, 0.24);
+}
+
+.VPNavBarTitle .logo {
+  height: 26px;
+  width: auto;
+}
+
+.VPNavBarTitle .title {
+  gap: 10px;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
 }
 
 .VPHome .VPHero .tagline {
