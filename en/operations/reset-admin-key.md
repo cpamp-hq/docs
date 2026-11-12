@@ -7,6 +7,8 @@ Use `reset-admin-key` while the service is stopped when you need to replace Mana
 1. Stop the entire v2 service (`docker compose stop` for Docker, or stop the complete launcher / `systemd` unit for `linux/amd64` Native) so the SQLite process lock is released.
 2. Back up the single `/data` volume (Manager's `usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present, plus Embedded `/data/runtime` and `/data/runtime-secret/token`) following [Backup And Restore](./backup.md).
 3. Never delete volumes, `usage.sqlite.manager.lock`, or installation records.
+4. If Fresh setup has not yet accepted an initial Admin Key, do not run `reset-admin-key`; use `initialize` to obtain another Handoff and continue the wizard. Reset does not update Fresh's `AdminInitialized` state, so writing a credential early makes Fresh state inconsistent.
+5. If startup config sets `CPA_MANAGER_ADMIN_KEY` or `CPA_MANAGER_ADMIN_KEY_FILE`, update it to the reset key or remove that startup setting before restarting. A Fresh instance with a startup key differing from the database reports `Fresh authority conflict` and stays unready; it **does not overwrite the database**. An instance upgraded from 1.x retains the existing database credential, which startup environment settings do not overwrite either.
 
 ## Docker Compose (Single Image)
 
@@ -26,7 +28,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-Save the key immediately and keep terminal output out of public logs or chat transcripts. Only after the command exits successfully, start the service and sign in at the Control Base Path chosen during installation on the original public entry (default `/console`, for example `http://<host>:18317/console`) to confirm the CPA connection; v2 does not serve `/management.html` (404):
+Save the key immediately and keep terminal output out of public logs or chat transcripts. Restart only after the command succeeds and startup credentials have been aligned as described above, then confirm the CPA connection. Fresh instances use the Control Base Path chosen at installation (default `http://<host>:18317/console`); instances upgraded from 1.x use `http://<host>:18317/management.html` (or `/`).
 
 ```bash
 docker compose up -d

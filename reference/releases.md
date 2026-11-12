@@ -4,17 +4,22 @@
 
 v2 Beta 是 **Prerelease**，不是 Stable；`releases/latest`、1.x 自动面板更新与默认安装脚本继续面向 **1.x Stable**。仅在维护者实际发布后，才可从 [全部 Releases](https://github.com/seakee/CPA-Manager-Plus/releases) 选择对应 Beta 版本下载；本页不是已经发布或已获生产升级授权的声明。不要将 Beta 指向浮动标签，也不要用 Beta 单文件面板替换 Embedded Full Web。
 
-同次 v2 发布的运行组合为：
+当前源码具备单镜像 `slim` / `full` 构建 target：`slim` 在向导中按固定摘要获取官方 CPA `v8.0.55`，`full` 内置同版 CPA。它们是构建能力，**不是单镜像正式发布、滚动标签或多架构已可用的证明**。从源码本地构建请自选 `cpa-manager-plus:full-local` / `slim-local`，不要覆盖本机 1.x 的 `:latest`；源码中的 `docker-compose.yml` 不是下载资产，部署示例见 [v2 Docker 安装](../deployment/docker.md)。
 
-- 单一镜像仓库 `seakee/cpa-manager-plus`（按 `<tag>@sha256:<digest>` 固定不可变摘要；官方 CPA 固定 `v8.0.55`）：
-  - **`slim` 变体**：精确 Beta 标签 `seakee/cpa-manager-plus:2.0.0-beta.N`（滚动标签 `seakee/cpa-manager-plus:beta`），不内置 CPA 二进制，在安装或升级向导中从 CDN / GitHub Release 或本地 `.tar.gz` 上传按固定摘要获取 CPA。
-  - **`full` 变体**：精确 Beta 标签 `seakee/cpa-manager-plus:2.0.0-beta.N-full`（滚动标签 `seakee/cpa-manager-plus:beta-full`），镜像内预置官方 CPA 二进制，适合离线与无外网环境。
-  - Beta 期间 `:latest`、`:preview`、`:1`、`:1.14` 保持指向 **1.x Stable**；v2 镜像标签不带 `v` 前缀（Git 发布 Tag 仍为 `v2.0.0-beta.N`）；从源码本地构建请使用 `cpa-manager-plus:full-local`（或 `slim-local`），避免覆盖本机 1.x 的 `:latest`。部署 `docker-compose.yml` 见 [v2 Docker 安装](../deployment/docker.md)。
-- 同版校验文件 `checksums.txt` 及发布说明；不要混用不同预发布的资产或依赖浮动标签。
-- linux/amd64 Native：`cpa-manager-plus-native-v2_<ver>_linux_amd64.tar.gz`。不提供 v2 的 macOS、Windows、linux/arm64 原生包，见 [原生部署](../deployment/native.md)。
-- 独立 CPA 轻量面板 `management.html`；Stable 与 Beta 的双轨取得方式见 [轻量面板](../deployment/cpa-panel.md)。
+当前发布脚本只允许显式 opt-in 的 v2 **`DRY_RUN=true`** 演练。`update-contract.mjs` 仍将平台限制为 **`linux/amd64`**，镜像角色仍为 `manager`、`ingress`、`runtime`；候选构建步骤已生成单镜像证据，不代表整个发布契约已经完成切换。不要从 Dockerfile 支持的 target/platform 推断已发布资产；也不要据此部署混合的新旧拓扑。安装前必须核对真实 Release 的同版镜像摘要、平台与 Compose 是否一致。
 
-**随 Beta 交付的发布契约，不是已有构建的现行更新能力：** v2 Beta 的 `release-info.json` 契约使用 `schema_version: 2`、`migration_required: true`、`minimum_direct_upgrade_version: v1.14.10`、`minimum_cpa_version: v8.0.55`；更新索引文件名是 **`update-index.json`**，外层保持 `schema_version: 1`，v2 的 `channels.beta` 条目使用 `schema_version: 2`，且只允许 Beta Prerelease。基线 `8935bce5` 尚未实现 v2 发布及该 schema-2 Beta 条目；发布端契约由 PR #1137 引入，当前仅允许显式 opt-in 的 `DRY_RUN=true` 演练，真实发布/索引写入仍须维护者解除门禁。不能据此声称 Beta 已发布或线上索引已改变。
+演练定义的六件套文件名为：
+
+| 文件 | 用途 |
+| --- | --- |
+| `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` | linux/amd64 Native，`<tag>` 包含 `v` 前缀；不提供 v2 macOS、Windows 或 linux/arm64 原生包 |
+| `management.html` | 独立 CPA 轻量面板，不是 Embedded Full Web |
+| `docker-compose.v2-embedded.yml` | 生成的 Embedded Compose 模板，不能用仓库根 `docker-compose.yml` 冒充 |
+| `embedded-release-pairing.json` | 同次 Embedded 组合的配对证据 |
+| `release-info.json` | 同次发布元数据 |
+| `checksums.txt` | 同次资产校验和 |
+
+v2 Beta 的 `release-info.json` 契约使用 `schema_version: 2`、`migration_required: true`、`minimum_direct_upgrade_version: v1.14.10`、`minimum_cpa_version: v8.0.55`。更新通道索引文件为 **`versions.json`**，外层保持 `schema_version: 1`，v2 的 `channels.beta` 条目使用 `schema_version: 2`，且只允许 Beta Prerelease。真实发布与索引写入仍受维护者门禁限制；不能据此声称 Beta 已发布、镜像标签已推送或线上索引已改变。Native 见 [原生部署](../deployment/native.md)，轻量面板的 Stable / Beta 取得方式见 [轻量面板](../deployment/cpa-panel.md)。
 
 **应用内更新不会提供 v2：** `v1.14.10` 的 Stable 检查不会选择 v2 Beta；手工切到 beta 后也会拒绝 schema-2 的 ReleaseInfo，不会显示可用的 v2 更新。当前 v2 构建同样不会通过应用内更新提供 v2 目标，发布端契约不等于已新增 v2 消费端支持。安装或后续更新必须阅读对应发布说明并显式选择同版资产，不能依赖自动换镜像；从 1.x 迁移按 [离线 copy-in、对账与回滚](../operations/update.md)，备份 `data.key`、SQLite WAL/SHM 和 `usage-archives/`。
 

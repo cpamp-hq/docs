@@ -16,7 +16,9 @@ v2 Beta 的完整模式不等同于 1.x 的单 Manager 部署。内置官方 CPA
 
 外部 Management Key 轮换后，用面板重新绑定并证明当前连接；已被 CPA 拒绝的凭证不应反复重试。Manager 的 `data.key` 与加密数据库必须成套保留。Adopt 的资格拒绝或未完成迁移不是 External 自动降级许可；按向导报告处理，不以更换环境变量或手改记录代替证明。
 
-v2 Beta 的浏览器入口是公开 origin 下的控制台，位于安装时设置的**控制台地址（Control Base Path）**：安装向导默认 **`/console`**（例如 `http://<host>:18317/console`），也可以在向导里改成其他合法路径，前端 API 随之为 `<控制台路径>/api/v2/*`。以向导完成页“登录并进入 CPAMP”指向的地址为准；该路径不能与 `/v1`、`/models`、`/management.html` 等保留路径冲突，向导会拒绝冲突值。v2 不提供 CPAMP 的 `/management.html`，访问该路径会返回 404；Embedded 的 `8317` 与 `9081` 只在容器内，不要另外公开。
+v2 Beta **全新安装**的浏览器入口是公开 origin 下安装时设置的**控制台地址（Control Base Path）**：向导默认 **`/console`**（例如 `http://<host>:18317/console`），前端 API 为 `<控制台路径>/api/v2/*`。以向导完成页“登录并进入 CPAMP”指向的地址为准；路径不能与 `/v1`、`/models`、`/management.html` 等保留路径冲突。Fresh 完整控制台不在 `/management.html` 提供服务；**从 1.x 离线升级的实例仍使用 `/management.html`（或根路径 `/`）与原管理员密钥**，不会因升级自动获得 `/console`。Embedded 的 `8317` 与 `9081` 只在容器内，不要另外公开。
+
+Ingress 还将 `/health`、`/status`、`/`、`/setup`、`/management.html`、`/usage-service/*`、`/v0/management/*` 路由至 Manager，供健康检查及升级过渡使用；路由归属不代表对应功能在 Fresh 中可用。`/v8/management/*`、已退役控制台路径等边缘拒绝请求返回 `404`，不会转发至 CPA。`GET` / `HEAD` 的 `/favicon.ico` 与 `/apple-touch-icon.png` 也由 Manager 处理。
 
 安装：[v2 Docker](../deployment/docker.md) / [linux/amd64 Native](../deployment/native.md)；维护：[备份](../operations/backup.md) / [许可证与发布资产](../reference/releases.md)。
 
@@ -26,10 +28,10 @@ v2 Beta 的浏览器入口是公开 origin 下的控制台，位于安装时设�
 | --- | --- | --- |
 | **Embedded** 客户端调用模型 | CPAMP 公开 origin 的 `/v1/...`（由 Ingress 转发至容器内 CPA，`8317` 不对外开放） | 向导或控制台签发的普通 CPA Client Key |
 | **External** 客户端调用模型 | 外部 CPA 原有的对外 `/v1/...` 地址 | 普通 CPA Client Key |
-| 打开 **CPAMP 完整模式控制台**（Embedded 或 External） | 公开 origin 下安装时设置的控制台地址（默认 `/console`，前端 API 为 `<控制台路径>/api/v2/*`） | CPAMP Admin Key |
+| 打开 **CPAMP 完整模式控制台**（Embedded 或 External） | 全新安装使用控制台地址（默认 `/console`，API 为 `<控制台路径>/api/v2/*`）；1.x 升级实例使用 `/management.html`（或 `/`） | CPAMP Admin Key |
 | 打开 **CPAMP 轻量面板**（无 Manager 后端） | 外部 CPA 的 `http://<cpa-host>:8317/management.html` | CPA Management Key |
 
-不要把 CPAMP Admin Key 或 CPA Management Key 填进普通模型客户端；也不要把 v2 完整模式的浏览器入口写成 `:18317/management.html`（返回 404）。External 模式下，Manager 仅通过 CPA Management API 轮询状态并消费内存请求队列（建议 `COLLECTOR_POLL_INTERVAL_MS` 保持在 `1000`–`5000` 毫秒之间），不接管外部 CPA 进程或宿主机生命周期。
+不要把 CPAMP Admin Key 或 CPA Management Key 填进普通模型客户端。External 模式下，Manager 通过 CPA Management API 读取状态并消费内存请求队列，不接管外部 CPA 进程或宿主机生命周期。轮询间隔由 `USAGE_POLL_INTERVAL_MS` 设置，默认 `500` 毫秒；须不超过 CPA 内存队列保留时间。
 
 ## 下一步
 

@@ -6,8 +6,10 @@ CPAMP keeps request history, configuration, and encrypted credentials on the hos
 
 v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at least **`v8.0.55`**. A backup does not authorize migration: follow [Upgrade Preflight And Reconciliation](./update.md). The v2 single image persists all state inside one named volume `cpamp-data` (mounted at `/data`), which must be backed up as a complete set:
 
+`cpamp-data` is a Compose logical volume key, not a fixed Docker volume name. Without an explicit name override, Docker uses `<project>_cpamp-data`. The commands below reuse the same Compose project to avoid creating an empty volume with plain `docker run -v cpamp-data:/data`; inspect the running container's actual `.Mounts` with `docker inspect` before mounting a volume directly.
+
 - **Manager state (`10002:10002`)**: `/data/usage.sqlite`, `/data/usage.sqlite-wal`, `/data/usage.sqlite-shm`, `/data/usage.sqlite-journal` when present, `/data/usage.sqlite.manager.lock`, `/data/data.key` (`0600`), `/data/usage-archives/` when present (including raw request archives and manifests; SQLite alone is insufficient), and `/data/upgrade-backup/` when upgraded from 1.x.
-- **Embedded Runtime state (`/data/runtime`, root `0:0`)**: `/data/runtime/.cpamp-v8-bootstrap` (`0:0`), `/data/runtime/supervisor/` (`0:10001`, including `operations.sqlite`, WAL/SHM, and on `slim` the verified CPA engine under `artifacts/cpa/` plus active state), and `/data/runtime/gateway/` (`10001:10001`, including `config.yaml`, singular `auth/`, `logs/`, and `plugins/` when present). Copying CPA `config.yaml` alone is insufficient.
+- **Embedded Runtime state (`/data/runtime`, root `0:0`)**: `/data/runtime/.cpamp-v8-bootstrap` (`0:0`), `/data/runtime/supervisor/` (`0:10001`, including `operations.sqlite`, WAL/SHM, Managed `destination/`, and on `slim` the verified CPA engine under `artifacts/cpa/` plus active state), and `/data/runtime/gateway/` (`10001:10001`, including `config.yaml`, singular `auth/`, `logs/`, and `plugins/` when present). Copying CPA `config.yaml` alone is insufficient.
 - **Runtime transport secret (`0:10002`)**: `/data/runtime-secret/token` (`0640`).
 - **Deployment configuration**: the digest-pinned `docker-compose.yml` (`seakee/cpa-manager-plus:<tag>@sha256:<digest>`), `CPAMP_PUBLIC_ORIGIN`, custom environment settings, and reverse-proxy configuration. Encrypt backup archives and restrict access.
 
@@ -100,7 +102,7 @@ Preserve archived numeric owners, permissions, and directory isolation (`/data/r
 
 ## Scope Of Offline Manager Snapshots (`manager-data-snapshot`)
 
-With the service stopped, `manager-data-snapshot` snapshots the database, WAL/SHM, rollback journal, and `data.key`, with an integrity manifest. It **does not include `usage-archives/`, custom configuration, `/data/runtime`, `/data/runtime-secret`, or external CPA**, so it does not replace a full backup. From the v2 native package root (the snapshot directory must not already exist):
+With the service stopped, `manager-data-snapshot` snapshots the database, WAL/SHM, rollback journal, and `data.key`, with an integrity manifest. It **does not include `usage.sqlite.manager.lock`, `usage-archives/`, custom configuration, `/data/runtime`, `/data/runtime-secret`, or external CPA**, so it does not replace a full backup. Fresh's non-empty `usage.sqlite.manager.lock` holds an admission receipt bound to the database identity; never remove it, empty it, or substitute a different installation's file. Restoring only a Manager snapshot into a new directory cannot restore a Fresh instance. For whole-instance recovery, use the same full-volume archive described above to restore that receipt, archive shards, and Runtime state together. The following commands are only offline database snapshots while retaining the original instance's other state. Run from the v2 native package root (the snapshot directory must not already exist):
 
 ```bash
 sudo ./bin/cpa-manager-plus manager-data-snapshot create \

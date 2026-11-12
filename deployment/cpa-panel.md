@@ -46,6 +46,8 @@ CPAMP 轻量面板由 CPA 直接托管，用 CPA Manager Plus 的界面替换官
 
 编辑 CPA `config.yaml`（注意：下方 `disable-auto-update-panel: false` 会让 CPA 始终拉取 `releases/latest` 的 1.x Stable 面板；若要放置 v2 Beta 预发布面板，请按后文改为 `disable-auto-update-panel: true`）：
 
+以下手工配置/缓存步骤仅适用于操作者独立运行的 CPA，不适用于 CPAMP Managed Runtime。不要手工编辑 `/data/runtime/gateway/config.yaml` 或 `/data/runtime/supervisor/destination/` 内受管文件：存在 bootstrap 标记时，launcher 会将 Gateway seed 配置逐字节比对，修改后拒绝启动；Supervisor 也校验目标持久化记录。Managed 配置请使用控制台支持的操作或导入/切换流程。
+
 ```yaml
 remote-management:
   # 安全默认值。只有需要从非 localhost 访问时才改为 true。
@@ -149,7 +151,7 @@ External 完整模式不是这个无后端的轻量面板：它需要 Manager，
 2. 通过 `initialize` Handoff 打开浏览器完成首次向导，或访问安装时设置的控制台地址（默认 `http://<cpamp-host>:18317/console`）并用 CPAMP 管理员密钥登录。
 3. 在控制台核对 CPA 连接与请求采集状态。
 
-v2 Beta 不提供 `/management.html`；访问该路径会返回 404，不是 v2 入口。CPA `:8317` 上的轻量面板仍可保留，但完整能力只在 v2 控制台入口中可见。
+Fresh 全新安装的完整控制台不在 `/management.html` 提供服务；从 1.x 离线升级的实例仍使用 `:18317/management.html`（或 `/`），不是 Fresh 的默认 `/console`。Ingress 将兼容性控制路径转交 Manager，但不代表它们在 Fresh 中可用；健康检查 `/health`、`/status` 及边缘拒绝返回 `404` 的规则见 [运行模型](../guide/runtime-model.md)。CPA `:8317` 上的轻量面板仍可保留，不要与 CPAMP 完整控制台混用。
 
 ## 常见问题
 

@@ -46,6 +46,8 @@ Browser
 
 Edit CPA `config.yaml` (note: `disable-auto-update-panel: false` below keeps pulling the 1.x Stable panel from `releases/latest`; set `disable-auto-update-panel: true` as shown further below when manually placing a v2 Beta prerelease panel):
 
+The manual configuration/cache steps below apply only to an independently operated CPA, not CPAMP Managed Runtime. Never hand-edit `/data/runtime/gateway/config.yaml` or managed files under `/data/runtime/supervisor/destination/`. When the bootstrap marker exists, launcher compares the Gateway seed configuration byte-for-byte and refuses startup if it differs; Supervisor also validates persisted destination records. Use supported console operations or import/switch workflows for Managed configuration.
+
 ```yaml
 remote-management:
   # Safe default. Change to true only for access from outside localhost.
@@ -149,7 +151,7 @@ When you need request history, cost analytics, or server-side automation:
 2. Complete browser setup via the host `initialize` Handoff, or open the Control Base Path chosen at installation (default `http://<cpamp-host>:18317/console`) and sign in with the CPAMP Admin Key.
 3. Verify the CPA connection and request collection in the console.
 
-v2 Beta does not serve `/management.html`; it returns 404 and is not the v2 entry. The lightweight panel may remain on CPA's port `:8317`, while full server-backed capabilities live at the v2 console entry.
+Fresh Full Web is not served at `/management.html`; instances upgraded offline from 1.x still use `:18317/management.html` (or `/`), not Fresh's default `/console`. Ingress routes transitional control paths to Manager, which does not make those features available in Fresh. See [Runtime Model](../guide/runtime-model.md) for `/health`, `/status`, and edge-denied `404` routing. The lightweight panel may remain on CPA's `:8317`; do not confuse it with the full CPAMP console.
 
 ## Troubleshooting
 

@@ -6,8 +6,10 @@ CPAMP 的请求历史、配置和加密凭证都在本机。备份时最容易�
 
 v2 Beta 从 **`v1.14.10`** 离线升级，目标 CPA 最低 **`v8.0.55`**；备份不是迁移授权，迁移仍须通过 [升级预检与对账](./update.md)。v2 单镜像将全部持久化状态保存在单一命名卷 `cpamp-data`（容器内 `/data`），备份时必须成套保留：
 
+`cpamp-data` 是 Compose 逻辑卷键，不是固定的 Docker 卷名；未覆盖卷名时实际名称为 `<project>_cpamp-data`。以下命令始终复用同一 Compose 项目，避免用裸 `docker run -v cpamp-data:/data` 误建空卷；需要直接挂卷时，先用运行容器的 `docker inspect` 核对实际 `.Mounts`。
+
 - **Manager 数据（`10002:10002`）**：`/data/usage.sqlite`、`/data/usage.sqlite-wal`、`/data/usage.sqlite-shm`、`/data/usage.sqlite-journal`（存在时）、`/data/usage.sqlite.manager.lock`、`/data/data.key`（`0600`）、`/data/usage-archives/`（存在时；含原始请求归档与清单，不可只备份 SQLite）以及升级生成的 `/data/upgrade-backup/`（存在时）。
-- **Embedded Runtime 状态（`/data/runtime`，根属主 `0:0`）**：`/data/runtime/.cpamp-v8-bootstrap`（`0:0`）、`/data/runtime/supervisor/`（`0:10001`，含 `operations.sqlite`、WAL/SHM，以及 `slim` 变体按需下载或上传校验后的 `artifacts/cpa/` 与激活状态）和 `/data/runtime/gateway/`（`10001:10001`，含 `config.yaml`、单数 `auth/`、`logs/` 与存在时的 `plugins/`）。不要只复制 CPA `config.yaml`。
+- **Embedded Runtime 状态（`/data/runtime`，根属主 `0:0`）**：`/data/runtime/.cpamp-v8-bootstrap`（`0:0`）、`/data/runtime/supervisor/`（`0:10001`，含 `operations.sqlite`、WAL/SHM、Managed 目标的 `destination/`，以及 `slim` 变体按需下载或上传校验后的 `artifacts/cpa/` 与激活状态）和 `/data/runtime/gateway/`（`10001:10001`，含 `config.yaml`、单数 `auth/`、`logs/` 与存在时的 `plugins/`）。不要只复制 CPA `config.yaml`。
 - **Runtime 传输密钥（`0:10002`）**：`/data/runtime-secret/token`（`0640`）。
 - **部署配置**：固定摘要的 `docker-compose.yml`（`seakee/cpa-manager-plus:<tag>@sha256:<digest>`）、`CPAMP_PUBLIC_ORIGIN`、自定义环境变量与反向代理配置。备份归档应加密存储并限制访问权限。
 
@@ -100,7 +102,7 @@ YAML
 
 ## Manager 离线快照（`manager-data-snapshot`）的边界
 
-`manager-data-snapshot` 在停止服务后为数据库、WAL/SHM、rollback journal 和 `data.key` 创建带完整性清单的快照；**不包含 `usage-archives/`、自定义配置、`/data/runtime`、`/data/runtime-secret` 或外部 CPA**，不能替代全量备份。在原生 v2 包根目录执行以下备份命令（快照目录必须尚不存在）：
+`manager-data-snapshot` 在停止服务后为数据库、WAL/SHM、rollback journal 和 `data.key` 创建带完整性清单的快照；**不包含 `usage.sqlite.manager.lock`、`usage-archives/`、自定义配置、`/data/runtime`、`/data/runtime-secret` 或外部 CPA**，不能替代全量备份。Fresh 的非空 `usage.sqlite.manager.lock` 保存与数据库身份绑定的准入凭据，不能删除、清空或用其他安装的文件替代；仅在新目录恢复 Manager 快照不足以恢复 Fresh 实例。整实例恢复请使用上文同次全卷归档，以一并恢复该凭据、归档分片及 Runtime 状态。下面的命令只用于保留原实例其他状态的离线数据库快照；在原生 v2 包根目录执行（快照目录必须尚不存在）：
 
 ```bash
 sudo ./bin/cpa-manager-plus manager-data-snapshot create \

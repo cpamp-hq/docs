@@ -15,6 +15,8 @@ For v2 Beta (`next`), choose the matching guide below instead of running `instal
 | **Lightweight Panel only on an existing CPA** | Manually place `management.html` from a published v2 Beta prerelease with automatic panel updates disabled. See [CPAMP Lightweight Panel](./cpa-panel.md#try-the-v2-beta-panel-on-cpa). |
 | **Upgrade an existing 1.x deployment to v2 Beta** | Update the 1.x instance to exact baseline **`v1.14.10`** first (target CPA requires at least **`v8.0.55`**), then attach a fresh empty `/data` volume, mount the original 1.x volume read-only at `/legacy:ro`, and run offline preflight, copy-in, and four-domain reconciliation. See [Upgrade And Rollback](../operations/update.md). |
 
+The table's `/console` entry and unavailable `/management.html` describe **Fresh installations only**. Instances upgraded offline from 1.x still use `:18317/management.html` (or `/`) and the original Admin Key. See [Runtime Model](../guide/runtime-model.md) for `/health`, `/status`, transitional control paths, and edge-denied `404` rules. Single-image tags are deployment examples, not evidence that current release scripts have published them; see [Release Assets And Gates](../reference/releases.md) for actual asset/platform limitations.
+
 ## 1.x (Before Upgrading)
 
 If you are deploying 1.x Stable, or using the installer script to bring an older 1.x deployment up to `v1.14.10` before migrating to v2, see the 1.x Stable documentation for full script options and maintenance modes: [One-Click Installer (1.x Stable)](https://cpamp-docs.seakee.dev/en/deployment/installer.html).

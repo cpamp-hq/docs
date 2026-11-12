@@ -4,17 +4,22 @@
 
 v2 Beta is a **Prerelease**, not Stable. `releases/latest`, automatic 1.x panel updates, and the default installer remain on **1.x Stable**. Select the matching Beta from [All Releases](https://github.com/seakee/CPA-Manager-Plus/releases) only after the maintainer actually publishes it; this page does not assert publication or authorize production migration. Do not use floating Beta tags or replace Embedded Full Web with the Beta single-file panel.
 
-One v2 release provides:
+Current source provides single-image `slim` / `full` build targets: `slim` acquires digest-pinned official CPA `v8.0.55` in the wizard, while `full` bundles the same CPA. These are build capabilities, **not proof of published single-image releases, rolling tags, or multi-architecture availability**. Choose local tags such as `cpa-manager-plus:full-local` / `slim-local` when building from source instead of overwriting local 1.x `:latest`. The source `docker-compose.yml` is not a downloadable release asset; see [v2 Docker Installation](../deployment/docker.md) for deployment examples.
 
-- Single image repository `seakee/cpa-manager-plus` (pinned via immutable `<tag>@sha256:<digest>`, with official CPA pinned to `v8.0.55`):
-  - **`slim` variant**: exact Beta tag `seakee/cpa-manager-plus:2.0.0-beta.N` (rolling tag `seakee/cpa-manager-plus:beta`), omitting the bundled CPA binary and acquiring the digest-pinned CPA in the install or upgrade wizard from CDN / GitHub Release or a local `.tar.gz` upload.
-  - **`full` variant**: exact Beta tag `seakee/cpa-manager-plus:2.0.0-beta.N-full` (rolling tag `seakee/cpa-manager-plus:beta-full`), bundling the official CPA binary for offline and air-gapped hosts.
-  - `:latest`, `:preview`, `:1`, and `:1.14` stay on **1.x Stable** during Beta; v2 image tags have no `v` prefix (Git release tags remain `v2.0.0-beta.N`); local builds from source should use `cpa-manager-plus:full-local` (or `slim-local`) so local 1.x `:latest` is not overwritten. See [v2 Docker Installation](../deployment/docker.md) for `docker-compose.yml`.
-- Release `checksums.txt` and matching release notes; never mix assets across prereleases or rely on floating tags.
-- linux/amd64 Native: `cpa-manager-plus-native-v2_<ver>_linux_amd64.tar.gz`. No v2 macOS, Windows, or linux/arm64 native assets; see [Native Deployment](../deployment/native.md).
-- Independent CPA lightweight panel `management.html`; see [Lightweight Panel](../deployment/cpa-panel.md) for Stable/Beta download tracks.
+Current release scripts permit only explicitly opted-in v2 **`DRY_RUN=true`** rehearsals. `update-contract.mjs` still limits platforms to **`linux/amd64`** and image roles to `manager`, `ingress`, and `runtime`. The candidate build step produces single-image evidence, but the complete release contract has not yet switched over. Dockerfile target/platform support does not establish published assets; do not deploy a mixture of old and new topologies. Before installing, verify that the actual Release's image digests, platform, and Compose agree.
 
-**The release contract shipped with Beta, not existing builds' current update capability:** the v2 Beta `release-info.json` contract uses `schema_version: 2`, `migration_required: true`, `minimum_direct_upgrade_version: v1.14.10`, and `minimum_cpa_version: v8.0.55`. The update index is **`update-index.json`**, retaining outer `schema_version: 1`; its v2 `channels.beta` entry uses `schema_version: 2` and permits Beta Prereleases only. Baseline `8935bce5` does not implement v2 publication or that schema-2 Beta entry. PR #1137 introduces the producer contract, currently limited to explicitly opted-in `DRY_RUN=true` rehearsals; real publication/index writes remain behind a maintainer gate. This does not assert a published Beta or a changed live index.
+The rehearsal defines these six asset filenames:
+
+| File | Purpose |
+| --- | --- |
+| `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` | linux/amd64 Native; `<tag>` includes its `v` prefix; no v2 macOS, Windows, or linux/arm64 native packages |
+| `management.html` | Independent CPA lightweight panel, not Embedded Full Web |
+| `docker-compose.v2-embedded.yml` | Generated Embedded Compose template, not the repository's source `docker-compose.yml` |
+| `embedded-release-pairing.json` | Pairing evidence for the same Embedded build |
+| `release-info.json` | Matching release metadata |
+| `checksums.txt` | Matching asset checksums |
+
+The v2 Beta `release-info.json` contract uses `schema_version: 2`, `migration_required: true`, `minimum_direct_upgrade_version: v1.14.10`, and `minimum_cpa_version: v8.0.55`. The update channel index is **`versions.json`**, retaining outer `schema_version: 1`; its v2 `channels.beta` entry uses `schema_version: 2` and permits Beta Prereleases only. Real publication/index writes remain behind a maintainer gate. This does not assert a published Beta, pushed image tags, or a changed live index. See [Native Deployment](../deployment/native.md) and [Lightweight Panel](../deployment/cpa-panel.md) for Native and Stable/Beta panel download details.
 
 **In-app updates do not offer v2:** `v1.14.10` Stable checks do not select v2 Beta. Manually selecting beta still rejects schema-2 ReleaseInfo, so no available v2 update is shown. Current v2 builds likewise do not offer v2 targets through in-app updates; the producer contract does not add v2 consumer support. Installation or later updates require reading the matching release notes and explicitly selecting one asset group, not automatic image replacement. For 1.x migration, follow [Offline Copy-In, Reconciliation, And Rollback](../operations/update.md), backing up `data.key`, SQLite WAL/SHM, and `usage-archives/`.
 

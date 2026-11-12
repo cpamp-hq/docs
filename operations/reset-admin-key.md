@@ -7,6 +7,8 @@
 1. 停止整个 v2 服务（Docker 执行 `docker compose stop`，`linux/amd64` 原生包停止完整 launcher / `systemd` 服务），释放 SQLite 进程锁。
 2. 按 [备份与恢复](./backup.md) 停机备份单一 `/data` 数据卷（含 Manager 的 `usage.sqlite`、WAL/SHM、`data.key`、存在时的 `usage-archives/`，以及 Embedded 的 `/data/runtime` 与 `/data/runtime-secret/token`）。
 3. 不要删除数据卷、`usage.sqlite.manager.lock` 或安装记录。
+4. 若 Fresh 首次引导尚未提交管理员密钥，不要运行 `reset-admin-key`；使用 `initialize` 重新取得 Handoff 并继续向导。重置命令不会同步 Fresh 的 `AdminInitialized` 状态，提前写入凭证会使 Fresh 状态不一致。
+5. 若启动配置含 `CPA_MANAGER_ADMIN_KEY` 或 `CPA_MANAGER_ADMIN_KEY_FILE`，在重启前同步为重置后的密钥，或移除该启动配置。Fresh 实例发现启动密钥与数据库不一致会报 `Fresh authority conflict` 并保持未就绪，**不会覆盖数据库**；从 1.x 升级的实例保留已有数据库凭证，启动环境也不会覆盖它。
 
 ## Docker Compose（单镜像）
 
@@ -26,7 +28,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-立即妥善保存该密钥，不要让输出进入公开日志或聊天记录。确认命令成功退出后，再启动服务并从原公开入口下安装时设置的控制台地址（默认 `/console`，例如 `http://<host>:18317/console`）登录核对 CPA 连接；v2 不提供 `/management.html`（返回 404）：
+立即妥善保存该密钥，不要让输出进入公开日志或聊天记录。命令成功且已按上述规则同步启动密钥后，再启动服务并核对 CPA 连接。Fresh 实例使用安装时设置的控制台地址（默认 `http://<host>:18317/console`）；从 1.x 升级的实例使用 `http://<host>:18317/management.html`（或 `/`）。
 
 ```bash
 docker compose up -d
