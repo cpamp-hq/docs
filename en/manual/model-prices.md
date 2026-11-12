@@ -1,15 +1,15 @@
 ---
-title: Model Prices And Cost Estimation
+title: Model Prices and Cost Estimation
 description: Configure model prices, service tiers, long-context multipliers, and cache read/write/creation billing for local CPAMP cost estimates.
 ---
 
-# Model Prices And Cost Estimation
+# Model Prices and Cost Estimation
 
 Model Prices maintains CPAMP's local cost-estimation rules. It affects Dashboard, Monitoring, and Usage Analytics; it does not change provider billing or CPA routing.
 
 Open the [Model Prices Demo](https://cpamp-demo.seakee.dev/#/demo/model-prices) to inspect fictional prices and model usage.
 
-## Price Sources
+## Price sources
 
 - Public metadata synchronized from models.dev first, with LiteLLM and OpenRouter used as fallbacks when the preferred source is unavailable or lacks a model.
 - Local prices added or overridden by the user.
@@ -30,7 +30,7 @@ The current sync maps models.dev `cost.input`, `cost.output`, `cost.cache_read`,
 - A manually saved price remains authoritative during synchronization, even when a source returns an exact match for the same model. Delete the manual entry and sync again to use synchronized pricing.
 - A synchronized price remains the last-known-good value until a later successful sync or a manual edit; `syncedAtMs` indicates its freshness.
 
-## Supported Billing Semantics
+## Supported billing semantics
 
 A price rule may include:
 
@@ -62,7 +62,7 @@ Models such as GPT-5.6 may vary by context length, service tier, and cache type.
 
 Model Prices displays synchronized context tiers and service-tier prices as read-only rules. The current manual editor manages base prices only; saving a manual price explicitly clears existing synchronized advanced rules, with a warning shown before saving.
 
-## Matching Model Names
+## Matching model names
 
 The client model, CPA alias, provider model, and price-table name may differ. When cost is missing:
 
@@ -71,11 +71,11 @@ The client model, CPA alias, provider model, and price-table name may differ. Wh
 3. Add a local alias or override when required.
 4. Refresh [Usage Analytics](./usage-analytics.md).
 
-## Usage Summary
+## Usage summary
 
 The page uses a compact model-usage summary to show which prices are active. It does not download full request history just to count model calls.
 
-## Accuracy Boundaries
+## Accuracy boundaries
 
 - Provider billing remains authoritative.
 - Missing token, service tier, long-context, or cache fields reduce estimate accuracy.

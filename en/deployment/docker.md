@@ -12,7 +12,7 @@ http://<host>:18317/management.html
 
 Do not carry over the old CPA-Manager "CPA panel + External Usage Service URL" workflow. In Plus, the full feature set comes from Manager Server. The CPAMP Lightweight Panel is an independent UI choice hosted by CPA and does not connect to or read Manager Server SQLite monitoring data.
 
-## Choose Your Scenario
+## Choose your scenario
 
 | Your environment                         | Recommended action                                |
 | ---------------------------------------- | ------------------------------------------------- |
@@ -63,7 +63,7 @@ CPAMP can also enable this during first setup or config save.
 
 The environment-variable examples on this page are for manual Docker deployments and legacy compatibility. The one-click installer does not leave the CPA URL or CPA Management Key in the final Compose environment; it runs `store-cpa-connection` once and encrypts the connection into SQLite with `/data/data.key`. The configuration API also returns only `managementKeyConfigured`, never the saved CPA Key.
 
-## Deploy CPA And CPAMP Together
+## Deploy CPA and CPAMP together
 
 If CPA is not running yet, start CPA and CPAMP with this Compose file:
 
@@ -135,7 +135,7 @@ docker compose logs cpa-manager-plus
 
 After setup, new browsers log in with the CPAMP Admin Key. The CPA Management Key is encrypted and stored server-side.
 
-## Deploy CPAMP Only
+## Deploy CPAMP only
 
 If CPA is already running, start only CPAMP:
 
@@ -154,7 +154,7 @@ You can also use the GHCR image:
 ghcr.io/seakee/cpa-manager-plus:latest
 ```
 
-## CPA URL Examples
+## CPA URL examples
 
 | Scenario                                       | CPA URL to enter during CPAMP setup                                                    |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -185,7 +185,7 @@ Do not use `127.0.0.1` from inside a container to reach CPA on the host. Inside 
 
 ::: details Advanced: common environment variables
 
-## Common Environment Variables
+## Common environment variables
 
 | Variable                     | Default                           | Description                                      |
 | ---------------------------- | --------------------------------- | ------------------------------------------------ |
@@ -209,7 +209,7 @@ For the full runtime reference, see [Manager Server Guide](../operations/manager
 
 :::
 
-## Data Persistence And Backup
+## Data persistence and backup
 
 Always mount `/data`. Docker defaults:
 
@@ -237,7 +237,7 @@ Why `data.key` matters:
 - If `data.key` is lost, CPA Management Keys saved to SQLite cannot be recovered; save the CPA connection again.
 - If this is a manual env/secret deployment, or the installer has not completed/skipped the CPA connection import, also back up `secrets/` in the install directory.
 
-## Read-Only Root Filesystem
+## Read-Only root filesystem
 
 Standard CPAMP Docker/Compose deployments use a writable root filesystem and require no additional temporary-volume configuration.
 
@@ -259,7 +259,7 @@ The database file and its WAL/SHM sidecars must also be writable by the Manager 
 
 ::: details Advanced: collection protocols and network requirements
 
-## Collection Paths
+## Collection paths
 
 When `USAGE_COLLECTOR_MODE=auto`, Manager Server tries these paths in order:
 
@@ -298,7 +298,7 @@ docker run -d \
   seakee/cpa-manager-plus:latest
 ```
 
-### Database Maintenance Is Pending After Upgrade
+### Database maintenance is pending after upgrade
 
 To keep HTTP startup bounded on large historical databases, Manager Server does not run unbounded `CREATE INDEX` or derived cleanup before listening. If the global warning, System Info, or `/status.databaseMaintenance.required` reports pending maintenance, collection and HTTP remain available, but historical request queries can become noticeably slower or time out.
 
@@ -351,7 +351,7 @@ databaseMaintenance.offlineJobs
 
 If the monitoring page is empty, continue with [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.md).
 
-## What Changed From CPA-Manager
+## What changed from CPA-Manager
 
 Old CPA-Manager Docker docs used `seakee/cpa-manager` and described an external Usage Service for a CPA-hosted panel. In CPA Manager Plus:
 

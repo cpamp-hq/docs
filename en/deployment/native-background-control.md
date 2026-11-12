@@ -30,7 +30,7 @@ Windows PowerShell:
 
 `logs [lines]` accepts only a positive integer line count. `logs -f` and `logs --follow` follow the current log stream.
 
-## Runtime Files
+## Runtime files
 
 By default, the scripts write runtime state inside the extracted package directory:
 
@@ -41,7 +41,7 @@ By default, the scripts write runtime state inside the extracted package directo
 
 The PID record stores process metadata, not just a raw PID. `status`, `stop`, and `restart` refuse to trust an unverifiable or stale PID record.
 
-## Environment Overrides
+## Environment overrides
 
 The scripts support these environment variables:
 
@@ -78,7 +78,7 @@ The default `run/` and `logs/` directories are private. On macOS/Linux, default 
 
 When using custom PID or log file paths, keep the parent directories private and user-controlled. The scripts reject symlinked or reparse-point runtime files and reject existing custom parent directories that are writable by broad local identities such as group/world on Unix or Everyone, Authenticated Users, or Users on Windows.
 
-## Windows Argument Notes
+## Windows argument notes
 
 Simple `start [args...]` forwarding is supported. Complex Windows arguments containing spaces or quotes can be shell-dependent because PowerShell forwards them through `Start-Process -ArgumentList`.
 

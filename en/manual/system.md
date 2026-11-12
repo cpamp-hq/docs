@@ -4,7 +4,7 @@ System shows what runtime the panel is connected to, which models are visible, a
 
 Use [Logs](./logs.md) for log content. Use [Monitoring](./monitoring.md), [Usage Analytics](./usage-analytics.md), and [Accounts](./accounts.md) for requests, cost, and account state.
 
-## Main Content
+## Main content
 
 - **Quick links**: main repository, Web UI repository, and documentation.
 - **Model list**: available models from the current connection, grouped by source.
@@ -13,7 +13,7 @@ Use [Logs](./logs.md) for log content. Use [Monitoring](./monitoring.md), [Usage
 
 The exact content depends on the usage option. The CPAMP Lightweight Panel connects to CPA, while Full Mode connects to Manager Server; Full Mode can be installed with Docker or a native package. The Live Demo only displays fictional data and is not a runtime mode that can connect to real services.
 
-## Model List
+## Model list
 
 Use the model list to answer:
 
@@ -24,7 +24,7 @@ If a client fails to request a model, first check whether the model is visible h
 
 A visible model does not guarantee requests will succeed. Auth, quota, upstream state, and routing rules can still fail.
 
-## Clear Login Storage
+## Clear login storage
 
 Clear login storage removes saved panel connection information from the current browser. Use it when:
 
@@ -34,7 +34,7 @@ Clear login storage removes saved panel connection information from the current 
 
 This does not delete server configuration, auth files, SQLite data, or CPA configuration. It only affects the current browser.
 
-## What To Collect For Troubleshooting
+## What to collect for troubleshooting
 
 Before reporting a problem, record:
 

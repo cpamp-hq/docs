@@ -1,4 +1,4 @@
-# Manager Server Guide
+# Manager Server guide
 
 Manager Server is the backend for the full CPAMP experience. It hosts `management.html`, stores local SQLite data, consumes the CPA usage queue through the collector, and protects management capabilities with the CPAMP Admin Key.
 
@@ -9,7 +9,7 @@ Most users do not need to read this page from top to bottom. Start with the docu
 | Install Full Mode for the first time    | [Quick Start](../guide/getting-started.md)                         |
 | Change the CPA connection or Monitoring | [Configuration](../manual/configuration.md)                        |
 | Monitoring has no data                  | [Monitoring Has No Data](../troubleshooting/request-monitoring.md) |
-| Upgrade or back up                      | [Upgrade CPAMP](./update.md), [Backup And Restore](./backup.md)    |
+| Upgrade or back up                      | [Upgrade CPAMP](./update.md), [Backup and Restore](./backup.md)    |
 
 This page is mainly for advanced deployments that need environment variables, custom collection networking, runtime endpoints, or data-directory control.
 
@@ -27,7 +27,7 @@ http://<cpa-host>:8317/management.html
 
 The CPAMP Lightweight Panel does not connect to or read Manager Server SQLite and does not provide full historical monitoring, model prices, API key aliases, import/export, or server inspection history.
 
-## What Manager Server Does
+## What Manager Server does
 
 Manager Server:
 
@@ -65,7 +65,7 @@ CPA still runs separately. CPAMP does not bundle CPA.
 
 :::
 
-## First Setup And Login
+## First setup and login
 
 On first startup, CPAMP needs an admin key. You can provide one:
 
@@ -100,7 +100,7 @@ After setup:
 - Manager Server uses the resolved CPA Management Key when calling CPA.
 - New browsers no longer need the CPA Management Key.
 
-## CPA Prerequisites
+## CPA prerequisites
 
 Request monitoring requires CPA usage publishing and the CPA usage queue.
 
@@ -161,7 +161,7 @@ auto -> RESP Pub/Sub -> HTTP usage queue -> RESP pop fallback
 
 RESP transports cannot pass through a normal HTTP reverse proxy. If you see `unsupported RESP prefix 'H'`, the RESP client is probably connecting to an HTTP endpoint.
 
-## Configuration Boundary
+## Configuration boundary
 
 Managed by Manager Server:
 
@@ -187,7 +187,7 @@ Still managed by CPA:
 
 Saving CPAMP configuration does not rewrite the full CPA `config.yaml`.
 
-## Environment Variables
+## Environment variables
 
 | Variable                                | Default                                                     | Description                                                                                                                                                                                                                        |
 | --------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -247,7 +247,7 @@ USAGE_DASHBOARD_HOURLY_ROLLUP_ENABLED=false
 
 Restart Manager Server after changing it. Dashboard and Usage Analytics will always use raw events while disabled. Except for the one-time startup format upgrade described below, disabling this runtime switch does not delete current-format rollup data. The switch is not exposed in the UI.
 
-Historical usage archives are stored under `usage-archives/` in the resolved data directory. Each segment is a sequence-numbered gzip JSONL file (`segment-*.jsonl.gz`). Usage import reads decompressed JSONL and does not automatically decode a `.gz` file; follow the archive-recovery procedure in [Backup And Restore](./backup.md). If only `USAGE_DB_PATH` or `dbPath` overrides the database location and no data directory is explicitly configured, the archive directory is placed beside that SQLite file. When both a data directory and database path are explicit, the data directory wins, so include that separate archive location in backups. On POSIX systems Manager Server creates directories as `0700` and files as `0600`. Windows inherits the parent directory ACL, so protect the resolved archive parent so only the service account and authorized administrators can access it. SQLite stores archive runs, segments, the maintenance lock, and the event identity ledger. Manual maintenance endpoints accept the CPAMP Admin Key only:
+Historical usage archives are stored under `usage-archives/` in the resolved data directory. Each segment is a sequence-numbered gzip JSONL file (`segment-*.jsonl.gz`). Usage import reads decompressed JSONL and does not automatically decode a `.gz` file; follow the archive-recovery procedure in [Backup and Restore](./backup.md). If only `USAGE_DB_PATH` or `dbPath` overrides the database location and no data directory is explicitly configured, the archive directory is placed beside that SQLite file. When both a data directory and database path are explicit, the data directory wins, so include that separate archive location in backups. On POSIX systems Manager Server creates directories as `0700` and files as `0600`. Windows inherits the parent directory ACL, so protect the resolved archive parent so only the service account and authorized administrators can access it. SQLite stores archive runs, segments, the maintenance lock, and the event identity ledger. Manual maintenance endpoints accept the CPAMP Admin Key only:
 
 - `POST /v0/management/usage/archives/preview` with `{"cutoff_timestamp_ms": ...}` previews the eligible event count and estimated size.
 - `POST /v0/management/usage/archives` with the same `{"cutoff_timestamp_ms": ...}` body creates a `previewed` run.
@@ -278,9 +278,9 @@ The workspace has two tabs, **Archive management** and **Import / export**, with
 
 The URL preserves the tab, purpose, cutoff, status and source filters, selected record, and drawer. Refresh and browser history restore views and read state; they never create an archive or start cleanup automatically. On phones, drawers fill the screen and keep their footer actions visible. If cleanup succeeds but a subsequent storage refresh fails, the page retains the successful result and offers a read-only refresh instead of repeating cleanup.
 
-### Reclaim SQLite Space While Stopped
+### Reclaim SQLite space while stopped
 
-Logical deletion normally does not shrink the SQLite file immediately. Before compacting, back up the complete data set as described in [Backup And Restore](./backup.md), stop every Manager Server connected to the database, and reserve temporary free space conservatively equal to at least the current database-file size. Static `previewed`, `archived`, `verified`, and `failed` runs do not block compaction; recorded maintenance locks and active `archiving`, `verifying`, or `deleting` stages do. Pending derived-data migrations are allowed and their checkpoint state is preserved exactly. Never delete WAL, SHM, or a maintenance lock manually.
+Logical deletion normally does not shrink the SQLite file immediately. Before compacting, back up the complete data set as described in [Backup and Restore](./backup.md), stop every Manager Server connected to the database, and reserve temporary free space conservatively equal to at least the current database-file size. Static `previewed`, `archived`, `verified`, and `failed` runs do not block compaction; recorded maintenance locks and active `archiving`, `verifying`, or `deleting` stages do. Pending derived-data migrations are allowed and their checkpoint state is preserved exactly. Never delete WAL, SHM, or a maintenance lock manually.
 
 Native package:
 
@@ -367,7 +367,7 @@ When `USAGE_QUOTA_COOLDOWN_ENABLED`, `USAGE_ACCOUNT_ACTIONS_ENABLED`, or `USAGE_
 
 ::: details Advanced: runtime endpoints
 
-## Runtime Endpoints
+## Runtime endpoints
 
 | Endpoint                                                         | Purpose                                                                                                      |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -417,7 +417,7 @@ Authorization: Bearer <CPAMP_ADMIN_KEY>
 
 :::
 
-## Data And Security
+## Data and security
 
 Back up:
 
@@ -441,7 +441,7 @@ Security notes:
 - Raw failure bodies stay local in SQLite. Normal APIs and JSONL exports expose sanitized summaries instead of raw diagnostic bodies.
 - Archive JSONL files may contain event-level `fail_body` and `raw_json`; protect them with the same access controls as the live SQLite database.
 
-## Import And Export
+## Import and export
 
 Manager Server exports JSONL / NDJSON usage events.
 

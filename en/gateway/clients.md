@@ -1,8 +1,8 @@
-# Client Configuration
+# Client configuration
 
 Clients need the CPA address and a normal CPA API Key. Do not point Codex, Claude Code, OpenCode, or OpenAI SDKs at CPAMP; CPAMP observes and manages, but it does not serve normal model traffic.
 
-## General Rules
+## General rules
 
 | Item       | Recommendation                                                                            |
 | ---------- | ----------------------------------------------------------------------------------------- |
@@ -34,7 +34,7 @@ Before connecting Claude Code:
 
 OAuth success only means authentication completed. If requests still fail, check account state in Accounts first, then read the Monitoring failure summary.
 
-## OpenCode And General OpenAI Clients
+## OpenCode and general OpenAI clients
 
 OpenCode, OpenAI SDKs, and most relay clients use the OpenAI-compatible `/v1/...` API:
 
@@ -46,6 +46,6 @@ Model:    model name or alias exposed by CPA
 
 Behind a reverse proxy, a 401 from `/v1/models` is usually a CPA API Key problem. A 401 from `/v0/management/config` is a CPAMP management login problem.
 
-## Factory Droid And Other Tools
+## Factory droid and other tools
 
 Any tool that accepts an OpenAI-compatible or Gemini-compatible endpoint can use the API exposed by CPA. The important part is that traffic passes through CPA; only then can CPAMP observe request events, cost, and account health.

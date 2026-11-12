@@ -4,7 +4,7 @@ Logs helps diagnose runtime issues. Use it when monitoring summaries are not eno
 
 Use [System](./system.md) for version, runtime mode, and model-list checks.
 
-## When To Use Logs
+## When to use logs
 
 - Provider requests fail and Monitoring does not explain enough.
 - OAuth login or callback fails.
@@ -13,7 +13,7 @@ Use [System](./system.md) for version, runtime mode, and model-list checks.
 - Reverse proxy paths hit the wrong upstream.
 - CPA or Manager Server connection is unhealthy.
 
-## Page Actions
+## Page actions
 
 - Refresh logs.
 - Hide management-panel logs so model requests and runtime errors are easier to see.
@@ -22,7 +22,7 @@ Use [System](./system.md) for version, runtime mode, and model-list checks.
 
 If request logging is enabled, CPA's separate error-request log list may be empty. That does not mean no request failed. Use [Monitoring](./monitoring.md) for sanitized failure summaries.
 
-## Investigation Flow
+## Investigation flow
 
 1. Get the approximate time from Monitoring or the page error.
 2. Refresh logs and locate the same time window.
@@ -30,7 +30,7 @@ If request logging is enabled, CPA's separate error-request log list may be empt
 4. If logs point to auth or quota, continue with [Accounts](./accounts.md).
 5. If logs point to plugins, continue with [Plugin Management](./plugins.md) and check resource paths.
 
-## Do Not Share
+## Do not share
 
 Logs may include paths, headers, or upstream summaries. Before sharing, remove:
 

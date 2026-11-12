@@ -2,7 +2,7 @@
 
 This guide explains how to upgrade CPAMP without losing SQLite data, `data.key`, or locally managed secrets. Follow the section for the way CPAMP is currently deployed; do not overwrite an existing deployment with first-install commands.
 
-## Before You Upgrade
+## Before you upgrade
 
 1. Read the target [release notes](../reference/releases.md) and the GitHub Release Upgrade Notes.
 2. Record the current image tag or native version, launch command, environment variables, and data directory.
@@ -14,9 +14,9 @@ This guide explains how to upgrade CPAMP without losing SQLite data, `data.key`,
    - Installer-managed `secrets/`, `.env`, `compose.yaml`, or `config.json`.
    - Custom reverse-proxy, systemd, launchd, or Windows service configuration.
 
-See [Backup And Restore](./backup.md) for safe procedures. A CPA Management Key encrypted in SQLite cannot be recovered if `data.key` is lost.
+See [Backup and Restore](./backup.md) for safe procedures. A CPA Management Key encrypted in SQLite cannot be recovered if `data.key` is lost.
 
-## What Happens After Startup
+## What happens after startup
 
 - Manager Server applies compatible SQLite schema and metadata migrations automatically; do not run SQL manually.
 - Large historical corrections may continue in the background after the HTTP server starts listening.
@@ -25,7 +25,7 @@ See [Backup And Restore](./backup.md) for safe procedures. A CPA Management Key 
 - Use authenticated `GET /status` to inspect migration, collector, event, and `databaseMaintenance` state. The global warning, System Info, and Request Monitoring explain when offline maintenance is required.
 - The Usage Maintenance page in a Manager Server-hosted panel shows migration, aggregate, active archive, and reclaimable SQLite state. A regular CPA-hosted panel does not show this entry.
 
-### If Database Maintenance Is Degraded
+### If database maintenance is degraded
 
 Manager Server binds HTTP before running work whose cost grows with historical data. Missing indexes on populated tables and some legacy-derived cleanup are therefore not executed without a bound during startup. This does not mean data is missing, but historical request queries can become noticeably slower or time out until the query indexes are prepared.
 
@@ -51,7 +51,7 @@ cpa-manager-plus cleanup-derived --db-path /path/to/usage.sqlite
 
 Stop Manager Server first because the offline command requires the exclusive SQLite process lock. The web UI does not run cleanup automatically, spawn a cleanup subprocess, or create large-table indexes online. The global warning reads bounded metadata through `/status?scope=database-maintenance`, so maintenance polling does not scan or count `usage_events`. After the command completes and Manager Server restarts, `/status.databaseMaintenance` recovers from the real metadata automatically. `cleanup-derived` never deletes, rebuilds, or rewrites authoritative `usage_events`.
 
-## Docker Deployment Created By The Installer
+## Docker Deployment created by the installer
 
 Do not rerun the installer. Enter the original installation directory and update the images:
 
@@ -73,7 +73,7 @@ docker compose up -d cpa-manager-plus
 
 Do not rerun the installer with `CPAMP_OVERWRITE=1` as an upgrade shortcut. That option regenerates configuration and may overwrite maintained `.env`, `compose.yaml`, CPA configuration, or `run.sh` files.
 
-## Manually Maintained Docker Compose
+## Manually maintained Docker Compose
 
 ### Tracking `latest`
 
@@ -83,7 +83,7 @@ docker compose up -d cpa-manager-plus
 docker compose logs --tail=100 cpa-manager-plus
 ```
 
-### Pinned Version
+### Pinned version
 
 Change the Compose image to the target version:
 
@@ -138,7 +138,7 @@ If CPA runs on a Linux host, retain:
 
 Removing the old container does not remove a named volume, but removing the volume destroys the data.
 
-## Native Deployment Created By The Installer
+## Native deployment created by the installer
 
 The installer normally creates:
 
@@ -160,11 +160,11 @@ Do not overwrite the running version directory:
 6. If the generated systemd unit is installed, update `WorkingDirectory` and `ExecStart`, then run `systemctl daemon-reload`.
 7. Start and verify the new version before deciding whether to remove the old runtime.
 
-Do not copy only `usage.sqlite` and omit WAL/SHM. Back up while the process is stopped or use a safe SQLite method from [Backup And Restore](./backup.md).
+Do not copy only `usage.sqlite` and omit WAL/SHM. Back up while the process is stopped or use a safe SQLite method from [Backup and Restore](./backup.md).
 
 ## Manual Native Packages
 
-### macOS Or Linux, Foreground Or Control Script
+### MacOS or Linux, foreground or control script
 
 1. Run `./cpa-manager-plusctl stop`, or stop your process supervisor.
 2. Back up the data directory and `data.key`.
@@ -180,7 +180,7 @@ Do not copy only `usage.sqlite` and omit WAL/SHM. Back up while the process is s
 
 Do not extract over a running directory; that can mix binary, control script, and embedded panel versions.
 
-### Linux systemd With A Fixed Program Directory
+### Linux systemd with a fixed program directory
 
 If the service always launches `/opt/cpa-manager-plus/cpa-manager-plus`:
 
@@ -234,7 +234,7 @@ rm static/management.html
 
 When `Disable Panel Auto Updates` is enabled, CPA downloads a panel only when the cached file is absent. Confirm that the file is CPA's panel cache, not Manager Server persistent data, before removing it.
 
-## Custom `management.html` Or `PANEL_PATH`
+## Custom `management.html` or `PANEL_PATH`
 
 For a manually deployed single-file panel:
 
@@ -247,7 +247,7 @@ Replacing only `management.html` does not update Manager Server APIs. Mixing a f
 
 `PANEL_PATH` changes which `management.html` Manager Server serves; the root `/favicon.ico` and `/apple-touch-icon.png` endpoints remain CPAMP service assets. This preserves Safari/iOS compatibility when `PANEL_PATH` points to an official CPAMP Release panel. A third-party panel that needs different branding should use its own explicit icon URLs or embedded icons.
 
-## Verify The Upgrade
+## Verify the upgrade
 
 Run:
 
@@ -270,9 +270,9 @@ Confirm:
 - `/status.databaseMaintenance.required` is `false`. If it is `true`, inspect the deferred-index and offline-job counts and follow the offline steps above.
 - Reverse-proxied `/management.html`, `/usage-service/*`, and management API paths still route to the correct service.
 
-For releases involving historical archives or large databases, rehearse on staging: complete backup → reserve temporary free space at least equal to the database-file size → stop every Manager Server → `compact-usage` → start service → check health/status/analytics → decompress an archive sample as documented in [Backup And Restore](./backup.md) and confirm that the source database skips it idempotently → confirm that the same sample is added to an empty isolated recovery instance → restore the complete backup into a separate directory and verify again. Physical compaction is not an automatic upgrade step; run it only after logical deletion when disk space must be reclaimed. Pending derived-data migration checkpoints are preserved by compaction and continue after restart.
+For releases involving historical archives or large databases, rehearse on staging: complete backup → reserve temporary free space at least equal to the database-file size → stop every Manager Server → `compact-usage` → start service → check health/status/analytics → decompress an archive sample as documented in [Backup and Restore](./backup.md) and confirm that the source database skips it idempotently → confirm that the same sample is added to an empty isolated recovery instance → restore the complete backup into a separate directory and verify again. Physical compaction is not an automatic upgrade step; run it only after logical deletion when disk space must be reclaimed. Pending derived-data migration checkpoints are preserved by compaction and continue after restart.
 
-## Rollback Principles
+## Rollback principles
 
 - Docker: restore the previous image tag and recreate the container while mounting the pre-upgrade data backup.
 - Native: stop the new version and restore the old binary, configuration, and pre-upgrade data backup.

@@ -2,7 +2,7 @@
 
 OAuth Login adds or reauthorizes accounts. It answers "how do I get a usable credential saved?" Account enablement, batch maintenance, and status decisions belong in [Accounts](./accounts.md).
 
-## Available Entries
+## Available entries
 
 The page shows login methods based on CPA and plugin capabilities. Common entries include:
 
@@ -19,7 +19,7 @@ The page shows login methods based on CPA and plugin capabilities. Common entrie
 
 Some entries appear only when the runtime supports them. If an entry is missing, check CPA version, plugin status, and configuration.
 
-## Standard Flow
+## Standard flow
 
 1. Click the provider login button.
 2. Complete login and authorization in the provider page.
@@ -42,7 +42,7 @@ Muse / Meta OAuth stores an account credential whose DCA is used only for authen
 
 Accounts does not currently expose one-click Meta reauthorization. Return to OAuth Login and repeat Device Flow when reauthorization is needed. Full Muse / Meta support requires CPA `v7.3.4+`.
 
-## Remote Browser Callback
+## Remote browser callback
 
 If CPAMP runs on a remote server, the provider may redirect to `http://localhost:...`. In that case:
 

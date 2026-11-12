@@ -1,8 +1,8 @@
-# Backup And Restore
+# Backup and restore
 
 CPAMP keeps request history, configuration, and encrypted credentials on the host. The common mistake is backing up only `usage.sqlite` and missing WAL/SHM files, `data.key`, or secret files in the install directory.
 
-## Required Backup Files
+## Required backup files
 
 Back up these files as a set:
 
@@ -14,7 +14,7 @@ Back up these files as a set:
 
 If your deployment directory contains custom configuration files, back them up too. With the one-click installer, also back up `secrets/` and `data/` under the install directory; after a successful import, `secrets/cpa-management-key` is normally gone, but it may remain after a failed upgrade or with `CPAMP_SKIP_EXECUTE=1` for retry. Manual env/secret deployments should back up their matching secret files.
 
-## Why data.key Is Required
+## Why data.key is required
 
 CPA connections saved through setup or the panel encrypt the CPA Management Key with `data.key` before saving it to SQLite.
 
@@ -28,7 +28,7 @@ Archive files may contain event-level `fail_body` and `raw_json`, so protect the
 
 The Usage Maintenance “Export usage” action is a complete JSONL snapshot of the current raw `usage_events`. It is independent of `USAGE_QUERY_LIMIT`, streams bounded batches from a stable snapshot boundary, and excludes events written after the export began. It is not a complete CPAMP backup and does not automatically merge raw events already deleted from SQLite back out of `usage-archives/` segments; back up the complete data set above for migration or disaster recovery.
 
-## Docker Backup Example
+## Docker backup example
 
 If you use a named volume, stop the container first, then export through a temporary container:
 
@@ -50,7 +50,7 @@ cp -a /srv/cpa-manager-plus-data /srv/cpa-manager-plus-data.backup
 docker start cpa-manager-plus
 ```
 
-## Native Package Backup
+## Native Package backup
 
 Stop the process, then copy the data directory:
 
@@ -76,7 +76,7 @@ Copy-Item -Recurse .\data .\data.backup
 
 If restore produces decryption errors, first check whether `data.key` matches the SQLite database.
 
-## Restore Raw Request History From A Verified Archive
+## Restore raw request history from a verified archive
 
 Prefer a complete restore from SQLite, WAL/SHM, `data.key`, and `usage-archives/` captured at the same point in time. The segment-import procedure below is for recovering archived request history into an isolated environment when the original database is unavailable. It is not a table-level merge procedure for a live production database.
 
@@ -108,7 +108,7 @@ The archive “Abandon task” action is allowed for `previewed` runs without pu
 
 Note: A complete backup taken strictly before the first raw deletion (consisting of `usage.sqlite`, `usage.sqlite-wal`, `usage.sqlite-shm`, `data.key`, and `usage-archives/`) serves as the recovery boundary if a future upgrade requires complete historical raw events to rebuild derived data. After raw events are deleted, pricing model sets and context-tier thresholds are frozen, and a full historical rebuild may require restoring that pre-deletion backup or using a dedicated migration path provided by that version.
 
-## Reclaim Physical Space After Logical Deletion
+## Reclaim physical space after logical deletion
 
 Deletion in the Usage Maintenance page removes only archived and verified raw rows. It does not immediately shrink the SQLite file. After completing the stopped backup above, run:
 
@@ -127,7 +127,7 @@ docker compose up -d cpa-manager-plus
 
 Stop every Manager Server connected to the database before running the command. The process-level database lock rejects a running Manager Server, and SQLite exclusive access rejects conflicting transactions. Any recorded maintenance lock or active `archiving`/`verifying`/`deleting` stage also blocks compaction; static `previewed`, `archived`, `verified`, and `failed` run can be compacted. Pending derived-data migrations are preserved exactly and continue after the server restarts; `compact-usage` does not advance, reset, or rewrite their checkpoints. If a lock belongs to a resumable active or failed run, start Manager Server and resume that run before retrying. If a lock remains for an inactive or terminal run, preserve the backup and logs and stop for diagnosis; never delete the lock or WAL manually. Keep the complete backup. Because VACUUM rebuilds the database file, conservatively reserve temporary free space of up to about twice the current usage.sqlite size to prevent compaction failures from running out of disk space. During execution, compact-usage outputs the current stage and periodic heartbeat status for long-running stages to stderr; the final CompactResult JSON is written strictly to stdout so that stdout can be safely redirected for machine-readable consumption. After compaction, start the server and verify `/health`, `/status`, Dashboard, Usage Analytics, and Usage Maintenance. After decompressing one archive sample as described above, re-importing it into the source database should remain an idempotent skip, while importing it into an empty isolated recovery instance should add the event.
 
-## Move Manager Configuration Without Request History
+## Move Manager configuration without request history
 
 If the old `usage.sqlite` is large and request history is no longer needed, start the replacement instance with an empty data directory and use the existing Manager configuration API to move the non-sensitive CPA URL, collector, Codex inspection, and External Usage Service settings. This does not copy `usage_events`, rollups, inspection run history, model prices, API Key aliases, or account-processing policy, and it does not export the CPA Management Key.
 
