@@ -9,6 +9,21 @@ When reviewing a new version, focus on three things: what changed, whether anyth
 
 Each Release lists major features, fixes, downloads, and any required upgrade notes.
 
+## Release channels and image tags
+
+Stable 1.x is the only production release channel. Docker Hub `seakee/cpa-manager-plus` currently publishes these tags:
+
+| Tag | Points to |
+| --- | --- |
+| `latest` | The newest stable release |
+| `1.14` | The newest 1.14.x release |
+| `1.14.10`, `v1.14.10` | That exact version, under both spellings |
+| `preview` | Preview builds that are not for production |
+
+Pin an exact version in production so a restart never changes the running image without review. `latest` follows each stable release and moves forward automatically.
+
+v2 is a prerelease channel. Its documentation lives at https://cpamp-docs.seakee.dev/next/ and is separate from this Stable documentation. `latest` and in-app updates do not offer v2, so a Stable deployment stays on 1.x unless you deliberately switch channels.
+
 ## Before upgrading
 
 1. Read the target version's Upgrade Notes.

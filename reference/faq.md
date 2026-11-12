@@ -8,7 +8,9 @@ CPAMP 统计和监控能力应从 Manager Server 托管面板进入：
 http://<host>:18317/management.html
 ```
 
-## 应该选择哪种使用方式？
+## 选择与安装
+
+### 应该选择哪种使用方式？
 
 | 目标                                         | 推荐模式                                     |
 | -------------------------------------------- | -------------------------------------------- |
@@ -19,7 +21,7 @@ http://<host>:18317/management.html
 
 CPAMP 轻量面板由 CPA 直接托管，是官方 Management Center 的增强替代 UI。它不配置 Manager Server，也不读取 Manager Server SQLite 数据。需要完整 CPAMP 能力时，使用 Docker 或原生包启动 Manager Server，并打开 `:18317/management.html`。
 
-## 打开面板后应该访问哪个地址？
+### 打开面板后应该访问哪个地址？
 
 CPAMP 完整模式（Docker 或原生包）：
 
@@ -35,7 +37,75 @@ http://<cpa-host>:8317/management.html
 
 如果你看到登录页而不是 setup，说明 Manager Server 已经配置过。请使用 CPAMP 管理员密钥登录。
 
-## 管理员密钥和 CPA Management Key 有什么区别？
+### Full Docker 打开的是登录页，不是 setup
+
+说明 Manager Server 已经配置过。
+
+请使用 CPAMP 管理员密钥：
+
+```text
+cpamp_...
+```
+
+不要在 CPAMP 登录表单中使用 CPA Management Key。如果管理员密钥丢失，阅读 [重置管理员密钥](../operations/reset-admin-key.md)。
+
+### setup 默认 CPA 地址不符合环境
+
+setup 表单中的默认 CPA 地址可能来自前端构建配置。
+
+修复方式：
+
+```text
+1. 手动填写正确的 CPA 地址。
+2. 使用 VITE_DEFAULT_CPA_BASE_URL=<your-cpa-url> 重新构建面板。
+```
+
+Docker Desktop 访问宿主机 CPA 常用：
+
+```text
+http://host.docker.internal:8317
+```
+
+同一个 Compose 网络常用：
+
+```text
+http://cli-proxy-api:8317
+```
+
+Linux 宿主机 CPA + Docker CPAMP 需要加 `--add-host=host.docker.internal:host-gateway`。详情见 [Docker 部署](../deployment/docker.md)。
+
+### 容器无法连接宿主机 CPA
+
+Docker 容器里的 `127.0.0.1` 指容器自身。
+
+如果 CPA 跑在 Linux 宿主机，CPAMP 跑在 Docker：
+
+```bash
+docker run -d \
+  --name cpa-manager-plus \
+  --restart unless-stopped \
+  --add-host=host.docker.internal:host-gateway \
+  -p 18317:18317 \
+  -v cpa-manager-plus-data:/data \
+  seakee/cpa-manager-plus:latest
+```
+
+然后使用：
+
+```text
+http://host.docker.internal:8317
+```
+
+在容器内测试：
+
+```bash
+docker exec -it cpa-manager-plus sh
+wget -qO- http://host.docker.internal:8317/healthz
+```
+
+## 登录与密钥
+
+### 管理员密钥和 CPA Management Key 有什么区别？
 
 | 位置                                | 使用的密钥                                |
 | ----------------------------------- | ----------------------------------------- |
@@ -48,23 +118,11 @@ http://<cpa-host>:8317/management.html
 
 不要混用这些密钥。通过 setup 或面板保存的 CPA 连接会把 CPA Management Key 用 `data.key` 加密后写入 SQLite；一键安装器提供的 env/secret 只作为一次性导入输入，成功后也会写入 SQLite 并从最终运行配置移除。手工 env/secret 部署仍从部署环境读取密钥。CPAMP 轻量面板由浏览器持有 CPA Management Key。
 
-## Full Docker 打开的是登录页，不是 setup
-
-说明 Manager Server 已经配置过。
-
-请使用 CPAMP 管理员密钥：
-
-```text
-cpamp_...
-```
-
-不要在 CPAMP 登录表单中使用 CPA Management Key。如果管理员密钥丢失，阅读 [重置管理员密钥](../operations/reset-admin-key.md)。
-
-## 忘记管理员密钥怎么办？
+### 忘记管理员密钥怎么办？
 
 先停止 Manager Server 并备份数据目录，然后按 [重置管理员密钥](../operations/reset-admin-key.md) 执行。
 
-## 启动或导入提示 CPA 连接记录冲突怎么办？
+### 启动或导入提示 CPA 连接记录冲突怎么办？
 
 该提示表示连接解析器无法从 SQLite 中的历史记录安全得出唯一连接，通常是没有完整 authority 的 partial 记录彼此冲突。完整的 `manager_config_v1` 始终优先；它与过期的旧 `setup` 不一致时会保留 manager 并 canonicalize setup，不需要修复；完整且兼容的旧 setup 也可以补全 partial manager。若确实收到无法解析的冲突错误，先停止 Manager Server，确认正确的 CPA URL 与 CPA Management Key，然后显式修复：
 
@@ -79,7 +137,31 @@ cpa-manager-plus store-cpa-connection \
 
 修复会把两边记录统一为你提供的连接并加密存储，采集器设置与其他数据保持不变；随后正常启动即可。详见[备份与迁移](../operations/backup.md)。
 
-## 只改了 CPA Panel Repository，为什么监控为空？
+### Manager Server 返回 401
+
+setup 后，Manager Server 接口需要：
+
+```text
+Authorization: Bearer <CPAMP_ADMIN_KEY>
+```
+
+示例：
+
+```bash
+curl -H "Authorization: Bearer <CPAMP_ADMIN_KEY>" \
+  http://<cpamp-host>:18317/status
+```
+
+```bash
+curl -H "Authorization: Bearer <CPAMP_ADMIN_KEY>" \
+  http://<cpamp-host>:18317/v0/management/config
+```
+
+CPA Management Key 不能用于 CPAMP Manager Server-only API。
+
+## 请求监控
+
+### 只改了 CPA Panel Repository，为什么监控为空？
 
 修改 CPA panel repository 只会改变 CPA 托管的前端页面。
 
@@ -110,32 +192,7 @@ CPA Management Key
 
 不要再寻找旧的 External Usage Service 配置项。
 
-## setup 默认 CPA 地址不符合环境
-
-setup 表单中的默认 CPA 地址可能来自前端构建配置。
-
-修复方式：
-
-```text
-1. 手动填写正确的 CPA 地址。
-2. 使用 VITE_DEFAULT_CPA_BASE_URL=<your-cpa-url> 重新构建面板。
-```
-
-Docker Desktop 访问宿主机 CPA 常用：
-
-```text
-http://host.docker.internal:8317
-```
-
-同一个 Compose 网络常用：
-
-```text
-http://cli-proxy-api:8317
-```
-
-Linux 宿主机 CPA + Docker CPAMP 需要加 `--add-host=host.docker.internal:host-gateway`。详情见 [Docker 部署](../deployment/docker.md)。
-
-## 请求监控为空怎么办？
+### 请求监控为空怎么办？
 
 先按 [请求监控排障](../troubleshooting/request-monitoring.md) 检查 `/status`、采集器、用量队列和保留时间。
 
@@ -191,7 +248,7 @@ eventCount
 
 如果两者都变化但页面为空，检查浏览器筛选条件、时间范围、硬刷新页面，并验证 `/v0/management/usage`。
 
-## `unsupported RESP prefix 'H'` 是什么？
+### `unsupported RESP prefix 'H'` 是什么？
 
 通常表示 RESP 采集器连到了 HTTP 端点。
 
@@ -211,7 +268,7 @@ http://cli-proxy-api:8317
 
 不要使用公网 HTTPS 反代域名。
 
-## HTTP 反向代理能代理 RESP 吗？
+### HTTP 反向代理能代理 RESP 吗？
 
 不能。RESP Pub/Sub 和 RESP pop 需要直接连接 CPA API 端口。HTTP queue 可以经过 HTTP proxy。
 
@@ -231,36 +288,39 @@ Fallback routes          -> CPA
 
 CPAMP 管理路径使用 CPAMP 管理员密钥；`/v1/*` 使用普通 API 密钥。
 
-## 容器无法连接宿主机 CPA
+### 停机期间的用量为什么无法恢复？
 
-Docker 容器里的 `127.0.0.1` 指容器自身。
+CPA 用量队列是内存队列，保留时间有限。
 
-如果 CPA 跑在 Linux 宿主机，CPAMP 跑在 Docker：
-
-```bash
-docker run -d \
-  --name cpa-manager-plus \
-  --restart unless-stopped \
-  --add-host=host.docker.internal:host-gateway \
-  -p 18317:18317 \
-  -v cpa-manager-plus-data:/data \
-  seakee/cpa-manager-plus:latest
-```
-
-然后使用：
+默认：
 
 ```text
-http://host.docker.internal:8317
+60 seconds
 ```
 
-在容器内测试：
+最大：
 
-```bash
-docker exec -it cpa-manager-plus sh
-wget -qO- http://host.docker.internal:8317/healthz
+```text
+3600 seconds
 ```
 
-## Docker 重建后数据没了
+如果 Manager Server 停机超过保留窗口，通常无法从 CPA 恢复那段时间的数据。请保持 Manager Server 持续运行。
+
+### `/models` 返回 412
+
+说明 Manager Server 尚未完成 setup。
+
+打开：
+
+```text
+http://<cpamp-host>:18317/management.html
+```
+
+先完成 setup。
+
+## 数据与备份
+
+### Docker 重建后数据没了
 
 通常是 `/data` 没挂载，或 Plus 启动到了新的空 volume。
 
@@ -285,7 +345,7 @@ Plus 示例 volume:   cpa-manager-plus-data
 
 如果期望看到旧数据，应挂载旧 volume 或复制旧数据。
 
-## 为什么备份需要 data.key？
+### 为什么备份需要 data.key？
 
 备份完整数据目录：
 
@@ -300,59 +360,13 @@ data.key
 
 一键安装器成功导入后，CPA Management Key 位于 SQLite 的加密配置中，`data.key` 与 SQLite 必须成对备份；安装器临时的 `secrets/cpa-management-key` 通常会被删除，但升级失败或跳过执行时可能仍需保留以便重试。手工 env/secret 部署则仍需备份对应的 secret 文件和数据目录。
 
-## Manager Server 返回 401
+### CPAMP 会上传数据吗？
 
-setup 后，Manager Server 接口需要：
+不会回传遥测。CPAMP 不包含分析 SDK，也不需要云账号。默认只连接你配置的 CPA 网关；模型价格同步、OAuth、提供商检查等可选功能只会在你明确配置或触发时访问对应外部服务。
 
-```text
-Authorization: Bearer <CPAMP_ADMIN_KEY>
-```
+## 面板与版本
 
-示例：
-
-```bash
-curl -H "Authorization: Bearer <CPAMP_ADMIN_KEY>" \
-  http://<cpamp-host>:18317/status
-```
-
-```bash
-curl -H "Authorization: Bearer <CPAMP_ADMIN_KEY>" \
-  http://<cpamp-host>:18317/v0/management/config
-```
-
-CPA Management Key 不能用于 CPAMP Manager Server-only API。
-
-## `/models` 返回 412
-
-说明 Manager Server 尚未完成 setup。
-
-打开：
-
-```text
-http://<cpamp-host>:18317/management.html
-```
-
-先完成 setup。
-
-## 停机期间的用量为什么无法恢复？
-
-CPA 用量队列是内存队列，保留时间有限。
-
-默认：
-
-```text
-60 seconds
-```
-
-最大：
-
-```text
-3600 seconds
-```
-
-如果 Manager Server 停机超过保留窗口，通常无法从 CPA 恢复那段时间的数据。请保持 Manager Server 持续运行。
-
-## CPAMP 轻量面板缺少监控或模型价格
+### CPAMP 轻量面板缺少监控或模型价格
 
 这是预期行为。
 
@@ -362,7 +376,7 @@ CPAMP 轻量面板不使用 Manager Server 分析能力，也不能挂接独立 
 http://<cpamp-host>:18317/management.html
 ```
 
-## CPA 面板仍显示旧面板
+### CPA 面板仍显示旧面板
 
 确认 CPA 配置指向本项目：
 
@@ -379,14 +393,10 @@ rm static/management.html
 
 如果开启了 `Disable Panel Auto Updates`，CPA 只有在缓存文件不存在时才会重新下载面板。
 
-## CPAMP 会上传数据吗？
-
-不会回传遥测。CPAMP 不包含分析 SDK，也不需要云账号。默认只连接你配置的 CPA 网关；模型价格同步、OAuth、提供商检查等可选功能只会在你明确配置或触发时访问对应外部服务。
-
-## 在线演示站会连接真实后端吗？
-
-不会。在线演示使用前端 mock 数据，不需要 CPA、Manager Server、CPA Management Key、Token 或 SQLite。
-
-## release 里的 management.html 是什么？
+### release 里的 management.html 是什么？
 
 `management.html` 是 release 包中的单文件管理面板，可由 Manager Server 托管，也可作为 CPAMP 轻量面板由 CPA 加载。在线文档仍通过 GitHub Pages 访问，不随安装包分发。
+
+### 在线演示站会连接真实后端吗？
+
+不会。在线演示使用前端 mock 数据，不需要 CPA、Manager Server、CPA Management Key、Token 或 SQLite。
