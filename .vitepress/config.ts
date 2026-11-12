@@ -219,10 +219,6 @@ const commonThemeConfig: DefaultTheme.Config = {
   logo: { light: '/brand/logo.svg', dark: '/brand/logo-white.svg', alt: 'CPA Manager Plus' },
   siteTitle: 'Docs',
   socialLinks: [{ icon: 'github', link: 'https://github.com/seakee/CPA-Manager-Plus' }],
-  footer: {
-    message: 'Released under the MIT License.',
-    copyright: 'Copyright 2026 Seakee.',
-  },
 };
 
 export default defineConfig({
@@ -306,6 +302,11 @@ export default defineConfig({
         outline: {
           label: '本页目录',
         },
+        footer: {
+          message:
+            '<a href="https://cpamp.seakee.dev/zh/">官网</a> · <a href="https://cpamp-demo.seakee.dev/">在线演示</a> · <a href="https://github.com/seakee/CPA-Manager-Plus">GitHub</a> · 基于 MIT 许可证发布',
+          copyright: 'Copyright 2026 Seakee.',
+        },
         docFooter: {
           prev: '上一页',
           next: '下一页',
@@ -337,6 +338,11 @@ export default defineConfig({
         },
         outline: {
           label: 'On this page',
+        },
+        footer: {
+          message:
+            '<a href="https://cpamp.seakee.dev/">Website</a> · <a href="https://cpamp-demo.seakee.dev/">Live demo</a> · <a href="https://github.com/seakee/CPA-Manager-Plus">GitHub</a> · Released under the MIT License',
+          copyright: 'Copyright 2026 Seakee.',
         },
         docFooter: {
           prev: 'Previous page',
