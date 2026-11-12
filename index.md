@@ -1,34 +1,26 @@
 ---
 layout: home
-title: CPA / CLIProxyAPI 管理面板与可观测性文档
-description: CPA Manager Plus 使用文档，覆盖 CPA / CLIProxyAPI 配置、请求监控、成本分析、配额、Codex/xAI 账号健康、插件、部署与运维。
+title: 使用文档
+description: CPA Manager Plus 使用文档：自托管 CPA / CLIProxyAPI 管理面板的安装部署、请求监控、成本分析、配额、账号健康与运维。
 
 hero:
   name: CPA Manager Plus
-  text: CPA 管理面板与可观测性文档
-  tagline: 管理 CPA / CLIProxyAPI，持久化请求，分析成本，并处理 Codex、Claude 与 xAI 的配额和账号健康。
+  text: 使用文档
+  tagline: 安装、使用和维护自托管的 CPA / CLIProxyAPI 管理面板。
   actions:
     - theme: brand
       text: 快速开始
       link: /guide/getting-started
     - theme: alt
-      text: 选择面板
+      text: 选择模式
       link: /guide/choosing-a-panel
     - theme: alt
       text: 在线演示
       link: https://cpamp-demo.seakee.dev/
-
-features:
-  - title: 快速完成安装
-    details: 先选择轻量面板或完整模式，再按推荐步骤完成登录和验证。
-  - title: 管理模型与账号
-    details: 添加 Provider 和 OAuth，在统一凭证管理中检查配额与账号状态。
-  - title: 查看请求与成本
-    details: 定位失败请求，分析 Token、成本、延迟和调用方。
 ---
 
 <script setup>
-import homePreview from './images/home-zh.png';
+import homePreview from './images/home-zh.webp';
 </script>
 
 <figure class="cpamp-home-preview">

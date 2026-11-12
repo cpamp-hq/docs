@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig, type DefaultTheme } from 'vitepress';
 import { channel } from './channel';
 
@@ -9,21 +11,26 @@ const versionNav = (english: boolean): DefaultTheme.NavItem => ({
   ],
 });
 
+const homeUrl = (english: boolean) => (english ? 'https://cpamp.seakee.dev/' : 'https://cpamp.seakee.dev/zh/');
+const demoUrl = 'https://cpamp-demo.seakee.dev/';
+
 const zhNav: DefaultTheme.NavItem[] = [
-  { text: '首页', link: '/' },
-  { text: '选择面板', link: '/guide/choosing-a-panel' },
-  { text: '轻量面板', link: '/deployment/cpa-panel' },
-  { text: '快速开始', link: '/guide/getting-started' },
-  { text: '在线演示', link: 'https://cpamp-demo.seakee.dev/' },
+  { text: '指南', link: '/guide/getting-started', activeMatch: '^/(guide|deployment)/' },
+  { text: '功能手册', link: '/manual/dashboard', activeMatch: '^/manual/' },
+  { text: '运维', link: '/operations/update', activeMatch: '^/(operations|troubleshooting)/' },
+  { text: '参考', link: '/reference/faq', activeMatch: '^/(reference|gateway|migration)/' },
+  { text: '在线演示', link: demoUrl },
+  { text: '官网', link: homeUrl(false) },
   versionNav(false),
 ];
 
 const enNav: DefaultTheme.NavItem[] = [
-  { text: 'Home', link: '/en/' },
-  { text: 'Choose A Panel', link: '/en/guide/choosing-a-panel' },
-  { text: 'Lightweight Panel', link: '/en/deployment/cpa-panel' },
-  { text: 'Get Started', link: '/en/guide/getting-started' },
-  { text: 'Live Demo', link: 'https://cpamp-demo.seakee.dev/' },
+  { text: 'Guide', link: '/en/guide/getting-started', activeMatch: '^/en/(guide|deployment)/' },
+  { text: 'Manual', link: '/en/manual/dashboard', activeMatch: '^/en/manual/' },
+  { text: 'Operations', link: '/en/operations/update', activeMatch: '^/en/(operations|troubleshooting)/' },
+  { text: 'Reference', link: '/en/reference/faq', activeMatch: '^/en/(reference|gateway|migration)/' },
+  { text: 'Live demo', link: demoUrl },
+  { text: 'Website', link: homeUrl(true) },
   versionNav(true),
 ];
 
@@ -34,13 +41,22 @@ const zhSidebar: DefaultTheme.Sidebar = [
       { text: '文档首页', link: '/' },
       { text: '选择适合的模式', link: '/guide/choosing-a-panel' },
       { text: '快速开始', link: '/guide/getting-started' },
-      { text: '安装轻量面板', link: '/deployment/cpa-panel' },
-      { text: channel.beta ? '安装完整模式（1.x 安装器）' : '安装完整模式', link: '/deployment/installer' },
-      ...(channel.beta ? [{ text: '安装 v2 Beta（Docker）', link: '/deployment/docker' }] : []),
+      { text: 'CPAMP 与 CPA 如何协作', link: '/guide/runtime-model' },
     ],
   },
   {
-    text: '日常使用',
+    text: '安装部署',
+    items: [
+      { text: '安装轻量面板', link: '/deployment/cpa-panel' },
+      { text: channel.beta ? '一键安装器（1.x）' : '一键安装器', link: '/deployment/installer' },
+      { text: channel.beta ? '安装 v2 Beta（Docker）' : 'Docker 部署', link: '/deployment/docker' },
+      { text: '原生包部署', link: '/deployment/native' },
+      { text: '原生包后台控制', link: '/deployment/native-background-control' },
+      { text: '反向代理', link: '/deployment/reverse-proxy' },
+    ],
+  },
+  {
+    text: '功能手册',
     items: [
       { text: '仪表盘', link: '/manual/dashboard' },
       { text: 'AI 提供商', link: '/manual/ai-providers' },
@@ -50,35 +66,22 @@ const zhSidebar: DefaultTheme.Sidebar = [
       { text: '用量分析', link: '/manual/usage-analytics' },
       { text: '账号巡检（Codex / xAI）', link: '/manual/codex-inspection' },
       { text: '账号处理队列', link: '/manual/account-actions' },
+      { text: '模型价格', link: '/manual/model-prices' },
       { text: '插件管理', link: '/manual/plugins' },
       { text: '配置中心', link: '/manual/configuration' },
-    ],
-  },
-  {
-    text: '维护与排障',
-    items: [
-      { text: '更新 CPAMP', link: '/operations/update' },
-      { text: '备份与恢复', link: '/operations/backup' },
-      { text: '重置管理员密钥', link: '/operations/reset-admin-key' },
-      { text: '请求监控为空', link: '/troubleshooting/request-monitoring' },
       { text: '日志查看', link: '/manual/logs' },
       { text: '系统信息', link: '/manual/system' },
     ],
   },
   {
-    text: '高级配置',
-    collapsed: true,
+    text: '运维与排障',
     items: [
-      { text: 'CPAMP 与 CPA 如何协作', link: '/guide/runtime-model' },
-      { text: 'Docker 手动部署', link: '/deployment/docker' },
-      { text: '原生包部署', link: '/deployment/native' },
-      { text: '原生包后台控制', link: '/deployment/native-background-control' },
-      { text: '反向代理', link: '/deployment/reverse-proxy' },
+      { text: '更新 CPAMP', link: '/operations/update' },
+      { text: '备份与恢复', link: '/operations/backup' },
+      { text: '重置管理员密钥', link: '/operations/reset-admin-key' },
       { text: 'Manager Server', link: '/operations/manager-server' },
-      { text: '准备 CPA 网关', link: '/gateway/configuration' },
-      { text: '客户端接入', link: '/gateway/clients' },
       { text: '配置与数据目录', link: '/operations/configuration' },
-      { text: '模型价格', link: '/manual/model-prices' },
+      { text: '请求监控为空', link: '/troubleshooting/request-monitoring' },
     ],
   },
   {
@@ -86,72 +89,65 @@ const zhSidebar: DefaultTheme.Sidebar = [
     collapsed: true,
     items: [
       { text: '常见问题', link: '/reference/faq' },
-      { text: '能力矩阵', link: '/reference/capability-matrix' },
+      { text: '准备 CPA 网关', link: '/gateway/configuration' },
+      { text: '客户端接入', link: '/gateway/clients' },
       { text: '提供商与兼容接口', link: '/gateway/providers' },
+      { text: '能力矩阵', link: '/reference/capability-matrix' },
       { text: '版本说明', link: '/reference/releases' },
       { text: '从 CPA-Manager 迁移', link: '/migration/from-cpa-manager' },
+      { text: '性能优化记录（2026-07）', link: '/operations/performance-optimization-2026-07-10' },
     ],
   },
 ];
 
 const enSidebar: DefaultTheme.Sidebar = [
   {
-    text: 'Get Started',
+    text: 'Get started',
     items: [
-      { text: 'Docs Home', link: '/en/' },
-      { text: 'Choose A Mode', link: '/en/guide/choosing-a-panel' },
-      { text: 'Quick Start', link: '/en/guide/getting-started' },
-      { text: 'Install Lightweight Panel', link: '/en/deployment/cpa-panel' },
-      { text: channel.beta ? 'Install Full Mode (1.x installer)' : 'Install Full Mode', link: '/en/deployment/installer' },
-      ...(channel.beta ? [{ text: 'Install v2 Beta (Docker)', link: '/en/deployment/docker' }] : []),
+      { text: 'Docs home', link: '/en/' },
+      { text: 'Choose a mode', link: '/en/guide/choosing-a-panel' },
+      { text: 'Quick start', link: '/en/guide/getting-started' },
+      { text: 'How CPAMP works with CPA', link: '/en/guide/runtime-model' },
     ],
   },
   {
-    text: 'Daily Use',
+    text: 'Install and deploy',
+    items: [
+      { text: 'Install the Lightweight Panel', link: '/en/deployment/cpa-panel' },
+      { text: channel.beta ? 'One-click installer (1.x)' : 'One-click installer', link: '/en/deployment/installer' },
+      { text: channel.beta ? 'Install v2 Beta (Docker)' : 'Docker deployment', link: '/en/deployment/docker' },
+      { text: 'Native packages', link: '/en/deployment/native' },
+      { text: 'Native background control', link: '/en/deployment/native-background-control' },
+      { text: 'Reverse proxy', link: '/en/deployment/reverse-proxy' },
+    ],
+  },
+  {
+    text: 'Manual',
     items: [
       { text: 'Dashboard', link: '/en/manual/dashboard' },
-      { text: 'AI Providers', link: '/en/manual/ai-providers' },
+      { text: 'AI providers', link: '/en/manual/ai-providers' },
       { text: 'Accounts', link: '/en/manual/accounts' },
-      { text: 'OAuth Login', link: '/en/manual/oauth' },
+      { text: 'OAuth login', link: '/en/manual/oauth' },
       { text: 'Monitoring', link: '/en/manual/monitoring' },
-      { text: 'Usage Analytics', link: '/en/manual/usage-analytics' },
-      { text: 'Account Inspection (Codex / xAI)', link: '/en/manual/codex-inspection' },
-      { text: 'Account Action Queue', link: '/en/manual/account-actions' },
-      { text: 'Plugin Management', link: '/en/manual/plugins' },
+      { text: 'Usage analytics', link: '/en/manual/usage-analytics' },
+      { text: 'Account inspection (Codex / xAI)', link: '/en/manual/codex-inspection' },
+      { text: 'Account action queue', link: '/en/manual/account-actions' },
+      { text: 'Model prices', link: '/en/manual/model-prices' },
+      { text: 'Plugins', link: '/en/manual/plugins' },
       { text: 'Configuration', link: '/en/manual/configuration' },
-    ],
-  },
-  {
-    text: 'Maintenance And Troubleshooting',
-    items: [
-      { text: 'Upgrade CPAMP', link: '/en/operations/update' },
-      { text: 'Backup And Restore', link: '/en/operations/backup' },
-      { text: 'Reset Admin Key', link: '/en/operations/reset-admin-key' },
-      {
-        text: 'Monitoring Has No Data',
-        link: '/en/troubleshooting/request-monitoring',
-      },
       { text: 'Logs', link: '/en/manual/logs' },
       { text: 'System', link: '/en/manual/system' },
     ],
   },
   {
-    text: 'Advanced Configuration',
-    collapsed: true,
+    text: 'Operations and troubleshooting',
     items: [
-      { text: 'How CPAMP Works With CPA', link: '/en/guide/runtime-model' },
-      { text: 'Manual Docker Deployment', link: '/en/deployment/docker' },
-      { text: 'Native Packages', link: '/en/deployment/native' },
-      { text: 'Native Background Control', link: '/en/deployment/native-background-control' },
-      { text: 'Reverse Proxy', link: '/en/deployment/reverse-proxy' },
+      { text: 'Upgrade CPAMP', link: '/en/operations/update' },
+      { text: 'Backup and restore', link: '/en/operations/backup' },
+      { text: 'Reset the admin key', link: '/en/operations/reset-admin-key' },
       { text: 'Manager Server', link: '/en/operations/manager-server' },
-      { text: 'Prepare The CPA Gateway', link: '/en/gateway/configuration' },
-      { text: 'Client Configuration', link: '/en/gateway/clients' },
-      {
-        text: 'Configuration And Data Directory',
-        link: '/en/operations/configuration',
-      },
-      { text: 'Model Prices', link: '/en/manual/model-prices' },
+      { text: 'Configuration and data directory', link: '/en/operations/configuration' },
+      { text: 'Monitoring has no data', link: '/en/troubleshooting/request-monitoring' },
     ],
   },
   {
@@ -159,10 +155,13 @@ const enSidebar: DefaultTheme.Sidebar = [
     collapsed: true,
     items: [
       { text: 'FAQ', link: '/en/reference/faq' },
-      { text: 'Capability Matrix', link: '/en/reference/capability-matrix' },
-      { text: 'Providers And Compatibility APIs', link: '/en/gateway/providers' },
+      { text: 'Prepare the CPA gateway', link: '/en/gateway/configuration' },
+      { text: 'Client configuration', link: '/en/gateway/clients' },
+      { text: 'Providers and compatible APIs', link: '/en/gateway/providers' },
+      { text: 'Capability matrix', link: '/en/reference/capability-matrix' },
       { text: 'Releases', link: '/en/reference/releases' },
-      { text: 'Migrate From CPA-Manager', link: '/en/migration/from-cpa-manager' },
+      { text: 'Migrate from CPA-Manager', link: '/en/migration/from-cpa-manager' },
+      { text: 'Performance notes (2026-07)', link: '/en/operations/performance-optimization-2026-07-10' },
     ],
   },
 ];
@@ -217,6 +216,8 @@ const commonThemeConfig: DefaultTheme.Config = {
       },
     },
   },
+  logo: { light: '/brand/logo.svg', dark: '/brand/logo-white.svg', alt: 'CPA Manager Plus' },
+  siteTitle: 'Docs',
   socialLinks: [{ icon: 'github', link: 'https://github.com/seakee/CPA-Manager-Plus' }],
   footer: {
     message: 'Released under the MIT License.',
@@ -232,9 +233,16 @@ export default defineConfig({
   srcExclude: ['README.md', 'tests/**'],
   ignoreDeadLinks: false,
   lastUpdated: true,
-  head: channel.beta ? [['meta', { name: 'robots', content: 'noindex' }]] : [],
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${channel.base}favicon.svg` }],
+    ['link', { rel: 'icon', type: 'image/x-icon', href: `${channel.base}favicon.ico`, sizes: '16x16 32x32 48x48' }],
+    ['link', { rel: 'apple-touch-icon', href: `${channel.base}apple-touch-icon.png`, sizes: '180x180' }],
+    ['meta', { name: 'theme-color', content: '#005cff' }],
+    ['meta', { property: 'og:site_name', content: 'CPA Manager Plus Docs' }],
+    ...(channel.beta ? ([['meta', { name: 'robots', content: 'noindex' }]] as const) : []),
+  ],
   sitemap: channel.beta ? undefined : { hostname: 'https://cpamp-docs.seakee.dev/' },
-  transformPageData(pageData) {
+  transformPageData(pageData, { siteConfig }) {
     const isEnglish = pageData.relativePath.startsWith('en/');
     const siteTitle = 'CPA Manager Plus';
     const title = pageData.title ? `${pageData.title} | ${siteTitle}` : siteTitle;
@@ -243,8 +251,20 @@ export default defineConfig({
       (isEnglish
         ? 'CPA / CLIProxyAPI management panel and observability documentation for requests, cost, quota, failures, and account health.'
         : 'CPA / CLIProxyAPI 管理面板与可观测性文档，覆盖请求监控、成本、配额、失败诊断和账号健康。');
-    const pagePath = pageData.relativePath.replace(/index\.md$/, '').replace(/\.md$/, '.html');
-    const canonical = `https://cpamp-docs.seakee.dev${channel.base}${pagePath}`;
+    const toUrl = (relativePath: string) =>
+      `https://cpamp-docs.seakee.dev${channel.base}${relativePath.replace(/index\.md$/, '').replace(/\.md$/, '.html')}`;
+    const canonical = toUrl(pageData.relativePath);
+    const zhPath = isEnglish ? pageData.relativePath.slice(3) : pageData.relativePath;
+    const hasPair =
+      existsSync(join(siteConfig.srcDir, zhPath)) && existsSync(join(siteConfig.srcDir, `en/${zhPath}`));
+    const alternates = hasPair
+      ? ([
+          ['zh-CN', toUrl(zhPath)],
+          ['en', toUrl(`en/${zhPath}`)],
+          ['x-default', toUrl(zhPath)],
+        ] as const)
+      : [];
+    const ogImage = 'https://cpamp-docs.seakee.dev/og.jpg';
 
     pageData.frontmatter.head ??= [];
     pageData.frontmatter.head.push(
@@ -255,7 +275,14 @@ export default defineConfig({
       ['meta', { property: 'og:url', content: canonical }],
       ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
       ['meta', { name: 'twitter:title', content: title }],
-      ['meta', { name: 'twitter:description', content: description }]
+      ['meta', { name: 'twitter:description', content: description }],
+      ['meta', { property: 'og:image', content: ogImage }],
+      ['meta', { property: 'og:image:width', content: '1200' }],
+      ['meta', { property: 'og:image:height', content: '630' }],
+      ['meta', { property: 'og:image:alt', content: 'CPA Manager Plus dashboard' }],
+      ['meta', { property: 'og:locale', content: isEnglish ? 'en_US' : 'zh_CN' }],
+      ['meta', { name: 'twitter:image', content: ogImage }],
+      ...alternates.map(([hreflang, href]) => ['link', { rel: 'alternate', hreflang, href }] as [string, Record<string, string>])
     );
   },
   themeConfig: commonThemeConfig,
