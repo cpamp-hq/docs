@@ -1,9 +1,9 @@
 ---
-title: Account Action Queue And Safe Auto-Disable
+title: Account Action Queue and Safe Auto-Disable
 description: Review, disable, re-enable, resolve, or delete problem accounts from sanitized credential evidence without treating every 401/403 as invalid credentials.
 ---
 
-# Account Action Queue And Safe Auto-Disable
+# Account Action Queue and Safe Auto-Disable
 
 Account Action Queue centralizes auth-related candidates detected from Monitoring. It is not a request-details page. It lists accounts that may need human action.
 
@@ -11,13 +11,13 @@ If you need the failed request itself, start with [Monitoring](./monitoring.md).
 
 Open the [Account Action Queue Demo](https://cpamp-demo.seakee.dev/#/demo/monitoring/account-actions) to inspect fictional candidates and actions.
 
-## When Candidates Appear
+## When candidates appear
 
 When Monitoring captures revoked tokens, invalid OAuth, auth-file failures, or similar signals, CPAMP can add the account to the candidate queue. Realtime request responses and Codex Inspection use the same credential-failure policy so the same error does not produce conflicting actions.
 
 The queue is controlled by `USAGE_ACCOUNT_ACTIONS_ENABLED` or the Configuration switch. Automatic disable also requires `USAGE_ACCOUNT_ACTIONS_AUTO_DISABLE`, and depends on the queue being enabled.
 
-## Automation Boundaries
+## Automation boundaries
 
 CPAMP never auto-disables an account from the HTTP status alone. `401` and `403` are inputs, but the error code, response body, and safe response headers must provide a sufficiently explicit credential signal:
 
@@ -41,7 +41,7 @@ Do not treat every `401/403` as an auto-disable rule. Codex and xAI are both cla
 - **Status**: pending, ignored, resolved, or failed.
 - **Evidence**: sanitized failure summary and related request context.
 
-## Handling Candidates
+## Handling candidates
 
 1. Open evidence first and confirm the issue is not a one-off upstream error.
 2. If the account was already reauthorized or handled manually, mark it resolved.
@@ -51,14 +51,14 @@ Do not treat every `401/403` as an auto-disable rule. Codex and xAI are both cla
 
 Before deleting, confirm that the same auth file is not used by another model or project. Delete affects history and future tracking.
 
-## Related Pages
+## Related pages
 
 - Need failure details: [Monitoring](./monitoring.md).
 - Need reauth: [OAuth Login](./oauth.md).
 - Need account enable/disable: [Accounts](./accounts.md).
 - Need Codex/xAI quota or state: [Account Inspection](./codex-inspection.md).
 
-## Usage Advice
+## Usage advice
 
 Use this queue for recurring auth-class problems. It is not meant for one-off network errors, upstream 5xx, or missing model names. If unsure, ignore or observe first; do not delete immediately.
 

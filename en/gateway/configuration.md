@@ -1,10 +1,10 @@
-# Prepare The CPA Gateway
+# Prepare the CPA gateway
 
 Check this page only when deploying Full Mode manually or when Monitoring never receives data. Users who installed “CPA + CPAMP” with the installer can usually skip it.
 
-## Two Required Settings
+## Two required settings
 
-### 1. Allow CPAMP To Manage CPA
+### 1. Allow CPAMP to manage CPA
 
 ```yaml
 remote-management:
@@ -16,7 +16,7 @@ remote-management:
 - When CPAMP and CPA do not run in the same process, confirm that `allow-remote` permits communication.
 - Do not expose the CPA management port and key directly to an untrusted network.
 
-### 2. Publish Request Data For Full Mode
+### 2. Publish request data for Full Mode
 
 ```yaml
 usage-statistics-enabled: true
@@ -25,7 +25,7 @@ redis-usage-queue-retention-seconds: 60
 
 Lightweight Panel does not need request collection. Full Mode needs these settings for request history and Usage Analytics. Keep the default 60-second retention unless collection is frequently interrupted.
 
-## Confirm That CPA Is Ready
+## Confirm that CPA is ready
 
 1. CPA starts without configuration errors.
 2. CPAMP connects with the CPA URL and CPA Management Key.
@@ -33,7 +33,7 @@ Lightweight Panel does not need request collection. Full Mode needs these settin
 
 If the connection works but request data is missing, see [Monitoring Has No Data](../troubleshooting/request-monitoring.md).
 
-## Where To Make Daily Changes
+## Where to make daily changes
 
 | Task                                 | Recommended page                            |
 | ------------------------------------ | ------------------------------------------- |

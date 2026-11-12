@@ -1,4 +1,4 @@
-# Monitoring Has No Data
+# Monitoring has no data
 
 First confirm that you opened CPAMP Full Mode:
 
@@ -11,7 +11,7 @@ The v2 Beta entry is the control base path chosen at installation; the value abo
 
 The Lightweight Panel on CPA `:8317/management.html` does not store request history, so Monitoring is unavailable there by design.
 
-## Check In This Order
+## Check in this order
 
 1. **Send a real request**: confirm that Codex, Claude Code, or another client actually requested a model through CPA.
 2. **Check the CPA connection**: Dashboard should show CPA as connected with no authentication error.
@@ -19,7 +19,7 @@ The Lightweight Panel on CPA `:8317/management.html` does not store request hist
 4. **Wait for a new request**: Monitoring only shows events collected after it is enabled; expired events cannot be recovered.
 5. **Use one Full Mode instance**: do not let multiple Manager Servers read the same CPA request queue.
 
-## Troubleshoot By Symptom
+## Troubleshoot by symptom
 
 | Symptom                                 | Check first                                                    |
 | --------------------------------------- | -------------------------------------------------------------- |
@@ -29,7 +29,7 @@ The Lightweight Panel on CPA `:8317/management.html` does not store request hist
 | Data stopped after adding a proxy       | Let Manager Server connect directly to CPA `:8317` first       |
 | No new data immediately after upgrade   | Send a new request and check the current connection            |
 
-## Most Common Fix
+## Most common fix
 
 1. Confirm that client base URLs point to CPA, not CPAMP.
 2. Enable `usage-statistics-enabled` in CPA configuration.

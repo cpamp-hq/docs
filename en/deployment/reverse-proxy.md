@@ -15,7 +15,7 @@ This guide uses a 1.x Stable same-domain setup:
 
 This applies to 1.x Stable Full Docker / Manager Server mode. CPA itself serves `/management.html` for the CPAMP Lightweight Panel, so this mixed routing is usually unnecessary.
 
-## Choose Your Scenario
+## Choose your scenario
 
 | Goal                                        | Recommended approach                                                |
 | ------------------------------------------- | ------------------------------------------------------------------- |
@@ -25,7 +25,7 @@ This applies to 1.x Stable Full Docker / Manager Server mode. CPA itself serves 
 
 For most deployments, use separate domains or subdomains for CPAMP and CPA. Read the full route table only when both must share one domain.
 
-## Route Boundaries
+## Route boundaries
 
 The table below is the 1.x Stable split (v2 Beta forwards the whole origin to `18317` and needs no per-path routing):
 
@@ -93,7 +93,7 @@ Minimum for HTTP usage queue:
 v6.10.8+
 ```
 
-## Docker Compose Example
+## Docker Compose example
 
 The example assumes:
 
@@ -145,7 +145,7 @@ services:
 
 If CPA already runs on the host machine, omit the CPA service and point the Nginx upstream to a host-accessible address instead.
 
-## Nginx HTTP Example
+## Nginx HTTP example
 
 The example below targets the 1.x Stable `/management.html` panel. For v2 Beta, forward the whole origin to `18317` instead of reusing this path split.
 
@@ -287,7 +287,7 @@ server {
 
 In production, terminate TLS at the reverse proxy. Manager Server listens on `0.0.0.0:18317` by default. Use `HTTP_ADDR` to change it.
 
-## Nginx Runs On The Host
+## Nginx runs on the host
 
 If Nginx runs directly on the host instead of inside the Docker network, change the upstreams to host ports:
 
@@ -313,7 +313,7 @@ ports:
   - '18317:18317'
 ```
 
-## CPAMP First Setup (1.x Stable)
+## CPAMP first setup (1.x Stable)
 
 Open:
 

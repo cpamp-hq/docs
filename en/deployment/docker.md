@@ -1,12 +1,12 @@
 # Docker Deployment
 
-## v2: Single-Image Installation
+## V2: single-image installation
 
 ::: warning Choose the correct channel
-This section covers v2 single-image deployment. The existing 1.x single-service and separate CPA examples below remain **1.x Stable** instructions; `bin/install-cpamp.sh` also still installs 1.x by default. Do not mount an existing 1.x volume directly into v2: read [Upgrade And Rollback](../operations/update.md) first.
+This section covers v2 single-image deployment. The existing 1.x single-service and separate CPA examples below remain **1.x Stable** instructions; `bin/install-cpamp.sh` also still installs 1.x by default. Do not mount an existing 1.x volume directly into v2: read [Upgrade and Rollback](../operations/update.md) first.
 :::
 
-### Build Targets: `full` vs `slim`
+### Build targets: `full` vs `slim`
 
 The root `Dockerfile` provides two targets sharing byte-identical `cpamp-launcher`, `cpamp-runtime-supervisor`, `cpa-manager-plus`, and `cpamp-ingress` binaries:
 
@@ -15,7 +15,7 @@ The root `Dockerfile` provides two targets sharing byte-identical `cpamp-launche
 | `full` (current Compose default) | All CPAMP components + pinned official CPA `v8.0.55` | Completes **Fresh New / New Managed** offline as well as **External** |
 | `slim` | CPAMP components only (no `cli-proxy-api` binary) | Supports **External**, or prepares the pinned CPA in the setup wizard (**Fresh New** and **Adopt** on the review step, **Upgrade Managed** at the `cpa-import` step; via official GitHub, a CDN prefix, or upload, with SHA-256 digest verification) |
 
-### Run With `docker run` Or Docker Compose
+### Run with `docker run` or Docker Compose
 
 Inside the single container, `cpamp-launcher` supervises `Runtime Supervisor` (`127.0.0.1:9081`), `Manager` (`127.0.0.1:18319`), `Ingress` (public `0.0.0.0:18317`, control `127.0.0.1:9082`), and managed `CPA` (`127.0.0.1:8317`), exposing only port `18317` and a single `/data` volume:
 
@@ -45,9 +45,9 @@ docker compose config
 docker compose up -d --build
 ```
 
-Preserve the single-container security boundary: no Docker socket mount, privileged mode, host networking, or published internal loopback ports; do not use `--pid=host`, `--pid=container:...`, `--init`, or Compose `pid:` / `init: true`, and do not mount `/proc` with `hidepid` (`cpamp-launcher` must run as PID 1 in a private container PID namespace with an unfiltered `/proc` procfs view, and container UID `10001` is reserved for the managed CPA process). Back up the `/data` volume as a complete unit; see [Backup And Restore](../operations/backup.md). Configure graceful drain duration via `CPAMP_DRAIN_TIMEOUT` (default `90s`) and ensure `--stop-timeout` / `stop_grace_period >= CPAMP_DRAIN_TIMEOUT + 60s` (default `150s`).
+Preserve the single-container security boundary: no Docker socket mount, privileged mode, host networking, or published internal loopback ports; do not use `--pid=host`, `--pid=container:...`, `--init`, or Compose `pid:` / `init: true`, and do not mount `/proc` with `hidepid` (`cpamp-launcher` must run as PID 1 in a private container PID namespace with an unfiltered `/proc` procfs view, and container UID `10001` is reserved for the managed CPA process). Back up the `/data` volume as a complete unit; see [Backup and Restore](../operations/backup.md). Configure graceful drain duration via `CPAMP_DRAIN_TIMEOUT` (default `90s`) and ensure `--stop-timeout` / `stop_grace_period >= CPAMP_DRAIN_TIMEOUT + 60s` (default `150s`).
 
-### Initialize And Claim The Installation
+### Initialize and claim the installation
 
 Configure the real public origin reachable from the deployment environment. **Prefer an HTTPS origin behind a configured TLS reverse proxy**, for example `https://cpamp.example.com`; replace it with your actual domain and configure the proxy/certificate first. Plain HTTP is only for trusted local/isolated test networks, never for sending Handoff, Admin Key, or Client Key over untrusted networks. Set `CPAMP_PUBLIC_PORT` as well if the host port differs. The origin is not CPA's internal URL.
 
@@ -65,7 +65,7 @@ For New Managed, save the one-time first Client Key and verify model requests th
 
 After the wizard completes, later logins open the **control base path** chosen at installation on the same public origin (the wizard defaults to `/console`, for example `http://<host>:18317/console`; a custom path moves both the console and its frontend API `<control-base-path>/api/v2/*`, so trust the "Sign in and enter CPAMP" link on the completion page). v2 does not serve `/management.html`; it returns 404 and is not the v2 entry.
 
-## 1.x Stable: Manual Deployment Reference
+## 1.X Stable: manual deployment reference
 
 Docker is the simplest path for a new deployment. The CPAMP image contains Manager Server and the embedded `management.html` panel. CPA / CLI Proxy API is still a separate service, and can run in the same Compose stack.
 
@@ -79,7 +79,7 @@ http://<host>:18317/management.html
 
 Do not carry over the old CPA-Manager "CPA panel + External Usage Service URL" workflow. In Plus, the full feature set comes from Manager Server. The CPAMP Lightweight Panel is an independent UI choice hosted by CPA and does not connect to or read Manager Server SQLite monitoring data.
 
-## Choose Your Scenario
+## Choose your scenario
 
 | Your environment                         | Recommended action                                |
 | ---------------------------------------- | ------------------------------------------------- |
@@ -130,7 +130,7 @@ CPAMP can also enable this during first setup or config save.
 
 The environment-variable examples on this page are for manual Docker deployments and legacy compatibility. The one-click installer does not leave the CPA URL or CPA Management Key in the final Compose environment; it runs `store-cpa-connection` once and encrypts the connection into SQLite with `/data/data.key`. The configuration API also returns only `managementKeyConfigured`, never the saved CPA Key.
 
-## Deploy CPA And CPAMP Together
+## Deploy CPA and CPAMP together
 
 If CPA is not running yet, start CPA and CPAMP with this Compose file:
 
@@ -202,7 +202,7 @@ docker compose logs cpa-manager-plus
 
 After setup, new browsers log in with the CPAMP Admin Key. The CPA Management Key is encrypted and stored server-side.
 
-## Deploy CPAMP Only
+## Deploy CPAMP only
 
 If CPA is already running, start only CPAMP:
 
@@ -221,7 +221,7 @@ You can also use the GHCR image:
 ghcr.io/seakee/cpa-manager-plus:latest
 ```
 
-## CPA URL Examples
+## CPA URL examples
 
 | Scenario                                       | CPA URL to enter during CPAMP setup                                                    |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -252,7 +252,7 @@ Do not use `127.0.0.1` from inside a container to reach CPA on the host. Inside 
 
 ::: details Advanced: common environment variables
 
-## Common Environment Variables
+## Common environment variables
 
 | Variable                     | Default                           | Description                                      |
 | ---------------------------- | --------------------------------- | ------------------------------------------------ |
@@ -276,7 +276,7 @@ For the full runtime reference, see [Manager Server Guide](../operations/manager
 
 :::
 
-## Data Persistence And Backup
+## Data persistence and backup
 
 Always mount `/data`. Docker defaults:
 
@@ -304,7 +304,7 @@ Why `data.key` matters:
 - If `data.key` is lost, CPA Management Keys saved to SQLite cannot be recovered; save the CPA connection again.
 - If this is a manual env/secret deployment, or the installer has not completed/skipped the CPA connection import, also back up `secrets/` in the install directory.
 
-## Read-Only Root Filesystem
+## Read-Only root filesystem
 
 Standard CPAMP Docker/Compose deployments use a writable root filesystem and require no additional temporary-volume configuration.
 
@@ -326,7 +326,7 @@ The database file and its WAL/SHM sidecars must also be writable by the Manager 
 
 ::: details Advanced: collection protocols and network requirements
 
-## Collection Paths
+## Collection paths
 
 When `USAGE_COLLECTOR_MODE=auto`, Manager Server tries these paths in order:
 
@@ -365,7 +365,7 @@ docker run -d \
   seakee/cpa-manager-plus:latest
 ```
 
-### Database Maintenance Is Pending After Upgrade
+### Database maintenance is pending after upgrade
 
 To keep HTTP startup bounded on large historical databases, Manager Server does not run unbounded `CREATE INDEX` or derived cleanup before listening. If the global warning, System Info, or `/status.databaseMaintenance.required` reports pending maintenance, collection and HTTP remain available, but historical request queries can become noticeably slower or time out.
 
@@ -418,7 +418,7 @@ databaseMaintenance.offlineJobs
 
 If the monitoring page is empty, continue with [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.md).
 
-## What Changed From CPA-Manager
+## What changed from CPA-Manager
 
 Old CPA-Manager Docker docs used `seakee/cpa-manager` and described an external Usage Service for a CPA-hosted panel. In CPA Manager Plus:
 

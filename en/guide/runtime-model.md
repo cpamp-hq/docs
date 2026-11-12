@@ -1,8 +1,8 @@
-# How CPAMP Works With CPA
+# How CPAMP works with CPA
 
-## v2 Beta: Embedded And External
+## V2 Beta: embedded and external
 
-Full Mode in v2 Beta is not the single-Manager 1.x deployment. Embedded official CPA is pinned to **`v8.0.55`**; External requires at least **`v8.0.55`** and actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**; see [Upgrade And Rollback](../operations/update.md).
+Full Mode in v2 Beta is not the single-Manager 1.x deployment. Embedded official CPA is pinned to **`v8.0.55`**; External requires at least **`v8.0.55`** and actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**; see [Upgrade and Rollback](../operations/update.md).
 
 | Mode | Who runs CPA | CPAMP boundary |
 | --- | --- | --- |
@@ -20,9 +20,9 @@ For a **Fresh installation**, the v2 Beta browser entry is the **Control Base Pa
 
 Ingress also routes `/health`, `/status`, `/`, `/setup`, `/management.html`, `/usage-service/*`, and `/v0/management/*` to Manager for health checks and transitional upgrade compatibility; route ownership does not mean a feature is available in Fresh mode. Edge-denied requests such as `/v8/management/*` and retired control paths return `404` without forwarding to CPA. Manager also handles `GET` / `HEAD` for `/favicon.ico` and `/apple-touch-icon.png`.
 
-Install: [v2 Docker](../deployment/docker.md) / [linux/amd64 Native](../deployment/native.md). Operate: [Backup](../operations/backup.md) / [Licensing And Release Assets](../reference/releases.md).
+Install: [v2 Docker](../deployment/docker.md) / [linux/amd64 Native](../deployment/native.md). Operate: [Backup](../operations/backup.md) / [Licensing and Release Assets](../reference/releases.md).
 
-## Where Requests And Keys Go
+## Where requests and keys go
 
 | Scenario | Target URL | Key Used |
 | --- | --- | --- |
@@ -33,13 +33,13 @@ Install: [v2 Docker](../deployment/docker.md) / [linux/amd64 Native](../deployme
 
 Never put the CPAMP Admin Key or CPA Management Key into regular model clients. In External mode, Manager reads CPA's Management API and drains its in-memory usage queue without taking over external CPA's host lifecycle. Set the poll interval with `USAGE_POLL_INTERVAL_MS` (default `500` ms), keeping it within CPA's in-memory queue retention window.
 
-## Next Steps
+## Next steps
 
 - Deploy Full Mode: [v2 Docker Installation](../deployment/docker.md) or [linux/amd64 Native Package](../deployment/native.md)
 - Compare Full Mode and Lightweight Panel: [Choose How To Run CPAMP](./choosing-a-panel.md)
 - Configure Codex, Claude Code, OpenCode, and SDK clients: [Connect Clients](../gateway/clients.md)
 - Diagnose missing monitoring records: [Request Monitoring Has No Data](../troubleshooting/request-monitoring.md)
 
-## 1.x (Before Upgrading)
+## 1.X (before upgrading)
 
 1.x Stable uses a single Manager Server paired with an external CPA and serves its UI at `:18317/management.html`; see the 1.x Stable documentation at [How CPAMP Works With CPA (1.x Stable)](https://cpamp-docs.seakee.dev/en/guide/runtime-model.html).

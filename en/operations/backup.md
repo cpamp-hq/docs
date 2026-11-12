@@ -1,10 +1,10 @@
-# Backup And Restore
+# Backup and restore
 
 CPAMP keeps request history, configuration, and encrypted credentials on the host. The common mistake is backing up only `usage.sqlite` and missing WAL/SHM files, `data.key`, or secret files in the install directory.
 
-## Persistent Layout And Required Backup Set
+## Persistent layout and required backup set
 
-v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at least **`v8.0.55`**. A backup does not authorize migration: follow [Upgrade Preflight And Reconciliation](./update.md). The v2 single image persists all state inside one named volume `cpamp-data` (mounted at `/data`), which must be backed up as a complete set:
+v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at least **`v8.0.55`**. A backup does not authorize migration: follow [Upgrade Preflight and Reconciliation](./update.md). The v2 single image persists all state inside one named volume `cpamp-data` (mounted at `/data`), which must be backed up as a complete set:
 
 `cpamp-data` is a Compose logical volume key, not a fixed Docker volume name. Without an explicit name override, Docker uses `<project>_cpamp-data`. The commands below reuse the same Compose project to avoid creating an empty volume with plain `docker run -v cpamp-data:/data`; inspect the running container's actual `.Mounts` with `docker inspect` before mounting a volume directly.
 
@@ -13,7 +13,7 @@ v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at le
 - **Runtime transport secret (`0:10002`)**: `/data/runtime-secret/token` (`0640`).
 - **Deployment configuration**: the digest-pinned `docker-compose.yml` (`seakee/cpa-manager-plus:<tag>@sha256:<digest>`), `CPAMP_PUBLIC_ORIGIN`, custom environment settings, and reverse-proxy configuration. Encrypt backup archives and restrict access.
 
-## Why data.key Is Required
+## Why data.key is required
 
 CPA Management Keys stored by Manager are encrypted with `data.key` before being written to SQLite:
 
@@ -21,7 +21,7 @@ CPA Management Keys stored by Manager are encrypted with `data.key` before being
 - If both `usage.sqlite` and `data.key` leak, the stored key can be decrypted, so treat backup archives as secrets.
 - If `data.key` is lost, the encrypted CPA connection key cannot be recovered, and resetting the CPAMP Admin Key cannot repair a missing `data.key`.
 
-## Full Offline Docker Backup
+## Full offline Docker backup
 
 From the `docker-compose.yml` directory and the same project, run the following complete subshell block as one operation. `docker compose stop` drains and stops all in-container processes within `stop_grace_period: 150s` (at least `CPAMP_DRAIN_TIMEOUT` + `60s`); `mktemp -d` creates a private unique directory, container-side `-u 0:0` with `--numeric-owner` preserves all numeric UIDs/GIDs and permissions inside `/data`, `set -C` refuses existing archive destinations, and `set -eu` stops on any failure without restarting services. Record the printed backup path:
 
@@ -45,7 +45,7 @@ From the `docker-compose.yml` directory and the same project, run the following 
 
 The final `up -d` runs only after the archive write, gzip integrity check, and tar directory read all succeed. On any failure, retain the directory/error, leave services stopped, resolve the cause, and use a fresh backup directory rather than overwriting a partial archive. The commands reuse the Digest-pinned single image; no other process may write the original volume while offline.
 
-## Restore Into A New Volume Proven Empty
+## Restore into a new volume proven empty
 
 Prepare the backup's `docker-compose.yml` (retaining the same digest-pinned image) and restore the saved public origin/environment without changing the original volume. Replace `BACKUP_DIR` below with the actual absolute directory of a successful backup. Other `RESTORE_*` variables are local shell/Compose override values, not new CPAMP settings. The script first generates and validates a legal restore project name, the merged Compose configuration, and the new volume name. Only after those checks pass does it stop the original project, create one new `cpamp-data` volume, bind it explicitly through the override, verify `/data` is empty, and extract with numeric ownership preserved. Do not delete the original project's volume to make it empty.
 
@@ -100,7 +100,7 @@ The restore project starts only after the empty-volume check, archive validation
 
 Preserve archived numeric owners, permissions, and directory isolation (`/data/runtime` root `0:0`, Manager files `10002:10002`, Gateway `10001:10001`); never run `chown -R` across `/data` to a single UID. Verify Admin login, CPA connection, Client Key, history/coverage, and Gateway; `/health` alone is insufficient. A 1.x rollback uses the original pre-migration 1.x volume, never v2 archives or restored volumes.
 
-## Scope Of Offline Manager Snapshots (`manager-data-snapshot`)
+## Scope of offline Manager snapshots (`manager-data-snapshot`)
 
 With the service stopped, `manager-data-snapshot` snapshots the database, WAL/SHM, rollback journal, and `data.key`, with an integrity manifest. It **does not include `usage.sqlite.manager.lock`, `usage-archives/`, custom configuration, `/data/runtime`, `/data/runtime-secret`, or external CPA**, so it does not replace a full backup. Fresh's non-empty `usage.sqlite.manager.lock` holds an admission receipt bound to the database identity; never remove it, empty it, or substitute a different installation's file. Restoring only a Manager snapshot into a new directory cannot restore a Fresh instance. For whole-instance recovery, use the same full-volume archive described above to restore that receipt, archive shards, and Runtime state together. The following commands are only offline database snapshots while retaining the original instance's other state. Run from the v2 native package root (the snapshot directory must not already exist):
 
@@ -122,6 +122,6 @@ A held lock refuses the command: stop the actual service first. After `docker co
 
 For External, the operator separately backs up/restores CPA configuration, OAuth credentials, and process state. Manager snapshots do not back up the remote host. Configuration-only export is not a complete v2 upgrade path.
 
-## 1.x (Before Upgrading)
+## 1.X (before upgrading)
 
-Before running an offline upgrade from `v1.14.10` to v2, stop the 1.x service and back up the full 1.x data volume/directory (`usage.sqlite`, WAL/SHM, `data.key`, `usage-archives/` when present, configuration, and `secrets/`). For ongoing 1.x Stable backup, restore, and offline `store-cpa-connection` procedures, see the 1.x Stable documentation at [Backup And Restore (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/backup.html).
+Before running an offline upgrade from `v1.14.10` to v2, stop the 1.x service and back up the full 1.x data volume/directory (`usage.sqlite`, WAL/SHM, `data.key`, `usage-archives/` when present, configuration, and `secrets/`). For ongoing 1.x Stable backup, restore, and offline `store-cpa-connection` procedures, see the 1.x Stable documentation at [Backup and Restore (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/backup.html).

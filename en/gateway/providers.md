@@ -1,8 +1,8 @@
-# Providers And Compatibility Reference
+# Providers and compatibility reference
 
 To add, edit, or test a model service, go directly to [AI Providers](../manual/ai-providers.md). This page is a reference for how provider families and client interfaces relate.
 
-## Common Providers
+## Common providers
 
 | Provider type     | Common use                                  | Related pages                               |
 | ----------------- | ------------------------------------------- | ------------------------------------------- |
@@ -14,7 +14,7 @@ To add, edit, or test a model service, go directly to [AI Providers](../manual/a
 
 When adding a provider, confirm four things first: base URL, authentication method, model names used by clients, and the account or auth file binding.
 
-## When Requests Fail
+## When requests fail
 
 1. Run an available model or key test from AI Providers.
 2. Check whether the auth file is disabled or out of quota.

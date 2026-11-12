@@ -1,15 +1,15 @@
 ---
-title: CPA Plugin Management And Store
+title: CPA Plugin Management and store
 description: Install, select versions, enable, configure, and troubleshoot CPA plugins with GitHub Releases, prereleases, manual tags, sandboxed plugin pages, and the theme message protocol.
 ---
 
-# CPA Plugin Management And Store
+# CPA Plugin Management and store
 
 The Plugins page installs, upgrades, enables, configures, and troubleshoots CPA plugins. CPAMP provides the management UI and plugin-page container; actual runtime capability depends on CPA and the plugin.
 
 Open the [Plugin Management Demo](https://cpamp-demo.seakee.dev/#/demo/plugins) to inspect fictional plugin and store data.
 
-## Page Areas
+## Page areas
 
 - **Installed Plugins** shows versions, authors, state, configuration, OAuth, menus, and page resources.
 - **Plugin Store** loads installable plugins from `plugins.store-sources`.
@@ -20,7 +20,7 @@ The plugin entry appears only when the Manager proves that the current connectio
 
 The entry stays visible while `plugins.enabled` is off, because that page holds the switch that turns plugins back on. Only the plugin's own menus disappear.
 
-## Plugin Runtime Switch
+## Plugin runtime switch
 
 In a default managed installation the Runtime Supervisor writes `plugins.enabled` and the plugin directory into the target CPA configuration, and the first-run wizard selection decides the initial value. After installation the managed installation can change the switch from the "Plugin runtime" control at the top of the Plugins page:
 
@@ -29,7 +29,7 @@ In a default managed installation the Runtime Supervisor writes `plugins.enabled
 - If the result of the last write is unknown, the page offers "Read back result": it reads CPA's current document and records what it proves, and never sends the write again.
 - The plugin directory (`plugins.dir`) is published by the Runtime Supervisor and cannot be changed here.
 
-## Install Versions
+## Install versions
 
 The store supports three version modes:
 
@@ -46,7 +46,7 @@ Before installing or upgrading:
 3. Persist the plugin directory.
 4. Use prereleases only when the environment accepts compatibility risk.
 
-## Installed Plugin Actions
+## Installed plugin actions
 
 - Enable or disable a plugin.
 - Edit string, number, boolean, array, or object fields.
@@ -57,7 +57,7 @@ Before installing or upgrading:
 
 If the UI says a restart is required, restart CPA or Manager Server for the deployment mode; a browser refresh is not enough.
 
-## Sandbox Boundary For Plugin Pages
+## Sandbox boundary for plugin pages
 
 Plugin pages open inside the Console as an iframe and always run in a **sandboxed opaque origin**. This is not a setting; the Manager enforces it on every response:
 
@@ -84,7 +84,7 @@ The Manager also enforces Fetch Metadata on every plugin resource request: a req
 
 Older browsers without Fetch Metadata still support plugin management, but cannot open plugin pages. That degradation is expected.
 
-## Theme Message Protocol
+## Theme message protocol
 
 The host cannot read or write the plugin document, so theme synchronization is a strictly optional message protocol. The Console posts to the iframe window after the frame loads, when the host theme changes, and after the page navigates again:
 
@@ -119,7 +119,7 @@ window.addEventListener('message', (event) => {
 });
 ```
 
-## Plugin Pages And Reverse Proxies
+## Plugin pages and Reverse Proxies
 
 Plugin pages use `/v0/resource/plugins/*`, in the site's root namespace rather than below `/api/v2/cpamp`. A custom reverse proxy must route that path to CPAMP or the page may be blank.
 
@@ -132,7 +132,7 @@ Common causes:
 - Required configuration is missing.
 - The plugin page depends on same-origin access: only resources below `/v0/resource/plugins/<plugin id>/` are supported.
 
-## CPA Version Upgrade Regression Checklist
+## CPA version upgrade regression checklist
 
 CPAMP supports CPA v8 and later only. When the pinned CPA version is upgraded, re-verify:
 
@@ -141,7 +141,7 @@ CPAMP supports CPA v8 and later only. When the pinned CPA version is upgraded, r
 3. **`pluginabi` version** — `pluginabi.SchemaVersion` (7 in v8.0.44) and the store plugins' compatibility. A mismatch installs successfully but never loads.
 4. **Resource prefix** — `/v0/resource/plugins/<id>/` has not changed from v8.0.13 through v8.0.55; re-verify that plugin pages open and that theme synchronization still works.
 
-## Security Boundaries
+## Security boundaries
 
 - Plugins are executable extensions. Review sources, permissions, and updates like server-side code.
 - CPAMP displays metadata and proxies management operations; it does not guarantee third-party plugin security or compatibility.

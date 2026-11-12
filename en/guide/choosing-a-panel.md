@@ -1,13 +1,13 @@
 ---
-title: Choosing A CPA / CLIProxyAPI Management Panel
+title: Choosing a CPA / CLIProxyAPI Management Panel
 description: Compare the official Management Center, CPAMP Lightweight Panel, and CPAMP Full Mode for CPA administration, monitoring, cost analytics, and account operations.
 ---
 
-# Choosing A CPA / CLIProxyAPI Management Panel
+# Choosing a CPA / CLIProxyAPI Management Panel
 
 CPA / CLIProxyAPI users do not have to choose only between the official UI and a full additional service. CPAMP provides both a lightweight panel hosted directly by CPA and a full mode backed by Manager Server.
 
-## Quick Decision
+## Quick decision
 
 | Goal                                                                   | Recommended choice         |
 | ---------------------------------------------------------------------- | -------------------------- |
@@ -49,7 +49,7 @@ Full Mode adds Manager Server and local SQLite for server-backed capabilities th
 - Server-side Codex/xAI inspection, quota cooldowns, and the account action queue.
 - Backups, background migrations, performance diagnostics, and an independent CPAMP Admin Key.
 
-## Entry Points And Capability Boundary
+## Entry points and capability boundary
 
 | Usage option                     | Panel entry                                 | Best for                                     |
 | -------------------------------- | ------------------------------------------- | -------------------------------------------- |
@@ -60,7 +60,7 @@ Full Mode adds Manager Server and local SQLite for server-backed capabilities th
 
 The Full Mode entry depends on the version: v2 Beta uses the Control Base Path chosen at installation (the wizard defaults to `/console`, for example `http://<cpamp-host>:18317/console`; a custom path moves both the console and its frontend API) and does not serve `/management.html`, which returns 404; 1.x Stable still uses `:18317/management.html`. The CPA-hosted `:8317` panel does not connect to or read Manager Server. Even when Manager Server runs separately, open its own Full Mode entry to use request history, cost analytics, model prices, and server-side inspection.
 
-## Full Mode Installation Options
+## Full Mode installation options
 
 Full Mode has one product capability set with two installation choices:
 
@@ -69,18 +69,18 @@ Full Mode has one product capability set with two installation choices:
 
 Both use the CPAMP Admin Key. The entry depends on the version: v2 Beta uses the control base path chosen at installation (default `/console`), while 1.x Stable uses `:18317/management.html`.
 
-## Preview Before Choosing
+## Preview before choosing
 
 The [Live Demo](https://cpamp-demo.seakee.dev/) lets you preview the interface and navigation with fictional data. It is not a panel, deployment option, or runtime mode. It cannot connect to, manage, or monitor a real CPA instance and cannot validate whether real features are working.
 
-## Recommended Upgrade Path
+## Recommended upgrade path
 
 1. Already run CPA and only want a different UI: install the CPAMP Lightweight Panel.
 2. Need historical monitoring or cost analytics: deploy Manager Server.
 3. Switch to the Full Mode entry (the control base path chosen at installation, default `/console`, for v2 Beta; `:18317/management.html` for 1.x Stable) and configure the CPA connection and collector.
 4. The lightweight panel may remain on the CPA port, but the two entry points have independent capabilities.
 
-## Next Steps
+## Next steps
 
 - Install the [CPAMP Lightweight Panel](../deployment/cpa-panel.md).
 - Review the [Capability Matrix](../reference/capability-matrix.md).

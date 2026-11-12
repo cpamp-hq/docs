@@ -1,9 +1,9 @@
 ---
-title: Accounts And Credential Health
+title: Accounts and Credential Health
 description: Manage CPA credentials, account health, quota windows, inspection results, cooldowns, and safe bulk actions in the unified Accounts workspace.
 ---
 
-# Accounts And Credential Health
+# Accounts and Credential Health
 
 `/accounts` is CPAMP's unified credential-management entry. It combines the former auth-file, account-quota, and inspection state into one workspace that answers: which accounts exist, whether they are enabled, whether they can serve requests now, and which accounts need reauthentication or manual review.
 
@@ -11,7 +11,7 @@ Use [OAuth Login](./oauth.md) to add OAuth accounts. Import, editing, status dec
 
 Open the unified [Accounts Demo](https://cpamp-demo.seakee.dev/#/demo/accounts) to inspect fictional credentials, quota, inspection, and automation state.
 
-## What To Check First
+## What to check first
 
 - **Credential and provider**: confirm whether the account belongs to Codex, Claude, Vertex, Antigravity, Kimi, xAI, or another source.
 - **`auth_index`**: the stable account index used to connect usage, quota, inspection, and account actions.
@@ -22,7 +22,7 @@ Open the unified [Accounts Demo](https://cpamp-demo.seakee.dev/#/demo/accounts) 
 
 Keep `auth_index` stable in multi-account deployments. File-name-only identity is not sufficient for reliably joining history and operational state to one account.
 
-## Common Actions
+## Common actions
 
 - Refresh the credential list or explicitly refresh Provider quota for one credential.
 - Paste JSON, upload, download, edit, disable, restore, or delete credentials.
@@ -34,7 +34,7 @@ Keep `auth_index` stable in multi-account deployments. File-name-only identity i
 
 If you are unsure whether an account is still needed, disable it before deleting it. Disable preserves history joins; deletion makes later inspection, quota, and action tracking harder.
 
-## Add Or Update Credentials
+## Add or update credentials
 
 1. Complete [OAuth Login](./oauth.md) for OAuth accounts.
 2. Paste or upload JSON when credentials already exist.
@@ -44,7 +44,7 @@ If you are unsure whether an account is still needed, disable it before deleting
 
 Official Sub2API multi-account exports are converted in the browser into independent CPA Codex credentials. Empty exports, malformed fields, and partial upload failures produce explicit results; a top-level array is not silently saved as one ordinary credential file.
 
-## Quota And Health Evidence
+## Quota and health evidence
 
 Account state may come from:
 
@@ -67,13 +67,13 @@ After a successful xAI OAuth quota refresh, CPAMP queries `/user?include=subscri
 | xAI/Grok OAuth  | CLI billing weekly/monthly data, official API identity, and request exhaustion | Official API identity does not provide queryable cost or remaining percentages.                     |
 | Other providers | CPA credential metadata or recent response Headers                             | No common active quota API is assumed.                                                              |
 
-## Quota Cooldown And Account Actions
+## Quota cooldown and account actions
 
 When quota cooldown is enabled and a supported account reaches a strict exhaustion signal, CPAMP can temporarily disable the related credential and restore it after recovery. Auto-restore only affects credentials disabled by that cooldown record; it does not override manual, inspection-owned, or authentication-failure disables.
 
 Quota cooldown is for clear quota exhaustion, not expired login, upstream bans, or configuration errors. Use [Account Action Queue](./account-actions.md) or [OAuth Login](./oauth.md) for those cases.
 
-## Troubleshooting Order
+## Troubleshooting order
 
 1. Read status codes and sanitized failure summaries in [Monitoring](./monitoring.md).
 2. Check whether the credential is manually disabled, needs reauth, or is cooling down.
