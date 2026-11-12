@@ -1,9 +1,9 @@
 ---
-title: CPA Management And Observability Dashboard
+title: CPA management and observability dashboard
 description: Use the CPA Manager Plus dashboard to inspect CPA/Manager Server connectivity, requests, success rate, cost, tokens, collector state, providers, and health alerts.
 ---
 
-# CPA Management And Observability Dashboard
+# CPA management and observability dashboard
 
 The dashboard is the first page to check after opening CPAMP. It does not replace request details. It answers the first operational questions: is the runtime connected, are requests arriving, did failures increase, did cost jump, and are there account or runtime warnings.
 
@@ -11,7 +11,7 @@ If you already know which account or request is involved, go directly to [Monito
 
 Open the [Dashboard Demo](https://cpamp-demo.seakee.dev/#/demo) to inspect fictional request, cost, failure, and provider state generated for the current date.
 
-## What To Check First
+## What to check first
 
 - **Connection and version**: confirm that the panel is connected to CPA or Manager Server and that the runtime mode matches your deployment.
 - **Quick stats**: API keys, auth files, AI providers, and model counts. These tell you whether configuration is being read.
@@ -21,7 +21,7 @@ Open the [Dashboard Demo](https://cpamp-demo.seakee.dev/#/demo) to inspect ficti
 
 Dashboard data comes from Manager Server's local SQLite database and the CPA usage queue. Cost is estimated from request events and model prices; it is not a provider invoice.
 
-## Common Workflow
+## Common workflow
 
 1. Start with connection state and collector state.
 2. If request count is zero, confirm that clients are actually sending traffic through CPA, then open [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.md).
@@ -29,7 +29,7 @@ Dashboard data comes from Manager Server's local SQLite database and the CPA usa
 4. If cost increased, open [Usage Analytics](./usage-analytics.md) and break it down by model, account, and caller.
 5. If an alert points to logs or runtime state, open [Logs](./logs.md) and [System](./system.md) before changing configuration.
 
-## If Dashboard Is Empty
+## If dashboard is empty
 
 If Dashboard stays empty, do not start by changing filters. Check:
 
@@ -41,7 +41,7 @@ If Dashboard stays empty, do not start by changing filters. Check:
 
 For the full sequence, see [Request Monitoring Troubleshooting](../troubleshooting/request-monitoring.md).
 
-## Usage Tips
+## Usage tips
 
 - If success rate drops, open [Monitoring](./monitoring.md) and filter by status code, model, and account.
 - If cost spikes, open [Usage Analytics](./usage-analytics.md) and compare model and account breakdowns.

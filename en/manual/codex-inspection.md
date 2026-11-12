@@ -11,14 +11,14 @@ Open the [Account Inspection Demo](https://cpamp-demo.seakee.dev/#/demo/codex-in
 
 For a single failed request, start with [Monitoring](./monitoring.md). Use inspection after the problem is narrowed to an account, credential, or quota signal.
 
-## Local And Server Inspection
+## Local and Server inspection
 
 - **Local inspection** runs in the current browser session and is useful for a few accounts or temporary diagnostics.
 - **Server inspection** runs in Manager Server and supports schedules, history, logs, and shared action policy.
 
 Before server inspection, confirm the CPA URL, CPA Management Key, auth files, and stable `auth_index` values.
 
-## Codex Evidence
+## Codex evidence
 
 - Plan, five-hour/weekly quota windows, reset, and remaining quota.
 - OAuth token and credential state.
@@ -28,7 +28,7 @@ Before server inspection, confirm the CPA URL, CPA Management Key, auth files, a
 
 Missing fields remain unknown; they are not converted into healthy or unhealthy states.
 
-## xAI Evidence
+## xAI evidence
 
 xAI inspection prefers read-only evidence that does not send a model inference request:
 
@@ -38,7 +38,7 @@ xAI inspection prefers read-only evidence that does not send a model inference r
 - Identity success proves only access to the identity endpoint; it does not prove a specific model, chat route, cost, or remaining quota.
 - Ambiguous `403`, regional restrictions, and model permissions are not automatically treated as invalid credentials.
 
-## Results And Actions
+## Results and actions
 
 - **Keep**: no sufficient evidence requires action.
 - **Reauthorize**: OAuth or credential state is explicitly invalid.
@@ -49,7 +49,7 @@ xAI inspection prefers read-only evidence that does not send a model inference r
 
 Read the provider, reason code, redacted evidence, and recent request behavior together with the action label.
 
-## Scheduling And Automation Boundaries
+## Scheduling and automation boundaries
 
 Server inspection can run at fixed intervals or a daily time. Start with record-only or conservative actions before enabling automatic disables.
 
@@ -59,7 +59,7 @@ All restores follow “the owner that disabled is the owner that may restore”:
 - Quota cooldown only restores credentials disabled by that cooldown record.
 - Manual and account-action disables are not overridden by inspection.
 
-## Related Pages
+## Related pages
 
 - Quota windows and cooldowns: [Accounts](./accounts.md)
 - OAuth reauthorization: [OAuth Login](./oauth.md)

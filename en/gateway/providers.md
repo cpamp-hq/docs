@@ -1,8 +1,8 @@
-# Providers And Compatibility Reference
+# Providers and compatibility reference
 
 To add, edit, or test a model service, go directly to [AI Providers](../manual/ai-providers.md). This page is a reference for how provider families and client interfaces relate.
 
-## Common Providers
+## Common providers
 
 | Provider type     | Common use                                  | Related pages                               |
 | ----------------- | ------------------------------------------- | ------------------------------------------- |
@@ -17,7 +17,7 @@ When adding a provider, confirm four things first: base URL, authentication meth
 
 Muse / Meta requires an extra credential distinction: OAuth Device Flow produces a DCA for account authentication and quota reads, while model inference uses a separate `meta-api-key`. Full support requires CPA `v7.3.4+`.
 
-## When Requests Fail
+## When requests fail
 
 1. Run an available model or key test from AI Providers.
 2. Check whether the auth file is disabled or out of quota.

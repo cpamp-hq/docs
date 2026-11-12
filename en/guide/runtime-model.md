@@ -1,4 +1,4 @@
-# How CPAMP Works With CPA
+# How CPAMP works with CPA
 
 CPA receives and forwards real model requests. CPAMP manages CPA and, in Full Mode, stores request history, analyzes cost, and helps maintain account state.
 
@@ -8,7 +8,7 @@ Most users only need to remember three things:
 2. The CPAMP Lightweight Panel opens from CPA `:8317/management.html` and uses the CPA Management Key.
 3. CPAMP Full Mode opens from `:18317/management.html` and uses the CPAMP Admin Key.
 
-## Where Each Request Goes
+## Where each request goes
 
 | Action                      | Address                                       | Key                |
 | --------------------------- | --------------------------------------------- | ------------------ |
@@ -19,7 +19,7 @@ Most users only need to remember three things:
 
 Do not mix these keys. If login fails, first confirm whether the current page uses port `8317` or `18317`.
 
-## The Two Modes
+## The two modes
 
 - **Lightweight Panel**: replaces the official CPA management UI without adding a service or database.
 - **Full Mode**: adds Manager Server for request history, cost analytics, server-side inspection, backups, and automation.
@@ -47,7 +47,7 @@ This means:
 
 :::
 
-## When To Change CPA Configuration
+## When to change CPA configuration
 
 CPA configuration still controls:
 
@@ -57,7 +57,7 @@ CPA configuration still controls:
 
 Prefer the CPAMP interface for daily work. Edit CPA `config.yaml` directly only when the UI does not expose a field, when preparing CPA before deployment, or during advanced troubleshooting.
 
-## Next Steps
+## Next steps
 
 - Install: [Quick Start](./getting-started.md)
 - Add model services: [AI Providers](../manual/ai-providers.md)

@@ -1,15 +1,15 @@
 ---
-title: CPA Usage And Cost Analytics
+title: CPA usage and Cost Analytics
 description: Analyze requests, tokens, cache, cost, latency, and failures by model, account, API key, provider, project, and time range.
 ---
 
-# CPA Usage And Cost Analytics
+# CPA usage and Cost Analytics
 
 Usage Analytics answers "where did the money go?" and "which requests caused the abnormal pattern?" It uses request-monitoring events and [Model Prices](./model-prices.md). It does not change provider billing.
 
 Open the [Usage Analytics Demo](https://cpamp-demo.seakee.dev/#/demo/usage-analytics) to browse fictional Overview, trends, models, API keys, credentials, and heatmap data.
 
-## Pick The Range First
+## Pick the range first
 
 Start with time range and granularity:
 
@@ -20,7 +20,7 @@ Start with time range and granularity:
 
 Filters include model, API key, provider, status, auth file, latency, and cache state. Once filters are applied, trend charts, rankings, and preview rows all use the same request set.
 
-## Main Views
+## Main views
 
 - **Overview**: request count, tokens, cost, failure rate, and latency.
 - **Model ranking**: the most expensive, most active, or least healthy models.
@@ -31,7 +31,7 @@ Filters include model, API key, provider, status, auth file, latency, and cache 
 - **Heatmap**: peak and quiet hours for scheduling decisions.
 - **Request preview**: jump back to Monitoring for individual requests.
 
-## Cost Spike Workflow
+## Cost spike workflow
 
 1. Check whether only cost increased, or whether request count and failure rate also increased.
 2. Open model ranking to find expensive model concentration.
@@ -41,11 +41,11 @@ Filters include model, API key, provider, status, auth file, latency, and cache 
 
 If the model name is an alias or internal name, add the matching entry in [Model Prices](./model-prices.md), or cost will be underestimated or empty.
 
-## Export And Historical Boundaries
+## Export and historical boundaries
 
-The complete JSONL export in Usage Maintenance is a stable, ordered snapshot of raw `usage_events` and is independent of `USAGE_QUERY_LIMIT`. It is not a complete CPAMP backup, and history already deleted from the raw table is not automatically merged back from archive segments. For migration or disaster recovery, follow [Backup And Restore](../operations/backup.md) and back up SQLite, WAL/SHM, `data.key`, and `usage-archives/` together.
+The complete JSONL export in Usage Maintenance is a stable, ordered snapshot of raw `usage_events` and is independent of `USAGE_QUERY_LIMIT`. It is not a complete CPAMP backup, and history already deleted from the raw table is not automatically merged back from archive segments. For migration or disaster recovery, follow [Backup and Restore](../operations/backup.md) and back up SQLite, WAL/SHM, `data.key`, and `usage-archives/` together.
 
-## Long Histories And Query Behavior
+## Long histories and query behavior
 
 - Each tab requests only the data it needs; stable filter selectors load separately from main analytics.
 - Strictly unfiltered long-range statistics can use incremental hourly rollups, while search, provider, account, latency, cache, and other complex filters continue to read raw events.
@@ -53,7 +53,7 @@ The complete JSONL export in Usage Maintenance is a stable, ordered snapshot of 
 - When a rollup checkpoint is pending, a timezone cannot be represented losslessly, or a rollup read fails, the query falls back to raw events to preserve correctness.
 - Historical cost may be recalculated with current model prices.
 
-## Accuracy Boundary
+## Accuracy boundary
 
 - Provider bills are the source of truth.
 - CPAMP estimates cost from request events and model prices.

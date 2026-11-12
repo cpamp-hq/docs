@@ -45,7 +45,7 @@ http://<host>:18317/management.html
 
 Log in with the CPAMP Admin Key saved or printed by the installer. See [Install Full Mode](../deployment/installer.md) for details.
 
-## First CPA Connection
+## First CPA connection
 
 If the installer did not save a CPA connection, enter these values when Full Mode opens for the first time:
 
@@ -54,7 +54,7 @@ If the installer did not save a CPA connection, enter these values when Full Mod
 3. CPA Management Key.
 4. Keep request monitoring in the default automatic mode.
 
-## Confirm That It Works
+## Confirm that it works
 
 ### Lightweight Panel
 
@@ -71,10 +71,10 @@ If the installer did not save a CPA connection, enter these values when Full Mod
 
 If Full Mode opens but has no request data, see [Monitoring Has No Data](../troubleshooting/request-monitoring.md).
 
-## What To Do Next
+## What to do next
 
 - Add model services: [AI Providers](../manual/ai-providers.md)
 - Log in or import accounts: [OAuth Login](../manual/oauth.md) and [Accounts](../manual/accounts.md)
 - Configure clients: [Client Configuration](../gateway/clients.md)
-- Upgrade and back up: [Upgrade CPAMP](../operations/update.md) and [Backup And Restore](../operations/backup.md)
+- Upgrade and back up: [Upgrade CPAMP](../operations/update.md) and [Backup and Restore](../operations/backup.md)
 - Maintain deployment manually: [Docker Deployment](../deployment/docker.md) or [Native Packages](../deployment/native.md)

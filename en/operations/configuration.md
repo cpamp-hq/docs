@@ -1,8 +1,8 @@
-# Configuration And Data Directory
+# Configuration and data directory
 
 CPAMP stores its core data locally. During deployment, identify three things first: where SQLite lives, how `data.key` is stored, and where the admin key comes from.
 
-## Key Files
+## Key files
 
 | File               | Description                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------- |
@@ -53,7 +53,7 @@ Connection records follow these authority rules: a complete `manager_config_v1` 
 
 The CPAMP Lightweight Panel is hosted by CPA and continues to follow CPA-port access semantics; its browser-held key path is separate from Manager Server's server-side storage.
 
-## Collection Configuration
+## Collection configuration
 
 Recommended setting:
 
@@ -71,7 +71,7 @@ Constraints:
 - CPA retention defaults to 60s and is capped at 3600s.
 - Only one Manager Server should consume the same CPA queue.
 
-## Usage Lifecycle Configuration
+## Usage lifecycle configuration
 
 Manager Server environment variables control resumable imports and historical retention:
 

@@ -4,7 +4,7 @@ Use this page when you have lost the CPAMP Admin Key for Full Docker or native M
 
 The reset command modifies the local SQLite database directly. Stop Manager Server before running it so the service does not keep writing to SQLite.
 
-## Shortest Recovery Path
+## Shortest recovery path
 
 1. Stop Manager Server and back up its data directory.
 2. Run `reset-admin-key` in the matching Docker or native environment.
@@ -16,7 +16,7 @@ The commands below are grouped by deployment. Run only the group that matches yo
 
 ::: details Advanced: command internals
 
-## What The Command Does
+## What the command does
 
 `cpa-manager-plus reset-admin-key` replaces `settings.admin_credential_v1` in the Manager Server SQLite database with a new salt and HMAC digest.
 
@@ -29,7 +29,7 @@ The alias `reset-admin-password` is also available.
 
 :::
 
-## Before You Run It
+## Before you run it
 
 1. Stop Manager Server.
 2. Back up the full data directory, including `usage.sqlite`, `usage.sqlite-wal`, `usage.sqlite-shm`, and `data.key`.
@@ -54,7 +54,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-### One-Click Installer Docker Deployments
+### One-Click Installer Docker deployments
 
 If `install-cpamp.sh` created the Docker deployment, prefer letting the installer stop the service, reset the credential, restart, and verify login:
 
@@ -78,7 +78,7 @@ CPAMP_CONFIRM=1 \
 bash install-cpamp.sh
 ```
 
-## Docker Named Volume
+## Docker named volume
 
 ```bash
 docker stop cpa-manager-plus
@@ -91,7 +91,7 @@ docker start cpa-manager-plus
 
 If you use the GitHub Container Registry image, replace `seakee/cpa-manager-plus:latest` with `ghcr.io/seakee/cpa-manager-plus:latest`.
 
-## Provide A Specific Admin Key
+## Provide a specific Admin Key
 
 Prefer `--admin-key-file` so the key does not enter shell history:
 

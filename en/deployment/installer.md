@@ -6,7 +6,7 @@ When the installer receives a CPA URL and CPA Management Key, they are one-time 
 
 Most users only need four steps: run the script, choose the install scope, choose Docker or a native package, and confirm the summary. After installation, use the address and key printed by the installer.
 
-## Run It
+## Run it
 
 Download the script, then run it:
 
@@ -32,7 +32,7 @@ The wizard walks through:
 6. Showing a summary so you can confirm, modify, or abort.
 7. Running the install only after confirmation.
 
-## Supported Combinations
+## Supported combinations
 
 | Install scope |    Docker |    Native package |
 | ------------- | --------: | ----------------: |
@@ -41,7 +41,7 @@ The wizard walks through:
 
 Use Docker for a full CPA + CPAMP install. The CPAMP native package contains Manager Server only; CPA must already be deployed separately.
 
-## Full Docker Install
+## Full Docker install
 
 Choose this when CPA is not installed yet. The installer starts both CPA and CPAMP and prepares persistent storage and login keys.
 
@@ -115,7 +115,7 @@ The script saves the CPAMP Admin Key and prints its file path and view command. 
 
 :::
 
-## CPAMP-Only Install
+## CPAMP-Only install
 
 If CPA is already running, choose CPAMP only. The interactive wizard first asks whether you want to enter the CPA URL and CPA Management Key now.
 
@@ -167,7 +167,7 @@ The native package imports the CPA connection offline before starting in the bac
 
 ::: details Automation, reruns, and repair
 
-## Advanced Usage
+## Advanced usage
 
 Preview the plan without writing files or starting services:
 
@@ -227,7 +227,7 @@ Common variables:
 | `CPAMP_OPERATION`           | `install`, `upgrade`, `repair`, or `regenerate`. Existing non-interactive deployments require an explicit operation. |
 | `CPAMP_PROJECT_NAME`        | Docker Compose project name. Defaults to `cpamp`; use another name for an isolated deployment on the same host.      |
 
-## Rerun And Overwrite
+## Rerun and overwrite
 
 The following `CPAMP_OPERATION` modes apply to maintenance of existing deployments. Existing native deployments also require `CPAMP_OPERATION=upgrade` for non-interactive upgrades (or running `bash install-cpamp.sh update` directly).
 
@@ -282,7 +282,7 @@ Native-package upgrades likewise back up SQLite sidecars and `data.key` before s
 
 :::
 
-## Startup And Login Verification
+## Startup and login verification
 
 After Docker installation, upgrade, or repair, and after native-package installation, the script waits for CPAMP health and then uses the current admin key against a protected Manager Server endpoint. For a CPA connection imported in this run, it also requests the CPA management configuration through CPAMP's server-side proxy to confirm that the URL and key actually work. It reports the install as completed only after all checks pass, then removes the temporary CPA Key file used for import.
 

@@ -174,7 +174,7 @@ describe('documentation content integrity', () => {
     assert(!dashboard.includes('checkpoint'));
     assert(!dashboardEn.includes('hourly rollup'));
     assert(troubleshooting.indexOf('## 按顺序检查') >= 0 && troubleshooting.indexOf('## 按顺序检查') < troubleshooting.indexOf('高级诊断'));
-    assert(troubleshootingEn.indexOf('## Check In This Order') >= 0 && troubleshootingEn.indexOf('## Check In This Order') < troubleshootingEn.indexOf('Advanced diagnostics'));
+    assert(troubleshootingEn.indexOf('## Check in this order') >= 0 && troubleshootingEn.indexOf('## Check in this order') < troubleshootingEn.indexOf('Advanced diagnostics'));
 
     assert(!releases.includes('docs/release-notes'));
     assert(!releases.includes('Tag push'));

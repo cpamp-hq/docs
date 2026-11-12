@@ -7,7 +7,7 @@ description: Let CPA host CPA Manager Plus directly on port 8317 as a lightweigh
 
 The CPAMP Lightweight Panel is hosted directly by CPA and replaces the official Management Center UI with CPA Manager Plus. It requires no Manager Server, SQLite database, additional container, or new port, making it suitable when you want a different management UI without a heavier deployment.
 
-## Shortest Installation Path
+## Shortest installation path
 
 1. Set `panel-github-repository` in CPA `config.yaml`.
 2. Confirm that the management panel is not disabled.
@@ -24,7 +24,7 @@ Browser
       -> CPA Management API
 ```
 
-## When To Use It
+## When to use it
 
 - CPA / CLIProxyAPI is already running.
 - You prefer a different interface or clearer information hierarchy than the official panel.
@@ -63,7 +63,7 @@ remote-management:
 
 `allow-remote: true` exposes the remote Management API. Use it only on a trusted network, through a VPN, or behind a protected reverse proxy. Do not expose the management port and key to an untrusted network.
 
-## Start And Log In
+## Start and log in
 
 1. Save the configuration and restart or reload CPA.
 2. Open:
@@ -79,7 +79,7 @@ On first access, CPA checks the latest Release in the configured GitHub reposito
 
 `management.html` remains a single-file distribution. It starts with conventional root icon URLs and keeps them only when the response is identified as a CPAMP Manager Server icon resource. Otherwise current browsers switch to the same ICO and Apple Touch Icon embedded as Data URLs. This keeps Safari 26+ and current iOS self-contained without requiring CPA to download companion files. Safari 18 and earlier do not reliably support Data URL icons, so the lightweight panel does not guarantee a custom Home Screen icon on those legacy versions. Full Mode continues to provide the conventional root icon resources directly.
 
-## Updates And Cache
+## Updates and cache
 
 With `disable-auto-update-panel: false`, CPA periodically checks for a newer panel. If an upgrade still shows the old interface:
 
@@ -95,7 +95,7 @@ rm static/management.html
 
 With `disable-auto-update-panel: true`, CPA downloads the panel only when the cached file is missing and does not perform periodic updates.
 
-## Lightweight Panel Capabilities
+## Lightweight Panel capabilities
 
 | Capability                                                   | CPAMP Lightweight Panel                             |
 | ------------------------------------------------------------ | --------------------------------------------------- |
@@ -109,7 +109,7 @@ With `disable-auto-update-panel: true`, CPA downloads the panel only when the ca
 
 The lightweight panel does not connect to or read a separately running Manager Server. Starting Manager Server does not add full features to `:8317/management.html`.
 
-## Upgrade To CPAMP Full Mode
+## Upgrade to CPAMP Full Mode
 
 When you need request history, cost analytics, or server-side automation:
 

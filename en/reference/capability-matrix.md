@@ -7,7 +7,7 @@ description: Compare management, monitoring, cost, quota, inspection, automation
 
 Use this page to confirm which features each usage option provides and what evidence each provider can expose. Missing fields remain unknown; CPAMP does not convert missing data into a healthy state, unlimited quota, or success.
 
-## By Usage Option
+## By usage option
 
 | Capability                                       | CPAMP Lightweight Panel     | CPAMP Full Mode |
 | ------------------------------------------------ | --------------------------- | --------------- |
@@ -27,7 +27,7 @@ The CPAMP Lightweight Panel is an enhanced WebUI hosted directly by CPA and requ
 
 > **The Live Demo is not a runtime mode.** It only previews the interface with fictional data. It cannot connect to, manage, or monitor a real CPA instance and does not mean the capabilities in this matrix are actually running.
 
-## How To Install Full Mode
+## How to install Full Mode
 
 Docker and native packages provide the same Full Mode capabilities; only the installation method differs.
 
@@ -39,7 +39,7 @@ Docker and native packages provide the same Full Mode capabilities; only the ins
 - Docker users should follow [Docker Deployment](../deployment/docker.md).
 - Linux, macOS, and Windows users should follow [Native Packages](../deployment/native.md).
 
-## By Account And Provider
+## By account and provider
 
 | Provider / account type              | Configuration                                              | Quota and health evidence                                             | Active inspection                 |
 | ------------------------------------ | ---------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------- |
@@ -55,7 +55,7 @@ Docker and native packages provide the same Full Mode capabilities; only the ins
 
 Full Muse / Meta support requires CPA `v7.3.4+`. OAuth DCA credentials and `meta-api-key` inference credentials are separate and are not interchangeable.
 
-## Data And Automation Boundaries
+## Data and automation boundaries
 
 - CPAMP only uses evidence returned by the provider, exposed by CPA, or safely extracted from request events.
 - An HTTP `401/403` alone is not enough to auto-disable a credential; explicit credential semantics are required.
@@ -64,9 +64,9 @@ Full Muse / Meta support requires CPA `v7.3.4+`. OAuth DCA credentials and `meta
 - Cost is estimated from collected requests and model prices; provider billing remains authoritative.
 - Requests missed after CPA queue expiry or while Manager Server is offline cannot be recovered.
 
-## Related Guides
+## Related guides
 
 - [Account Inspection](../manual/codex-inspection.md)
-- [Accounts And Credential Health](../manual/accounts.md)
+- [Accounts and Credential Health](../manual/accounts.md)
 - [Account Action Queue](../manual/account-actions.md)
 - [Manager Server Guide](../operations/manager-server.md)

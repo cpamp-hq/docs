@@ -6,7 +6,7 @@ Native mode is still Manager Server mode: the binary serves `/management.html`, 
 
 If you only want to install the CPAMP native package, you can use [One-Click Installer](./installer.md). The script does not install CPA natively; use Docker for a full new deployment.
 
-## Shortest Installation Path
+## Shortest installation path
 
 1. Confirm that CPA already runs and prepare its URL and CPA Management Key.
 2. Download the native package for your operating system and architecture from GitHub Releases.
@@ -67,7 +67,7 @@ aarch64 -> linux_arm64
 arm64   -> linux_arm64
 ```
 
-## Run Manually
+## Run manually
 
 macOS / Linux:
 
@@ -122,7 +122,7 @@ $env:CPA_MANAGER_ADMIN_KEY = 'replace-with-a-long-random-admin-key'
 .\cpa-manager-plus.exe
 ```
 
-## Data Location
+## Data location
 
 By default, native packages create:
 
@@ -159,7 +159,7 @@ data/data.key
 
 ::: details Advanced: Linux systemd example
 
-## Linux systemd Example
+## Linux systemd example
 
 Install to a fixed directory:
 
@@ -212,7 +212,7 @@ journalctl -u cpa-manager-plus -f
 
 :::
 
-## First Setup
+## First setup
 
 Open:
 
@@ -234,7 +234,7 @@ After setup:
 - CPA Management Key is stored server-side and encrypted.
 - New browsers no longer need the CPA Management Key.
 
-## Running In The Background
+## Running in the background
 
 Native packages include background control scripts for `start`, `status`, `logs`, `restart`, and `stop`. The scripts write PID records and log files, and protect the default runtime directories with private permissions. See [Native Background Control](./native-background-control.md).
 
