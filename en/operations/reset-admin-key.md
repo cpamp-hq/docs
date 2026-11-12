@@ -1,8 +1,14 @@
 # Reset Admin Key
 
-## v2 Beta: Preserve Data And Installation State
+Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize And Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade And Rollback](./update.md) (exact baseline `v1.14.10`, minimum target CPA `v8.0.55`).
 
-Stop and follow [Backup And Restore](./backup.md) for the single `/data` volume (Manager's `usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present, plus Embedded `/data/runtime` and `/data/runtime-secret`). Reset replaces only Manager's administrator credential. It cannot recover `data.key`, rotate CPA Management Key/Client Keys, reclaim installation, or complete an upgrade. First installation uses [Host Initialize And Handoff](../deployment/docker.md), not Admin reset instead of the wizard.
+## Before You Run It
+
+1. Stop the entire v2 service (`docker compose stop` for Docker, or stop the complete launcher / `systemd` unit for `linux/amd64` Native) so the SQLite process lock is released.
+2. Back up the single `/data` volume (Manager's `usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present, plus Embedded `/data/runtime` and `/data/runtime-secret/token`) following [Backup And Restore](./backup.md).
+3. Never delete volumes, `usage.sqlite.manager.lock`, or installation records.
+
+## Docker Compose (Single Image)
 
 From the `docker-compose.yml` directory/project, retaining the digest-pinned `seakee/cpa-manager-plus:<tag>@sha256:<digest>` single image:
 
@@ -12,66 +18,7 @@ docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus \
   cpa-manager-plus reset-admin-key --db-path /data/usage.sqlite
 ```
 
-`-u 10002:10002 --entrypoint cpa-manager-plus` invokes the CLI directly as the unprivileged Manager identity (`10002:10002`), avoiding starting the full PID 1 launcher or changing SQLite/lock file ownership to `0:0`. Save the new Admin Key shown once in the terminal. Only after success run `docker compose up -d` and sign in at the control base path chosen at installation on the original public entry (default `/console`, for example `http://<host>:18317/console`); v2 does not serve `/management.html`. Do not delete volumes, lock files, or installation records. On failure, leave services stopped and check the actual data path. Keep output out of public logs.
-
-For linux/amd64 Native, stop the complete launcher/systemd service and back up first, then run from the package root:
-
-```bash
-sudo ./bin/cpa-manager-plus reset-admin-key --db-path "$PWD/data/usage.sqlite"
-```
-
-For an explicit new key, prefer `--admin-key-file` with a private file; Docker also needs that file mounted read-only, readable by UID `10002`, and passed via its container-side path. After success restart the original service and verify administrator login/CPA connection, rather than rerunning the installer. Upgrade refusals still follow [Upgrade](./update.md) (source baseline `v1.14.10`, minimum CPA `v8.0.55`).
-
-## 1.x Stable: Original Deployment Recovery
-
-
-Use this page when you have lost the CPAMP Admin Key for Full Docker or native Manager Server mode. It does not reset the CPA Management Key and cannot recover a lost `data.key`.
-
-The reset command modifies the local SQLite database directly. Stop Manager Server before running it so the service does not keep writing to SQLite.
-
-## Shortest Recovery Path
-
-1. Stop Manager Server and back up its data directory.
-2. Run `reset-admin-key` in the matching Docker or native environment.
-3. Record the new CPAMP Admin Key from the terminal, but never commit or share it.
-4. Restart Manager Server.
-5. In 1.x Stable open `:18317/management.html`; in v2 Beta open the control base path chosen at installation (default `/console`), log in with the new key, and confirm the CPA connection.
-
-The commands below are grouped by deployment. Run only the group that matches your setup.
-
-::: details Advanced: command internals
-
-## What The Command Does
-
-`cpa-manager-plus reset-admin-key` replaces `settings.admin_credential_v1` in the Manager Server SQLite database with a new salt and HMAC digest.
-
-- If no key is provided, it generates a `cpamp_...` admin key.
-- If a key is provided, only its digest is saved. The command does not echo the provided key.
-- The command does not start the HTTP service, collector, or background jobs.
-- The command does not need the CPA Management Key or `data.key`.
-
-The alias `reset-admin-password` is also available.
-
-:::
-
-## Before You Run It
-
-1. Stop Manager Server.
-2. Back up the full data directory, including `usage.sqlite`, `usage.sqlite-wal`, `usage.sqlite-shm`, and `data.key`.
-3. Confirm the command points to the real Manager Server database:
-   - Docker default: `/data/usage.sqlite`
-   - Native package default: `data/usage.sqlite` next to the binary
-   - Custom deployment: the value of `USAGE_DB_PATH`
-
-## Docker Compose
-
-```bash
-docker compose -f docker-compose.manager.yml stop cpa-manager-plus
-docker compose -f docker-compose.manager.yml run --rm cpa-manager-plus reset-admin-key
-docker compose -f docker-compose.manager.yml up -d cpa-manager-plus
-```
-
-The command prints the newly generated key once:
+`-u 10002:10002 --entrypoint cpa-manager-plus` invokes the CLI directly as the unprivileged Manager identity (`10002:10002`), avoiding starting the PID 1 launcher and keeping SQLite, WAL, and lock-file ownership on `10002:10002` rather than `0:0`. When no key flag is supplied, a random key is printed once:
 
 ```text
 CPA Manager Plus admin key reset.
@@ -79,82 +26,50 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-### One-Click Installer Docker Deployments
-
-If `install-cpamp.sh` created the Docker deployment, prefer letting the installer stop the service, reset the credential, restart, and verify login:
+Save the key immediately and keep terminal output out of public logs or chat transcripts. Only after the command exits successfully, start the service and sign in at the Control Base Path chosen during installation on the original public entry (default `/console`, for example `http://<host>:18317/console`) to confirm the CPA connection; v2 does not serve `/management.html` (404):
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/seakee/CPA-Manager-Plus/main/bin/install-cpamp.sh
-CPAMP_OPERATION=repair \
-CPAMP_INSTALL_DIR="$HOME/cpa-manager-plus" \
-bash install-cpamp.sh
+docker compose up -d
 ```
 
-The repair flow synchronizes the SQLite admin credential with `secrets/cpamp-admin-key` in the install directory, so the file and actual login key remain aligned. It does not delete the Docker data volume, CPA Management Key, or request history.
+## Provide A Specific Admin Key (`--admin-key-file`)
 
-Non-interactive environments require explicit confirmation:
-
-```bash
-curl -fsSLO https://raw.githubusercontent.com/seakee/CPA-Manager-Plus/main/bin/install-cpamp.sh
-CPAMP_OPERATION=repair \
-CPAMP_INSTALL_DIR="$HOME/cpa-manager-plus" \
-CPAMP_NON_INTERACTIVE=1 \
-CPAMP_CONFIRM=1 \
-bash install-cpamp.sh
-```
-
-## Docker Named Volume
+To set a chosen key explicitly, pass `--admin-key-file` (cannot be combined with `--admin-key`, and keeps plaintext out of shell history). Because the one-shot Docker container runs as `10002:10002`, make the temporary host file readable by UID `10002` and mount it read-only:
 
 ```bash
-docker stop cpa-manager-plus
-docker run --rm \
-  -v cpa-manager-plus-data:/data \
-  seakee/cpa-manager-plus:latest \
-  reset-admin-key
-docker start cpa-manager-plus
-```
-
-If you use the GitHub Container Registry image, replace `seakee/cpa-manager-plus:latest` with `ghcr.io/seakee/cpa-manager-plus:latest`.
-
-## Provide A Specific Admin Key
-
-Prefer `--admin-key-file` so the key does not enter shell history:
-
-```bash
-printf '%s\n' 'replace-with-a-long-random-admin-key' > /srv/new-cpamp-admin-key.txt
-docker stop cpa-manager-plus
-docker run --rm \
-  -v cpa-manager-plus-data:/data \
+sudo install -m 0400 -o 10002 -g 10002 /dev/null /srv/new-cpamp-admin-key.txt
+sudo sh -c "printf '%s\n' 'replace-with-a-long-random-admin-key' > /srv/new-cpamp-admin-key.txt"
+docker compose stop
+docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus \
   -v /srv/new-cpamp-admin-key.txt:/run/secrets/new_admin_key:ro \
-  seakee/cpa-manager-plus:latest \
-  reset-admin-key --admin-key-file /run/secrets/new_admin_key
-docker start cpa-manager-plus
+  cpa-manager-plus reset-admin-key \
+  --db-path /data/usage.sqlite \
+  --admin-key-file /run/secrets/new_admin_key
+docker compose up -d
 ```
 
-## Native Packages
+When a key is provided, only its digest is stored and the plaintext is never echoed (`Use the provided admin key to log in after restarting Manager Server.`). Remove `/srv/new-cpamp-admin-key.txt` after verifying console login and the CPA connection.
 
-macOS / Linux:
+## linux/amd64 Native Package
+
+Stop the complete launcher / `systemd` service and back up `data/` first, then run from the extracted package root:
 
 ```bash
-./cpa-manager-plus reset-admin-key
+sudo ./bin/cpa-manager-plus reset-admin-key --db-path "$PWD/data/usage.sqlite"
 ```
 
-Windows PowerShell:
+With `--admin-key-file`, pass a restricted private host file; after success restart the original service and verify login rather than rerunning `initialize`.
 
-```powershell
-.\cpa-manager-plus.exe reset-admin-key
-```
-
-If the SQLite database is not in the default data directory, pass the path explicitly:
-
-```bash
-./cpa-manager-plus reset-admin-key --db-path /path/to/usage.sqlite
-```
+::: details Advanced: command internals
+`cpa-manager-plus reset-admin-key` (alias `reset-admin-password`) acquires the exclusive process lock, verifies that the target file exists, is non-empty, and contains the `settings` and `usage_events` tables, and writes a new salted HMAC credential to `settings.admin_credential_v1` (preserving an existing `CreatedAtMS` and updating `RotatedAtMS`). It does not start the HTTP server, collector, or background workers, and does not read `data.key` or `/data/runtime-secret/token`.
+:::
 
 ## Troubleshooting
 
-- `SQLite database not found`: the command is not running against the real configured environment. Pass `--db-path`, or mount the correct Docker volume or host directory.
-- `is empty` / `does not look like a CPA Manager Plus Manager Server database`: the path points to the wrong file or a newly created empty file.
-- `database is locked`: Manager Server or another process is still using SQLite. Stop related processes and retry.
-- Login still fails after reset: confirm the panel is accessing the same Manager Server.
-- The new generated key was not saved: run the command again while Manager Server is stopped. It will generate another random key.
+- `acquire admin reset lock; stop Manager Server and retry`: the service is still running or another process holds the lock. Confirm `docker compose stop` or `systemctl stop` finished; never delete lock files manually.
+- `SQLite database not found at ...` / `is empty` / `does not look like a CPA Manager Plus Manager Server database`: `--db-path` points to the wrong path or a newly created empty volume. Leave services stopped and inspect the actual volume mapping.
+- The generated key was not saved: run the same command again while the service remains stopped to generate a fresh random key.
+
+## 1.x (Before Upgrading)
+
+1.x Stable deployments (`docker-compose.manager.yml`, `install-cpamp.sh` with `CPAMP_OPERATION=repair`, or multi-platform 1.x native binaries) use a different recovery procedure; see the 1.x Stable documentation at [Reset Admin Key (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/reset-admin-key.html).

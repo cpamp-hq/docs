@@ -2,7 +2,7 @@
 
 ## v2 Beta: Embedded And External
 
-Full Mode in v2 Beta is not the single-Manager 1.x deployment below. Embedded official CPA is pinned to **`v8.0.55`**; External requires at least **`v8.0.55`** and actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**; see [Upgrade And Rollback](../operations/update.md).
+Full Mode in v2 Beta is not the single-Manager 1.x deployment. Embedded official CPA is pinned to **`v8.0.55`**; External requires at least **`v8.0.55`** and actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**; see [Upgrade And Rollback](../operations/update.md).
 
 | Mode | Who runs CPA | CPAMP boundary |
 | --- | --- | --- |
@@ -20,70 +20,24 @@ The v2 Beta browser entry is the console under the **Control Base Path** chosen 
 
 Install: [v2 Docker](../deployment/docker.md) / [linux/amd64 Native](../deployment/native.md). Operate: [Backup](../operations/backup.md) / [Licensing And Release Assets](../reference/releases.md).
 
-## 1.x Stable And Lightweight Panel Reference
+## Where Requests And Keys Go
 
-This section describes 1.x Stable, where Full Mode is the Manager Server panel at `:18317/management.html`. For v2 Beta use the control base path above (default `/console`); do not treat this section's `:18317/management.html` as the v2 entry.
+| Scenario | Target URL | Key Used |
+| --- | --- | --- |
+| **Embedded** client model requests | `<public-origin>/v1/...` on CPAMP (forwarded by Ingress to in-container CPA; `8317` is not exposed) | Regular CPA Client Key issued in the wizard or console |
+| **External** client model requests | External CPA's own `/v1/...` endpoint | Regular CPA Client Key |
+| Open **CPAMP Full Mode console** (Embedded or External) | Control Base Path under the public origin chosen at installation (default `/console`, frontend API `<control-base-path>/api/v2/*`) | CPAMP Admin Key |
+| Open **CPAMP Lightweight Panel** (no Manager backend) | External CPA `http://<cpa-host>:8317/management.html` | CPA Management Key |
 
-CPA receives and forwards real model requests. CPAMP manages CPA and, in Full Mode, stores request history, analyzes cost, and helps maintain account state.
-
-Most users only need to remember three things:
-
-1. Codex, Claude Code, OpenCode, and other clients always connect to CPA, not CPAMP.
-2. The CPAMP Lightweight Panel opens from CPA `:8317/management.html` and uses the CPA Management Key.
-3. CPAMP Full Mode opens from its own console and uses the CPAMP Admin Key: the control base path chosen at installation for v2 Beta (default `/console`), `:18317/management.html` for 1.x Stable.
-
-## Where Each Request Goes
-
-| Action                      | Address                                       | Key                |
-| --------------------------- | --------------------------------------------- | ------------------ |
-| A client requests a model   | CPA model endpoints such as `/v1/...`         | CPA client API key |
-| Use CPAMP Lightweight Panel | CPA `:8317/management.html`                   | CPA Management Key |
-| Use CPAMP Full Mode         | CPAMP `:18317/management.html`                | CPAMP Admin Key    |
-| Connect Full Mode to CPA    | CPA URL entered during setup or configuration | CPA Management Key |
-
-Do not mix these keys. If login fails, first confirm whether the current page is `8317` or the CPAMP console. The `:18317/management.html` address in the Full Mode row belongs to 1.x Stable; v2 Beta uses the control base path described at the top of this page (default `/console`).
-
-## The Two Modes
-
-- **Lightweight Panel**: replaces the official CPA management UI without adding a service or database.
-- **Full Mode**: adds Manager Server for request history, cost analytics, server-side inspection, backups, and automation.
-
-If you are unsure which one to use, read [Choosing A Panel](./choosing-a-panel.md).
-
-::: details Complete request and data flow
-
-```text
-Codex / Claude Code / other clients
-  -> CPA
-      -> model providers
-      -> request logs and usage queue
-
-CPAMP Full Mode
-  -> reads management information and usage events from CPA
-  -> stores request history, prices, inspection, and automation state
-```
-
-This means:
-
-- For a failed client request, check CPA, the provider, the account, and client configuration first.
-- When CPAMP has no data, confirm that requests pass through CPA, then inspect monitoring collection.
-- CPAMP does not forward model requests by itself.
-
-:::
-
-## When To Change CPA Configuration
-
-CPA configuration still controls:
-
-- Providers, model routing, auth files, and OAuth.
-- Client API keys, quota, logs, and plugins.
-- Remote management, usage publishing, and queue retention.
-
-Prefer the CPAMP interface for daily work. Edit CPA `config.yaml` directly only when the UI does not expose a field, when preparing CPA before deployment, or during advanced troubleshooting.
+Never put the CPAMP Admin Key or CPA Management Key into regular model clients, and never use `:18317/management.html` as the v2 Full Mode entry (it returns 404). In External mode, Manager only polls CPA's Management API and drains its in-memory usage queue (keep `COLLECTOR_POLL_INTERVAL_MS` around `1000`–`5000` ms) without taking over external CPA's host lifecycle.
 
 ## Next Steps
 
-- Install: [Quick Start](./getting-started.md)
-- Add model services: [AI Providers](../manual/ai-providers.md)
-- Configure clients: [Client Configuration](../gateway/clients.md)
-- Monitoring has no data: [Monitoring Has No Data](../troubleshooting/request-monitoring.md)
+- Deploy Full Mode: [v2 Docker Installation](../deployment/docker.md) or [linux/amd64 Native Package](../deployment/native.md)
+- Compare Full Mode and Lightweight Panel: [Choose How To Run CPAMP](./choosing-a-panel.md)
+- Configure Codex, Claude Code, OpenCode, and SDK clients: [Connect Clients](../gateway/clients.md)
+- Diagnose missing monitoring records: [Request Monitoring Has No Data](../troubleshooting/request-monitoring.md)
+
+## 1.x (Before Upgrading)
+
+1.x Stable uses a single Manager Server paired with an external CPA and serves its UI at `:18317/management.html`; see the 1.x Stable documentation at [How CPAMP Works With CPA (1.x Stable)](https://cpamp-docs.seakee.dev/en/guide/runtime-model.html).

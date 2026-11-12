@@ -69,29 +69,13 @@ cat share/cpamp/provenance.json
 
 The Native package carries CPAMP's root `LICENSE` (and `share/licenses/cpamp/LICENSE`), the official CPA `LICENSE`, `cpa-artifact.json`, `share/licenses/<component>/inventory.json` for `manager`, `ingress`, `runtime-supervisor`, and `web`, plus `share/cpamp/provenance.json` with `role: "native"` (a tarball does not own the host OS, so it omits container-only `base-image` and `glibc-runtime` components).
 
-## 1.x Stable: Release Entry
+## Related Operations
 
+- Offline migration from 1.x (exact baseline `v1.14.10`) and rollback: [Upgrade CPA Manager Plus](../operations/update.md)
+- Full offline `/data` volume backup and restore: [Backup And Restore](../operations/backup.md)
+- Replace a forgotten administrator credential: [Reset Admin Key](../operations/reset-admin-key.md)
+- CPA lightweight panel cache clearing and manual Beta placement: [Updates And Cache](../deployment/cpa-panel.md#updates-and-cache)
 
-When reviewing a new version, focus on three things: what changed, whether anything is incompatible, and whether the upgrade requires extra backup or configuration work.
+## 1.x (Before Upgrading)
 
-## View The Latest Version
-
-- [Latest GitHub Release](https://github.com/seakee/CPA-Manager-Plus/releases/latest)
-- [All Releases](https://github.com/seakee/CPA-Manager-Plus/releases)
-
-Each Release lists major features, fixes, downloads, and any required upgrade notes.
-
-## Before Upgrading
-
-1. Read the target version's Upgrade Notes.
-2. Confirm whether you use Lightweight Panel, Docker Full Mode, or a native package.
-3. For Full Mode, back up SQLite, `data.key`, and secrets in the install directory.
-4. Follow the matching steps in [Upgrade CPAMP](../operations/update.md).
-
-Lightweight Panel is normally updated by CPA when it checks for a new `management.html`. If the old interface remains, see [Lightweight Panel Updates And Cache](../deployment/cpa-panel.md#updates-and-cache).
-
-## If Something Goes Wrong
-
-- Cannot log in after upgrade: [Reset Admin Key](../operations/reset-admin-key.md)
-- Monitoring is empty after upgrade: [Monitoring Has No Data](../troubleshooting/request-monitoring.md)
-- Unsure where data files are stored: [Configuration And Data Directory](../operations/configuration.md)
+`releases/latest` continues to track 1.x Stable during Beta. For 1.x Stable release assets and update guidance, see the 1.x Stable documentation at [Releases And Update Notes (1.x Stable)](https://cpamp-docs.seakee.dev/en/reference/releases.html).

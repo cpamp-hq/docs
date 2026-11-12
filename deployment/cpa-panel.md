@@ -9,13 +9,15 @@ CPAMP 轻量面板由 CPA 直接托管，用 CPA Manager Plus 的界面替换官
 
 ## 最短安装流程
 
-1. 在 CPA `config.yaml` 中设置 `panel-github-repository`。
-2. 确认管理面板没有被禁用。
-3. 重启或重新加载 CPA。
-4. 打开 `http://<cpa-host>:8317/management.html`。
-5. 使用 CPA Management Key 登录。
+- **试用 v2 Beta 轻量面板（本分支推荐）**：CPA 自动更新只读取 `releases/latest`（Beta 期间保持为 **1.x Stable**），因此试用 v2 Beta 面板需从已发布的 v2 Beta 预发布手动下载 `management.html`、在 `config.yaml` 中设置 `disable-auto-update-panel: true` 并放入 `static/management.html`，直接跳到下文 [在 CPA 上试用 v2 Beta 面板](#在-cpa-上试用-v2-beta-面板)。
+- **使用 `panel-github-repository` 自动跟踪 `releases/latest`（Beta 期间为 1.x Stable 面板）**：
+  1. 在 CPA `config.yaml` 中设置 `panel-github-repository`。
+  2. 确认未关闭管理面板。
+  3. 重启或重载 CPA。
+  4. 打开 `http://<cpa-host>:8317/management.html`。
+  5. 输入 CPA 管理密钥登录。
 
-下面给出完整配置和安全说明；已经熟悉 CPA 配置的用户只需要完成以上步骤。
+下方先列出 CPA 面板托管的基础配置与缓存机制，随后说明 v2 Beta 预发布面板的手动替换步骤。
 
 ```text
 浏览器
@@ -40,9 +42,9 @@ CPAMP 轻量面板由 CPA 直接托管，用 CPA Manager Plus 的界面替换官
 - CPA 需要能够访问 GitHub Release，或通过它已经配置的代理下载 `management.html`。
 - CPA v8 可用：v2 Beta 的轻量面板通过 CPA v8 仍然提供的 `/v0/management` 工作，详见下文「v2 Beta 与轻量面板的连续性」。
 
-## 配置 CPA
+## 配置 CPA（基础配置与 1.x 自动更新基线）
 
-编辑 CPA 的 `config.yaml`：
+编辑 CPA `config.yaml`（注意：下方 `disable-auto-update-panel: false` 会让 CPA 始终拉取 `releases/latest` 的 1.x Stable 面板；若要放置 v2 Beta 预发布面板，请按后文改为 `disable-auto-update-panel: true`）：
 
 ```yaml
 remote-management:
@@ -141,16 +143,13 @@ External 完整模式不是这个无后端的轻量面板：它需要 Manager，
 
 ## 升级到 CPAMP 完整模式
 
-需要请求历史、成本分析或服务端自动化时：
+当你需要请求历史、成本分析或服务端自动化时：
 
-1. 按 [Docker 部署](./docker.md) 或 [原生包部署](./native.md) 启动 Manager Server。
-2. 打开完整模式入口：v2 Beta 是安装时设置的控制台地址（默认 `http://<cpamp-host>:18317/console`），1.x Stable 是 `http://<cpamp-host>:18317/management.html`。
-3. 使用 CPAMP Admin Key 完成 setup 或登录。
-4. 配置 CPA 地址、CPA Management Key 和请求采集。
+1. 按 [v2 Docker 安装](./docker.md) 或 [linux/amd64 原生包](./native.md) 启动 v2 服务。
+2. 通过 `initialize` Handoff 打开浏览器完成首次向导，或访问安装时设置的控制台地址（默认 `http://<cpamp-host>:18317/console`）并用 CPAMP 管理员密钥登录。
+3. 在控制台核对 CPA 连接与请求采集状态。
 
-v2 Beta 不提供 `/management.html`，访问返回 404，它不是 v2 入口。
-
-CPA 端口上的轻量面板可以继续保留，但完整功能只从 Manager Server 面板入口使用。
+v2 Beta 不提供 `/management.html`；访问该路径会返回 404，不是 v2 入口。CPA `:8317` 上的轻量面板仍可保留，但完整能力只在 v2 控制台入口中可见。
 
 ## 常见问题
 
@@ -159,3 +158,7 @@ CPA 端口上的轻量面板可以继续保留，但完整功能只从 Manager S
 - 远程访问返回拒绝：检查 `allow-remote`、防火墙和反向代理。
 - 安装 v2 Beta 面板后又变回 1.x 界面：确认 `disable-auto-update-panel: true`；否则 CPA 会用 `releases/latest` 的 1.x 面板覆盖手动放置的文件。
 - 没有请求监控：这是轻量模式的预期行为；使用 Manager Server 面板。
+
+## 1.x（升级前）
+
+1.x Stable 轻量面板与 1.x 完整模式（`:18317/management.html`）的说明见 1.x 稳定版文档：[CPAMP 轻量面板（1.x Stable）](https://cpamp-docs.seakee.dev/deployment/cpa-panel.html)。

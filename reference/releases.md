@@ -69,29 +69,13 @@ cat share/cpamp/provenance.json
 
 Native 包携带 CPAMP 根 `LICENSE`（及 `share/licenses/cpamp/LICENSE`）、官方 CPA `LICENSE`、`cpa-artifact.json`，以及 `manager`、`ingress`、`runtime-supervisor`、`web` 四个组件的 `share/licenses/<component>/inventory.json` 与 `role: "native"` 的 `share/cpamp/provenance.json`（原生归档不拥有宿主机操作系统，因此不包含容器专用的 `base-image` 与 `glibc-runtime` 组件）。
 
-## 1.x Stable：版本入口
+## 相关维护入口
 
+- 从 1.x（精确基线 `v1.14.10`）离线迁移与回滚：[更新与升级](../operations/update.md)
+- 单一 `/data` 数据卷停机备份与恢复：[备份与恢复](../operations/backup.md)
+- 重置管理员凭证：[重置管理员密钥](../operations/reset-admin-key.md)
+- CPA 轻量面板缓存清理与 Beta 手动替换：[更新与缓存](../deployment/cpa-panel.md#更新与缓存)
 
-查看新版本时，重点关注三件事：新增了什么、是否有不兼容变化、升级前是否需要额外备份或配置调整。
+## 1.x（升级前）
 
-## 查看最新版本
-
-- [最新 GitHub Release](https://github.com/seakee/CPA-Manager-Plus/releases/latest)
-- [全部历史版本](https://github.com/seakee/CPA-Manager-Plus/releases)
-
-每个 Release 会列出主要功能、修复、下载文件和必要的升级说明。
-
-## 升级前
-
-1. 阅读目标版本的 Upgrade Notes。
-2. 确认当前使用的是轻量面板、Docker 完整模式还是原生包。
-3. 完整模式先备份 SQLite、`data.key` 和安装目录中的 secret。
-4. 再按[更新 CPAMP](../operations/update.md)执行对应步骤。
-
-轻量面板通常由 CPA 自动检查新的 `management.html`。如果升级后仍显示旧界面，查看[轻量面板更新与缓存](../deployment/cpa-panel.md#更新与缓存)。
-
-## 遇到问题
-
-- 更新后无法登录：[重置管理员密钥](../operations/reset-admin-key.md)
-- 更新后监控为空：[请求监控没有数据](../troubleshooting/request-monitoring.md)
-- 不确定数据文件位置：[配置与数据目录](../operations/configuration.md)
+`releases/latest` 在 Beta 期间继续指向 1.x Stable。1.x 稳定版发布资产与版本核对方式请参阅 1.x 稳定版文档：[版本与更新说明（1.x Stable）](https://cpamp-docs.seakee.dev/reference/releases.html)。
