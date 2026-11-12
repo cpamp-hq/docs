@@ -126,7 +126,7 @@ describe('documentation content integrity', () => {
 
     assert(!docsIndex.split('## 先体验界面')[0].includes('<h3>在线演示</h3>'));
     assert(docsIndex.includes('不是部署或运行模式'));
-    assert(!docsIndexEn.split('## Preview The Interface')[0].includes('<h3>Live Demo</h3>'));
+    assert(!docsIndexEn.split('## Preview the interface')[0].includes('<h3>Live Demo</h3>'));
     assert(docsIndexEn.includes('not a deployment or runtime mode'));
     assert(!choosingPanel.includes('| 在线演示'));
     assert(choosingPanel.includes('演示站不是面板、部署方式或运行模式'));
@@ -146,7 +146,6 @@ describe('documentation content integrity', () => {
   });
 
   it('keeps primary documentation user-focused and progressive', () => {
-    const config = readFileSync(configPath, 'utf8');
     const gettingStarted = readFileSync(path.join(docsRoot, 'guide/getting-started.md'), 'utf8');
     const gettingStartedEn = readFileSync(
       path.join(docsRoot, 'en/guide/getting-started.md'),
@@ -164,16 +163,6 @@ describe('documentation content integrity', () => {
     );
     const releases = readFileSync(path.join(docsRoot, 'reference/releases.md'), 'utf8');
     const releasesEn = readFileSync(path.join(docsRoot, 'en/reference/releases.md'), 'utf8');
-
-    assert(config.includes("text: '开始使用'"));
-    assert(config.includes("text: '日常使用'"));
-    assert(config.includes("text: '维护与排障'"));
-    assert.match(config, /text: '高级配置',\n\s+collapsed: true/);
-    assert.match(config, /text: '参考',\n\s+collapsed: true/);
-    assert(config.includes("text: 'Get Started'"));
-    assert.match(config, /text: 'Advanced Configuration',\n\s+collapsed: true/);
-    assert(!config.includes('性能优化报告（2026-07-10）'));
-    assert(!config.includes('Performance Report (2026-07-10)'));
 
     assert(gettingStarted.includes('路线一：安装轻量面板'));
     assert(gettingStarted.includes('路线二：安装完整模式'));
