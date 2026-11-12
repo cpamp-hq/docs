@@ -36,7 +36,7 @@ Docker and native packages provide the same Full Mode capabilities; only the ins
 | Docker deployment (recommended) | Most new users and server deployments | v2 Beta: `http://<cpamp-host>:18317/console` (default control base path)<br>1.x Stable: `http://<cpamp-host>:18317/management.html` |
 | Native package deployment       | Hosts where Docker is not used        | Same as above                                                                                           |
 
-v2 Beta does not serve `/management.html`; it returns 404 and is not the v2 entry.
+A Fresh v2 Beta installation does not serve `/management.html`; it returns 404 and is not a Fresh v2 entry. Instances upgraded offline from 1.x still use their original 1.x panel entry.
 
 - Docker users should follow [Docker Deployment](../deployment/docker.md).
 - Linux, macOS, and Windows users should follow [Native Packages](../deployment/native.md).

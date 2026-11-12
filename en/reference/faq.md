@@ -4,7 +4,7 @@ CPA Manager Plus provides full monitoring and analytics through Manager Server. 
 
 The CPAMP analytics browser entry depends on the version:
 
-- **v2 Beta**: the Control Base Path chosen at installation; the wizard defaults to `/console`, for example `http://<host>:18317/console`. Trust the address behind "Sign in and enter CPAMP" on the completion page. v2 does not serve `/management.html`, which returns 404.
+- **v2 Beta**: the Control Base Path chosen at installation; the wizard defaults to `/console`, for example `http://<host>:18317/console`. Trust the address behind "Sign in and enter CPAMP" on the completion page. A Fresh installation does not serve `/management.html`, which returns 404; instances upgraded offline from 1.x still use it or `/`.
 - **1.x Stable**: the Manager Server-hosted panel, for example `http://<host>:18317/management.html`.
 
 ```text
@@ -35,7 +35,7 @@ v2 Beta (the control base path chosen at installation under the public origin; t
 http://<host>:18317/console     (default; replace it if you chose another path)
 ```
 
-The console and its frontend API move together: the frontend calls `<control-base-path>/api/v2/*`. v2 does not serve `/management.html`; that path returns 404.
+The console and its frontend API move together: the frontend calls `<control-base-path>/api/v2/*`. A Fresh installation does not serve `/management.html`; that path returns 404, while an instance upgraded offline from 1.x keeps its original entry.
 
 1.x Stable (the Manager Server-hosted panel):
 
@@ -190,7 +190,7 @@ docker run -d \
   seakee/cpa-manager-plus:latest
 ```
 
-Open:
+Open (1.x Stable):
 
 ```text
 http://<host>:18317/management.html
@@ -328,7 +328,7 @@ http://<cpamp-host>:18317/management.html
 
 Finish setup first. `412` is not this path's status code.
 
-v2 Beta: while installation is unfinished or the Gateway is not admitted, `/v1/models` is answered by the public ingress with `503 gateway pending configuration`. After completing the wizard, check Gateway status and the Client Key in the console on the public origin (default `/console`; trust the wizard's completion page). Once admitted, `/v1/*` is forwarded to CPA and the status is CPA's own; this page does not promise a specific code. `:18317/management.html` returns 404 in v2.
+v2 Beta: while installation is unfinished or the Gateway is not admitted, `/v1/models` is answered by the public ingress with `503 gateway pending configuration`. After completing the wizard, check Gateway status and the Client Key in the console on the public origin (default `/console`; trust the wizard's completion page). Once admitted, `/v1/*` is forwarded to CPA and the status is CPA's own; this page does not promise a specific code. A Fresh installation answers `:18317/management.html` with 404; instances upgraded offline from 1.x keep the original entry.
 
 ## Data and backups
 
@@ -408,7 +408,7 @@ If `Disable Panel Auto Updates` is enabled, CPA only downloads the panel again w
 
 ### What is management.html in a release?
 
-`management.html` is the single-file management panel shipped in release packages and loaded by CPA as the CPAMP Lightweight Panel; each v2 Beta prerelease ships it too. The 1.x Stable Manager Server hosts it at `:18317/management.html`; v2 Beta Full Mode instead serves the console under the Control Base Path (default `/console`) and does not serve `/management.html` (404). The online documentation remains on GitHub Pages and is not distributed with install packages.
+`management.html` is the single-file management panel shipped in release packages and loaded by CPA as the CPAMP Lightweight Panel; each v2 Beta prerelease ships it too. The 1.x Stable Manager Server hosts it at `:18317/management.html`; a Fresh v2 Beta Full Mode instead serves the console under the Control Base Path (default `/console`) and does not serve `/management.html` (404), while an instance upgraded offline from 1.x still has Manager host that panel. The online documentation remains on GitHub Pages and is not distributed with install packages.
 
 ### Does the demo site connect to a real backend?
 

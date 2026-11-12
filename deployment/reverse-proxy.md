@@ -3,7 +3,7 @@
 如果你想用同一个域名访问 CPAMP 面板和 CPA API，就需要明确分流规则。HTTP 面板和 HTTP API 可以走反向代理；RESP Pub/Sub / RESP pop 不能走普通 HTTP 反向代理。
 
 ::: warning v2 Beta 的入口与 1.x 不同
-v2 Beta 单镜像只公开 `18317` 一个端口，由 Ingress 统一路由：控制台位于安装时设置的**控制台地址（Control Base Path）**下，向导默认 `/console`（例如 `https://your-domain.com/console`），前端调用同一路径下的 `/api/v2/*`；如果安装时换成别的合法路径，控制台和前端 API 一起移动。控制台路径本身不带尾斜杠（默认值下 `/console/` 返回 404），且只在浏览器式导航（`Accept: text/html`）下返回页面；`/management.html` 在 v2 返回 404。因此 v2 不需要本页的 1.x 路径分流，把整个域名转发到 `18317` 即可，反向代理不需要改写控制台路径。下表、Nginx 示例和排障项描述的是 1.x Stable 的 `/management.html` 面板。
+v2 Beta 单镜像只公开 `18317` 一个端口，由 Ingress 统一路由：控制台位于安装时设置的**控制台地址（Control Base Path）**下，向导默认 `/console`（例如 `https://your-domain.com/console`），前端调用同一路径下的 `/api/v2/*`；如果安装时换成别的合法路径，控制台和前端 API 一起移动。控制台路径本身不带尾斜杠（默认值下 `/console/` 返回 404），且只在浏览器式导航（`Accept: text/html`）下返回页面；Fresh 全新安装下 `/management.html` 返回 404。因此 v2 不需要本页的 1.x 路径分流，把整个域名转发到 `18317` 即可，反向代理不需要改写控制台路径。下表、Nginx 示例和排障项描述的是 1.x Stable 的 `/management.html` 面板。
 :::
 
 本文按 1.x Stable 的同域名部署来说明：
@@ -43,7 +43,7 @@ v2 Beta 单镜像只公开 `18317` 一个端口，由 Ingress 统一路由：控
 | 未明确归属的新路径                           | CPA `:8317`      | 避免阻断 CPA 未来新增接口（`/v8/management/*` 除外，见上）。                                            |
 | RESP Pub/Sub / RESP pop                      | 直连 CPA `:8317` | 不能经过 HTTP 反向代理。                                                                                |
 
-上述 `/v8/management/config/api-keys[/*]` 只读路由属于 1.x Stable 的 `/management.html` 管理面。v2 Beta 不提供 `/management.html`，公开 Ingress 也拒绝整个 `/v8/management/*`；沙箱化插件 iframe 是跨站取用者，两者都不可达。
+上述 `/v8/management/config/api-keys[/*]` 只读路由属于 1.x Stable 的 `/management.html` 管理面。Fresh 全新安装的 v2 Beta 不提供 `/management.html`，公开 Ingress 也拒绝整个 `/v8/management/*`；沙箱化插件 iframe 是跨站取用者，两者都不可达。
 
 1.x Stable 推荐架构：
 

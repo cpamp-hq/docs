@@ -63,7 +63,7 @@ docker compose exec -T -u 10002:10002 cpa-manager-plus cpa-manager-plus initiali
 
 New Managed 完成后请立即保存一次性首把 Client Key，并通过统一入口完成首次模型请求验证后再接入业务流量。Admin Key、CPA Management Key 与 Client Key 职责不同，不可混用。进程 `/health` 返回 200 不代表安装完成或网关已放行，必须以向导完成、路由校验与客户端实测为准。
 
-安装向导完成后，后续登录直接打开同一公开 origin 下安装时设置的**控制台地址**（向导默认 `/console`，例如 `http://<host>:18317/console`；如果改过控制台路径，控制台和前端 API `<控制台路径>/api/v2/*` 一起变，以向导完成页“登录并进入 CPAMP”为准）。v2 不提供 `/management.html`，访问返回 404，它不是 v2 入口。
+安装向导完成后，后续登录直接打开同一公开 origin 下安装时设置的**控制台地址**（向导默认 `/console`，例如 `http://<host>:18317/console`；如果改过控制台路径，控制台和前端 API `<控制台路径>/api/v2/*` 一起变，以向导完成页“登录并进入 CPAMP”为准）。Fresh 全新安装的 v2 不提供 `/management.html`，访问返回 404，它不是 v2 入口；从 1.x 离线升级、沿用原 1.x 数据卷的实例仍由 Manager 托管该面板，见 [升级与回滚](../operations/update.md)。
 
 ## 1.x Stable：手动部署参考
 

@@ -63,7 +63,7 @@ In the browser, set and save the CPAMP Admin Key, then choose **New Managed** (n
 
 For New Managed, save the one-time first Client Key and verify model requests through the public entry before sending production traffic. Admin Key, CPA Management Key, and Client Key are different credentials. A successful process `/health` is not installation completion or Gateway readiness: require the wizard's completion, routing verification, and client connectivity.
 
-After the wizard completes, later logins open the **control base path** chosen at installation on the same public origin (the wizard defaults to `/console`, for example `http://<host>:18317/console`; a custom path moves both the console and its frontend API `<control-base-path>/api/v2/*`, so trust the "Sign in and enter CPAMP" link on the completion page). v2 does not serve `/management.html`; it returns 404 and is not the v2 entry.
+After the wizard completes, later logins open the **control base path** chosen at installation on the same public origin (the wizard defaults to `/console`, for example `http://<host>:18317/console`; a custom path moves both the console and its frontend API `<control-base-path>/api/v2/*`, so trust the "Sign in and enter CPAMP" link on the completion page). A Fresh v2 installation does not serve `/management.html`; it returns 404 and is not the v2 entry. Instances upgraded offline from 1.x and reusing their original 1.x volume still serve that panel from Manager — see [Upgrade and Rollback](../operations/update.md).
 
 ## 1.X Stable: manual deployment reference
 
