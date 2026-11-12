@@ -6,8 +6,11 @@ v2 Beta 是 **Prerelease**，不是 Stable；`releases/latest`、1.x 自动面�
 
 同次 v2 发布的运行组合为：
 
-- 三个镜像：`seakee/cpa-manager-plus:<tag>@sha256:<digest>`、`seakee/cpamp-ingress:<tag>@sha256:<digest>`、`seakee/cpamp-runtime:<tag>@sha256:<digest>`；官方 CPA 固定 `v8.0.55`。
-- Prerelease 附件 `docker-compose.v2-embedded.yml` 与 `embedded-release-pairing.json`，同版校验文件及发布说明；不能混合版本或只更换一个角色。
+- 单一镜像仓库 `seakee/cpa-manager-plus`（按 `<tag>@sha256:<digest>` 固定不可变摘要；官方 CPA 固定 `v8.0.55`）：
+  - **`slim` 变体**：精确 Beta 标签 `seakee/cpa-manager-plus:2.0.0-beta.N`（滚动标签 `seakee/cpa-manager-plus:beta`），不内置 CPA 二进制，在安装或升级向导中从 CDN / GitHub Release 或本地 `.tar.gz` 上传按固定摘要获取 CPA。
+  - **`full` 变体**：精确 Beta 标签 `seakee/cpa-manager-plus:2.0.0-beta.N-full`（滚动标签 `seakee/cpa-manager-plus:beta-full`），镜像内预置官方 CPA 二进制，适合离线与无外网环境。
+  - Beta 期间 `:latest`、`:preview`、`:1`、`:1.14` 保持指向 **1.x Stable**；v2 镜像标签不带 `v` 前缀（Git 发布 Tag 仍为 `v2.0.0-beta.N`）；从源码本地构建请使用 `cpa-manager-plus:full-local`（或 `slim-local`），避免覆盖本机 1.x 的 `:latest`。部署 `docker-compose.yml` 见 [v2 Docker 安装](../deployment/docker.md)。
+- 同版校验文件 `checksums.txt` 及发布说明；不要混用不同预发布的资产或依赖浮动标签。
 - linux/amd64 Native：`cpa-manager-plus-native-v2_<ver>_linux_amd64.tar.gz`。不提供 v2 的 macOS、Windows、linux/arm64 原生包，见 [原生部署](../deployment/native.md)。
 - 独立 CPA 轻量面板 `management.html`；Stable 与 Beta 的双轨取得方式见 [轻量面板](../deployment/cpa-panel.md)。
 
@@ -19,38 +22,38 @@ v2 Beta 是 **Prerelease**，不是 Stable；`releases/latest`、1.x 自动面�
 
 **当前仓库根 `LICENSE` 是 MIT**，镜像复制该文件；官方 CPA 的 MIT LICENSE 独立分发，第三方依赖保留各自许可证。不要把未来许可提案视为已生效，也不要仅根据 CPAMP 的 MIT 推断所有打包依赖均采用 MIT。实际分发内容与对应许可证文本是核验依据。
 
-### Embedded 镜像
+### Embedded 单镜像
 
 | 文件 | 含义 |
 | --- | --- |
-| `/usr/local/share/licenses/cpamp/LICENSE` | 三角色镜像中的 CPAMP 项目许可证 |
-| `/usr/local/share/licenses/cli-proxy-api/LICENSE` | Runtime 镜像中随内置 CPA 分发的官方许可证，不在另外两角色中重复提供 |
+| `/usr/local/share/licenses/cpamp/LICENSE` | 单镜像（`slim` 与 `full`）中的 CPAMP 项目许可证 |
+| `/usr/local/share/licenses/cli-proxy-api/LICENSE` | `full` 变体中随内置 CPA 分发的官方许可证（`slim` 不内置 CPA 二进制，因此不含该文件） |
+| `/usr/local/share/cpamp/runtime/cpa-artifact.json` | 镜像锁定的官方 CPA 版本（`8.0.55`）与 `artifactId` SHA256 清单 |
 | `/usr/local/share/cpamp/release/third-party-inventory.txt` | JSON 内容的聚合第三方收集清单（不要因 `.txt` 后缀当作纯文本列表） |
-| `/usr/local/share/licenses/<component>/inventory.json` | 角色对应的组件清单和原始 LICENSE/NOTICE 文件摘要 |
-| `/usr/local/share/cpamp/provenance.json` | 版本、源码、角色/平台、二进制与第三方清单的字节绑定记录 |
+| `/usr/local/share/licenses/<component>/inventory.json` | 单镜像各组件清单和原始 LICENSE/NOTICE 文件摘要 |
+| `/usr/local/share/cpamp/provenance.json` | 版本、源码、角色（`cpamp`）/平台、二进制与第三方清单的字节绑定记录（`slim` 标记 `"cpaBundled": false`） |
 
-Manager 的 component 为 `manager`、`web`、`base-image`；Ingress 为 `ingress`、`base-image`；Runtime 为 `runtime-supervisor`、`base-image`。Go/Web 收集原始许可文本；Alpine 的边界是已安装 APK 许可元数据及可取得的包内声明，Debian 基础镜像使用已安装包的 copyright 文件。`VERIFIED_LICENSE_COLLECTION` 不代表法律审批，也不把“仅元数据”自动变为完整原文覆盖。
+单镜像（`role: "cpamp"`）的 `<component>` 包含 `manager`、`web`、`ingress`、`runtime-supervisor`、`base-image`（Alpine）与 `glibc-runtime`（供官方 CPA 二进制运行的 Debian `libc6`/`libgcc-s1`/`gcc-12-base` 运行库）。Go/Web 收集原始许可文本；Alpine 基础镜像的边界是已安装 APK 许可元数据及可取得的包内声明，`glibc-runtime` 使用对应 Debian 包的 copyright 文件。`VERIFIED_LICENSE_COLLECTION` 不代表法律审批，也不把“仅元数据”自动变为完整原文覆盖。
 
-在已安装的同版发布 Compose 中查验（输出是公开构建资料，不包含运行密钥）：
+在已运行的单镜像 `docker-compose.yml` 目录中查验（输出是公开构建资料，不包含运行密钥）：
 
 ```bash
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/licenses/cpamp/LICENSE
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-runtime \
+# 仅 full 变体内置 CPA 许可证：
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/licenses/cli-proxy-api/LICENSE
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
+docker compose exec -T cpa-manager-plus \
+  cat /usr/local/share/cpamp/runtime/cpa-artifact.json
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/cpamp/release/third-party-inventory.txt
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/licenses/manager/inventory.json
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
-  cat /usr/local/share/cpamp/provenance.json
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-ingress \
-  cat /usr/local/share/cpamp/provenance.json
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-runtime \
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/cpamp/provenance.json
 ```
 
-将版本、`sourceCommit`、平台/角色与配对记录核对，并按 inventory 列出的路径/摘要查验具体声明。Provenance 是**未签名的构建来源声明**，不是受保护发布者证明、签名或法律结论；校验和只证明下载内容匹配相应记录，仍须信任取得记录的发布来源。
+将版本、`sourceCommit`、平台与镜像摘要同对应 GitHub Release 说明及 `checksums.txt` 核对，并按 inventory 列出的路径/摘要查验具体声明。Provenance 是**未签名的构建来源声明**，不是受保护发布者证明、签名或法律结论；校验和只证明下载内容匹配相应记录，仍须信任取得记录的发布来源。
 
 ### linux/amd64 Native
 
@@ -60,9 +63,11 @@ docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-runtime \
 cat LICENSE
 cat share/licenses/cli-proxy-api/LICENSE
 cat share/cpamp/runtime/cpa-artifact.json
+cat share/cpamp/release/third-party-inventory.txt
+cat share/cpamp/provenance.json
 ```
 
-当前 Native 包实际携带 CPAMP 根 LICENSE 与上述 CPA LICENSE。镜像里的组件 inventory/Provenance 不等于 Native 也有同一份证据；当前 Native 包不提供 `THIRD_PARTY_NOTICES/` 或独立 Native Provenance，不能用容器路径宣称完成 Native 依赖声明核验。
+Native 包携带 CPAMP 根 `LICENSE`（及 `share/licenses/cpamp/LICENSE`）、官方 CPA `LICENSE`、`cpa-artifact.json`，以及 `manager`、`ingress`、`runtime-supervisor`、`web` 四个组件的 `share/licenses/<component>/inventory.json` 与 `role: "native"` 的 `share/cpamp/provenance.json`（原生归档不拥有宿主机操作系统，因此不包含容器专用的 `base-image` 与 `glibc-runtime` 组件）。
 
 ## 1.x Stable：版本入口
 

@@ -4,10 +4,13 @@
 
 v2 Beta is a **Prerelease**, not Stable. `releases/latest`, automatic 1.x panel updates, and the default installer remain on **1.x Stable**. Select the matching Beta from [All Releases](https://github.com/seakee/CPA-Manager-Plus/releases) only after the maintainer actually publishes it; this page does not assert publication or authorize production migration. Do not use floating Beta tags or replace Embedded Full Web with the Beta single-file panel.
 
-One v2 release pairs:
+One v2 release provides:
 
-- Three images: `seakee/cpa-manager-plus:<tag>@sha256:<digest>`, `seakee/cpamp-ingress:<tag>@sha256:<digest>`, and `seakee/cpamp-runtime:<tag>@sha256:<digest>`, with official CPA pinned to `v8.0.55`.
-- Prerelease attachments `docker-compose.v2-embedded.yml` and `embedded-release-pairing.json`, matching checksums and release notes. Never mix releases or replace only one role.
+- Single image repository `seakee/cpa-manager-plus` (pinned via immutable `<tag>@sha256:<digest>`, with official CPA pinned to `v8.0.55`):
+  - **`slim` variant**: exact Beta tag `seakee/cpa-manager-plus:2.0.0-beta.N` (rolling tag `seakee/cpa-manager-plus:beta`), omitting the bundled CPA binary and acquiring the digest-pinned CPA in the install or upgrade wizard from CDN / GitHub Release or a local `.tar.gz` upload.
+  - **`full` variant**: exact Beta tag `seakee/cpa-manager-plus:2.0.0-beta.N-full` (rolling tag `seakee/cpa-manager-plus:beta-full`), bundling the official CPA binary for offline and air-gapped hosts.
+  - `:latest`, `:preview`, `:1`, and `:1.14` stay on **1.x Stable** during Beta; v2 image tags have no `v` prefix (Git release tags remain `v2.0.0-beta.N`); local builds from source should use `cpa-manager-plus:full-local` (or `slim-local`) so local 1.x `:latest` is not overwritten. See [v2 Docker Installation](../deployment/docker.md) for `docker-compose.yml`.
+- Release `checksums.txt` and matching release notes; never mix assets across prereleases or rely on floating tags.
 - linux/amd64 Native: `cpa-manager-plus-native-v2_<ver>_linux_amd64.tar.gz`. No v2 macOS, Windows, or linux/arm64 native assets; see [Native Deployment](../deployment/native.md).
 - Independent CPA lightweight panel `management.html`; see [Lightweight Panel](../deployment/cpa-panel.md) for Stable/Beta download tracks.
 
@@ -19,38 +22,38 @@ One v2 release pairs:
 
 **The current repository root `LICENSE` is MIT**, and images copy that file. Official CPA's MIT LICENSE is distributed separately; third-party dependencies retain their own terms. Future licensing proposals are not effective licenses. CPAMP's MIT license does not imply that every bundled dependency uses MIT. Inspect the actual distributed files and matching license texts.
 
-### Embedded Images
+### Embedded Single Image
 
 | File | Meaning |
 | --- | --- |
-| `/usr/local/share/licenses/cpamp/LICENSE` | CPAMP project license in all three image roles |
-| `/usr/local/share/licenses/cli-proxy-api/LICENSE` | Official bundled CPA license in Runtime, not duplicated in the other two roles |
+| `/usr/local/share/licenses/cpamp/LICENSE` | CPAMP project license in both `slim` and `full` variants |
+| `/usr/local/share/licenses/cli-proxy-api/LICENSE` | Official bundled CPA license in the `full` variant (`slim` omits the CPA binary and this file) |
+| `/usr/local/share/cpamp/runtime/cpa-artifact.json` | Image-pinned official CPA version (`8.0.55`) and `artifactId` SHA256 manifest |
 | `/usr/local/share/cpamp/release/third-party-inventory.txt` | Aggregate license collection inventory containing JSON, despite the `.txt` suffix |
-| `/usr/local/share/licenses/<component>/inventory.json` | Role-specific component inventory and original LICENSE/NOTICE file digests |
-| `/usr/local/share/cpamp/provenance.json` | Byte-bound version, source, role/platform, binary, and third-party inventory record |
+| `/usr/local/share/licenses/<component>/inventory.json` | Component inventory and original LICENSE/NOTICE file digests |
+| `/usr/local/share/cpamp/provenance.json` | Byte-bound version, source, role (`cpamp`)/platform, binary, and third-party inventory record (`"cpaBundled": false` on `slim`) |
 
-Manager components are `manager`, `web`, and `base-image`; Ingress uses `ingress` and `base-image`; Runtime uses `runtime-supervisor` and `base-image`. Go/Web collect original texts. Alpine coverage is installed APK license metadata and available packaged notices; Debian uses installed packages' copyright files. `VERIFIED_LICENSE_COLLECTION` is not legal approval and does not turn metadata-only coverage into complete original-text coverage.
+Single-image (`role: "cpamp"`) `<component>` directories are `manager`, `web`, `ingress`, `runtime-supervisor`, `base-image` (Alpine), and `glibc-runtime` (Debian `libc6`/`libgcc-s1`/`gcc-12-base` runtime libraries required by the official CPA binary). Go/Web collect original texts. Alpine base-image coverage is installed APK license metadata and available packaged notices; `glibc-runtime` uses the corresponding Debian copyright files. `VERIFIED_LICENSE_COLLECTION` is not legal approval and does not turn metadata-only coverage into complete original-text coverage.
 
-Inspect the installed matching release Compose (public build data, not runtime secrets):
+Inspect from the running single-image `docker-compose.yml` directory (public build data, not runtime secrets):
 
 ```bash
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/licenses/cpamp/LICENSE
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-runtime \
+# full variant only (bundled CPA license):
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/licenses/cli-proxy-api/LICENSE
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
+docker compose exec -T cpa-manager-plus \
+  cat /usr/local/share/cpamp/runtime/cpa-artifact.json
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/cpamp/release/third-party-inventory.txt
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/licenses/manager/inventory.json
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-manager \
-  cat /usr/local/share/cpamp/provenance.json
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-ingress \
-  cat /usr/local/share/cpamp/provenance.json
-docker compose -f docker-compose.v2-embedded.yml exec -T cpamp-runtime \
+docker compose exec -T cpa-manager-plus \
   cat /usr/local/share/cpamp/provenance.json
 ```
 
-Compare version, `sourceCommit`, platform/role with the pairing record, and inspect individual notices using inventory paths/digests. Provenance is an **unsigned build-source claim**, not protected-producer proof, a signature, or a legal conclusion. Checksums prove correspondence with a record; you must still trust the release source supplying it.
+Compare version, `sourceCommit`, platform, and image digest with the matching GitHub Release notes and `checksums.txt`, and inspect individual notices using inventory paths/digests. Provenance is an **unsigned build-source claim**, not protected-producer proof, a signature, or a legal conclusion. Checksums prove correspondence with a record; you must still trust the release source supplying it.
 
 ### linux/amd64 Native
 
@@ -60,9 +63,11 @@ From the extracted package root:
 cat LICENSE
 cat share/licenses/cli-proxy-api/LICENSE
 cat share/cpamp/runtime/cpa-artifact.json
+cat share/cpamp/release/third-party-inventory.txt
+cat share/cpamp/provenance.json
 ```
 
-The current Native package carries CPAMP's root LICENSE and the CPA LICENSE above. Image component inventories/Provenance are not evidence for the Native package: it currently supplies neither `THIRD_PARTY_NOTICES/` nor independent Native Provenance. Container paths cannot establish Native dependency-notice verification.
+The Native package carries CPAMP's root `LICENSE` (and `share/licenses/cpamp/LICENSE`), the official CPA `LICENSE`, `cpa-artifact.json`, `share/licenses/<component>/inventory.json` for `manager`, `ingress`, `runtime-supervisor`, and `web`, plus `share/cpamp/provenance.json` with `role: "native"` (a tarball does not own the host OS, so it omits container-only `base-image` and `glibc-runtime` components).
 
 ## 1.x Stable: Release Entry
 

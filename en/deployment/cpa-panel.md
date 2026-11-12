@@ -122,7 +122,7 @@ Install the v2 Beta panel manually, retaining the cache location and automatic-u
 
 To return to the 1.x panel, delete `static/management.html`, set `disable-auto-update-panel` back to `false`, and restart CPA.
 
-External Full Mode is not this backend-free lightweight panel: it needs Manager while the operator independently runs, upgrades, and backs up external CPA. CPAMP does not take over its host lifecycle; see [Runtime Model](../guide/runtime-model.md). v2 Embedded instead requires the matching three-image Compose/pairing record; copying only `management.html` does not upgrade Full Web. See [Releases And Licensing](../reference/releases.md) for current project MIT, official CPA MIT, and image third-party notice inspection paths.
+External Full Mode is not this backend-free lightweight panel: it needs Manager while the operator independently runs, upgrades, and backs up external CPA. CPAMP does not take over its host lifecycle; see [Runtime Model](../guide/runtime-model.md). v2 Embedded instead delivers the full console through the digest-pinned `seakee/cpa-manager-plus` single image (`slim` or `full` variant; see [v2 Docker Installation](./docker.md)); copying only `management.html` does not upgrade Full Web. See [Releases And Licensing](../reference/releases.md) for current project MIT, official CPA MIT, and image third-party notice inspection paths.
 
 
 ## Lightweight Panel Capabilities

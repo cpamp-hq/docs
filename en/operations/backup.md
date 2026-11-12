@@ -27,11 +27,13 @@ If a CPA connection is managed by manual environment variables or secret files, 
 
 ## v2 Beta: Embedded Stack Backup And Restore
 
-v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at least **`v8.0.55`**. A backup does not authorize migration: follow [Upgrade Preflight And Reconciliation](./update.md). The complete Manager set includes `usage.sqlite`, WAL/SHM when present, `data.key`, `usage-archives/` when present, and custom configuration/secrets. Resetting Admin cannot repair a missing `data.key`.
+v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at least **`v8.0.55`**. A backup does not authorize migration: follow [Upgrade Preflight And Reconciliation](./update.md). The v2 single image persists all state inside one named volume `cpamp-data` (mounted at `/data`):
 
-Embedded also requires the entire Runtime volume: actual paths are `/runtime/gateway/config.yaml`, `/runtime/gateway/auth/` (singular `auth`), `/runtime/gateway/plugins/` when present, and `/runtime/supervisor/` (including `operations.sqlite`, WAL/SHM, and artifacts/active state). CPA configuration alone is insufficient. Retain the transport secret volume at `/run/cpamp/runtime-secret`, matching Compose/pairing record, public origin, and environment configuration. Encrypt backups and restrict access.
+- **Manager state (`10002:10002`)**: `/data/usage.sqlite`, WAL/SHM/journal when present, `/data/usage.sqlite.manager.lock`, `/data/data.key` (`0600`), `/data/usage-archives/` when present, and `/data/upgrade-backup/` when upgraded from 1.x. Resetting Admin cannot repair a missing `data.key`.
+- **Embedded Runtime state (`/data/runtime`, root `0:0`)**: `/data/runtime/.cpamp-v8-bootstrap` (`0:0`), `/data/runtime/supervisor/` (`0:10001`, including `operations.sqlite`, WAL/SHM, and on `slim` the verified CPA engine under `artifacts/cpa/` plus active state), and `/data/runtime/gateway/` (`10001:10001`, including `config.yaml`, singular `auth/`, `logs/`, and `plugins/` when present). Copying CPA `config.yaml` alone is insufficient.
+- **Runtime transport secret (`0:10002`)**: `/data/runtime-secret/token` (`0640`). Retain the matching digest-pinned `docker-compose.yml` (`seakee/cpa-manager-plus:<tag>@sha256:<digest>`), `CPAMP_PUBLIC_ORIGIN`, and environment configuration. Encrypt backups and restrict access.
 
-From the release Compose directory and the same project, run the following complete subshell block as one operation. `mktemp -d` creates a private unique directory, container-side `set -C` refuses existing archive destinations, and `set -eu` stops on any failure without restarting services. Record the printed backup path:
+From the `docker-compose.yml` directory and the same project, run the following complete subshell block as one operation. `docker compose stop` drains and stops all in-container processes within `stop_grace_period: 150s` (at least `CPAMP_DRAIN_TIMEOUT` + `60s`); `mktemp -d` creates a private unique directory, container-side `-u 0:0` with `--numeric-owner` preserves all numeric UIDs/GIDs and permissions inside `/data`, `set -C` refuses existing archive destinations, and `set -eu` stops on any failure without restarting services. Record the printed backup path:
 
 ```bash
 (
@@ -39,37 +41,23 @@ From the release Compose directory and the same project, run the following compl
   umask 077
   BACKUP_DIR="$(mktemp -d "$PWD/cpampd-backup.XXXXXX")"
   printf 'Backup directory: %s\n' "$BACKUP_DIR"
-  docker compose -f docker-compose.v2-embedded.yml stop
-  docker compose -f docker-compose.v2-embedded.yml run --rm --no-deps \
-    -v "$BACKUP_DIR":/backup --entrypoint sh cpamp-manager -ec '
+  docker compose stop
+  docker compose run --rm --no-deps -u 0:0 \
+    -v "$BACKUP_DIR":/backup --entrypoint sh cpa-manager-plus -ec '
       set -C
-      tar -czpf - -C /data . > /backup/manager.tgz
-      gzip -t /backup/manager.tgz
-      tar -tzf /backup/manager.tgz > /dev/null
+      tar --numeric-owner -czpf - -C /data . > /backup/cpamp-data.tgz
+      gzip -t /backup/cpamp-data.tgz
+      tar -tzf /backup/cpamp-data.tgz > /dev/null
     '
-  docker compose -f docker-compose.v2-embedded.yml run --rm --no-deps \
-    -v "$BACKUP_DIR":/backup --entrypoint sh cpamp-runtime -ec '
-      set -C
-      tar -czpf - -C /runtime . > /backup/runtime.tgz
-      gzip -t /backup/runtime.tgz
-      tar -tzf /backup/runtime.tgz > /dev/null
-    '
-  docker compose -f docker-compose.v2-embedded.yml run --rm --no-deps \
-    -v "$BACKUP_DIR":/backup --entrypoint sh cpamp-runtime -ec '
-      set -C
-      tar -czpf - -C /run/cpamp/runtime-secret . > /backup/runtime-secret.tgz
-      gzip -t /backup/runtime-secret.tgz
-      tar -tzf /backup/runtime-secret.tgz > /dev/null
-    '
-  docker compose -f docker-compose.v2-embedded.yml up -d
+  docker compose up -d
 )
 ```
 
-The final `up -d` runs only after all three writes, gzip integrity checks, and tar directory reads succeed. On any failure, retain the directory/error, leave services stopped, resolve the cause, and use a fresh backup directory rather than overwriting partial archives. The commands reuse Digest-pinned images; no other Manager/CPA may write original volumes while offline.
+The final `up -d` runs only after the archive write, gzip integrity check, and tar directory read all succeed. On any failure, retain the directory/error, leave services stopped, resolve the cause, and use a fresh backup directory rather than overwriting a partial archive. The commands reuse the Digest-pinned single image; no other process may write the original volume while offline.
 
-### Restore Into Three New Volumes Proven Empty
+### Restore Into A New Volume Proven Empty
 
-Prepare the backup's Compose/pairing record and restore the saved public origin/environment without changing the original volumes. Replace `BACKUP_DIR` below with the actual absolute directory of a successful backup. Other `RESTORE_*` variables are local shell/Compose override values, not new CPAMP settings. The script first generates and validates a legal restore project name, the merged Compose configuration, and new volume names. Only after those checks pass does it stop the original project and create three new volumes. It explicitly binds them through the override and verifies empty directories before extraction. Do not delete original project volumes to make them empty.
+Prepare the backup's `docker-compose.yml` (retaining the same digest-pinned image) and restore the saved public origin/environment without changing the original volume. Replace `BACKUP_DIR` below with the actual absolute directory of a successful backup. Other `RESTORE_*` variables are local shell/Compose override values, not new CPAMP settings. The script first generates and validates a legal restore project name, the merged Compose configuration, and the new volume name. Only after those checks pass does it stop the original project, create one new `cpamp-data` volume, bind it explicitly through the override, verify `/data` is empty, and extract with numeric ownership preserved. Do not delete the original project's volume to make it empty.
 
 ```bash
 (
@@ -84,71 +72,47 @@ Prepare the backup's Compose/pairing record and restore the saved public origin/
       printf 'Invalid restore project name: %s\n' "$RESTORE_PROJECT" >&2
       exit 1 ;;
   esac
-  RESTORE_MANAGER_VOLUME="$RESTORE_PROJECT-manager"
-  RESTORE_RUNTIME_VOLUME="$RESTORE_PROJECT-runtime"
-  RESTORE_SECRET_VOLUME="$RESTORE_PROJECT-secret"
+  RESTORE_DATA_VOLUME="$RESTORE_PROJECT-data"
   printf 'Restore project: %s\nRestore directory: %s\n' "$RESTORE_PROJECT" "$RESTORE_DIR"
   cat > "$RESTORE_DIR/volumes.yml" <<YAML
 volumes:
-  cpamp-manager-data:
+  cpamp-data:
     external: true
-    name: "$RESTORE_MANAGER_VOLUME"
-  cpamp-runtime-data:
-    external: true
-    name: "$RESTORE_RUNTIME_VOLUME"
-  cpamp-runtime-transport-secret:
-    external: true
-    name: "$RESTORE_SECRET_VOLUME"
+    name: "$RESTORE_DATA_VOLUME"
 YAML
   restore_compose() {
-    docker compose -p "$RESTORE_PROJECT" -f docker-compose.v2-embedded.yml \
+    docker compose -p "$RESTORE_PROJECT" -f docker-compose.yml \
       -f "$RESTORE_DIR/volumes.yml" "$@"
   }
-  restore_compose config
-  for volume in "$RESTORE_MANAGER_VOLUME" "$RESTORE_RUNTIME_VOLUME" "$RESTORE_SECRET_VOLUME"; do
-    if docker volume inspect "$volume" > /dev/null 2>&1; then
-      printf 'Refusing existing volume: %s\n' "$volume" >&2
-      exit 1
-    fi
-  done
-  docker compose -f docker-compose.v2-embedded.yml stop
-  for volume in "$RESTORE_MANAGER_VOLUME" "$RESTORE_RUNTIME_VOLUME" "$RESTORE_SECRET_VOLUME"; do
-    docker volume create "$volume"
-  done
-  restore_compose run --rm --no-deps --entrypoint sh cpamp-manager -ec '
+  restore_compose config > /dev/null
+  if docker volume inspect "$RESTORE_DATA_VOLUME" > /dev/null 2>&1; then
+    printf 'Refusing existing volume: %s\n' "$RESTORE_DATA_VOLUME" >&2
+    exit 1
+  fi
+  docker compose stop
+  docker volume create "$RESTORE_DATA_VOLUME"
+  restore_compose run --rm --no-deps -u 0:0 --entrypoint sh cpa-manager-plus -ec '
     entries="$(find /data -mindepth 1 -maxdepth 1 -print -quit)"
     test -z "$entries"
   '
-  restore_compose run --rm --no-deps --entrypoint sh cpamp-runtime -ec '
-    for root in /runtime /run/cpamp/runtime-secret; do
-      entries="$(find "$root" -mindepth 1 -maxdepth 1 -print -quit)"
-      test -z "$entries"
-    done
-  '
-  restore_compose run --rm --no-deps -v "$BACKUP_DIR":/backup:ro \
-    --entrypoint sh cpamp-manager -ec '
-      for archive in manager runtime runtime-secret; do
-        gzip -t "/backup/$archive.tgz"
-        tar -tzf "/backup/$archive.tgz" > /dev/null
-      done
+  restore_compose run --rm --no-deps -u 0:0 -v "$BACKUP_DIR":/backup:ro \
+    --entrypoint sh cpa-manager-plus -ec '
+      gzip -t /backup/cpamp-data.tgz
+      tar -tzf /backup/cpamp-data.tgz > /dev/null
     '
-  restore_compose run --rm --no-deps -v "$BACKUP_DIR":/backup:ro \
-    --entrypoint tar cpamp-manager -xzpf /backup/manager.tgz -C /data
-  restore_compose run --rm --no-deps -v "$BACKUP_DIR":/backup:ro \
-    --entrypoint tar cpamp-runtime -xzpf /backup/runtime.tgz -C /runtime
-  restore_compose run --rm --no-deps -v "$BACKUP_DIR":/backup:ro \
-    --entrypoint tar cpamp-runtime -xzpf /backup/runtime-secret.tgz -C /run/cpamp/runtime-secret
+  restore_compose run --rm --no-deps -u 0:0 -v "$BACKUP_DIR":/backup:ro \
+    --entrypoint tar cpa-manager-plus --numeric-owner -xzpf /backup/cpamp-data.tgz -C /data
   restore_compose up -d
 )
 ```
 
-The restore project starts only after all three empty-volume checks, archive validations, and extractions succeed. On failure, do not start it; retain original volumes and restore records, then retry with another new empty volume set. Keep the printed restore project name and `volumes.yml`, always using the same `-p` and both `-f` arguments to manage this instance. Original-project commands address original volumes, not restored ones. Both projects cannot publish the same host port simultaneously.
+The restore project starts only after the empty-volume check, archive validation, and extraction succeed. On failure, do not start it; retain the original volume and restore records, then retry with another new empty volume. Keep the printed restore project name and `volumes.yml`, always using the same `-p` and both `-f` arguments to manage this instance. Original-project commands address the original volume, not the restored one. Both projects cannot publish the same host port simultaneously.
 
-Preserve archived owners, permissions, and isolation; do not recursively change all data to the CPA identity. Verify Admin login, CPA connection, Client Key, history/coverage, and Gateway; `/health` alone is insufficient. A 1.x rollback uses the original pre-migration 1.x volume, never v2 archives or restored volumes.
+Preserve archived numeric owners, permissions, and directory isolation (`/data/runtime` root `0:0`, Manager files `10002:10002`, Gateway `10001:10001`); never run `chown -R` across `/data` to a single UID. Verify Admin login, CPA connection, Client Key, history/coverage, and Gateway; `/health` alone is insufficient. A 1.x rollback uses the original pre-migration 1.x volume, never v2 archives or restored volumes.
 
 ### Scope Of Offline Manager Snapshots
 
-With Manager stopped, `manager-data-snapshot` snapshots the database, WAL/SHM, rollback journal, and `data.key`, with an integrity manifest. It **does not include `usage-archives/`, custom configuration, Runtime, or external CPA**, so it does not replace a full backup. From the v2 native package root (the snapshot directory must not already exist):
+With the service stopped, `manager-data-snapshot` snapshots the database, WAL/SHM, rollback journal, and `data.key`, with an integrity manifest. It **does not include `usage-archives/`, custom configuration, `/data/runtime`, `/data/runtime-secret`, or external CPA**, so it does not replace a full backup. From the v2 native package root (the snapshot directory must not already exist):
 
 ```bash
 sudo ./bin/cpa-manager-plus manager-data-snapshot create \
@@ -164,7 +128,7 @@ sudo ./bin/cpa-manager-plus manager-data-snapshot restore \
   --snapshot-dir "$PWD/backup/manager-snapshot"
 ```
 
-A held lock refuses the command: stop the actual Manager. Docker can use the same Compose's `run --rm --no-deps cpamp-manager manager-data-snapshot ...`, naming `/data/usage.sqlite`, `/data/data.key`, and a mounted persistent snapshot directory. A full Native backup/restore also includes the same backup's `data/runtime/` and secrets in `run/`, preserving ownership/permissions.
+A held lock refuses the command: stop the actual service first. After `docker compose stop`, Docker can run `docker compose run --rm --no-deps -u 10002:10002 -v "$SNAPSHOT_PARENT":/snapshots --entrypoint cpa-manager-plus cpa-manager-plus manager-data-snapshot ...` (with a host directory writable by UID `10002`), naming `/data/usage.sqlite`, `/data/data.key`, and a non-existent snapshot subdirectory. A full Native backup/restore also includes the same backup's `data/runtime/` and secrets in `run/`, preserving ownership/permissions.
 
 For External, the operator separately backs up/restores CPA configuration, OAuth credentials, and process state. Manager snapshots do not back up the remote host. Configuration-only export is not a complete v2 upgrade path.
 

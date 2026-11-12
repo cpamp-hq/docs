@@ -122,7 +122,7 @@ CPA 的 `panel-github-repository` 自动更新入口面向 `releases/latest`，�
 
 回到 1.x 面板：删除 `static/management.html`，把 `disable-auto-update-panel` 改回 `false`，重启 CPA。
 
-External 完整模式不是这个无后端的轻量面板：它需要 Manager，并由操作者独立运行、升级及备份外部 CPA；CPAMP 不接管其宿主机生命周期，见 [运行模型](../guide/runtime-model.md)。v2 Embedded 则必须使用同版三镜像 Compose/配对记录，不能只复制 `management.html` 升级 Full Web。项目当前 MIT、官方 CPA MIT 与镜像第三方声明的核验路径见 [发布与许可证](../reference/releases.md)。
+External 完整模式不是这个无后端的轻量面板：它需要 Manager，并由操作者独立运行、升级及备份外部 CPA；CPAMP 不接管其宿主机生命周期，见 [运行模型](../guide/runtime-model.md)。v2 Embedded 则通过固定摘要的 `seakee/cpa-manager-plus` 单镜像（`slim` 或 `full` 变体，见 [v2 Docker 安装](./docker.md)）交付完整控制台，只复制 `management.html` 不会升级 Full Web。项目当前 MIT、官方 CPA MIT 与镜像第三方声明的核验路径见 [发布与许可证](../reference/releases.md)。
 
 
 ## 轻量面板支持什么

@@ -6,7 +6,7 @@ Full Mode in v2 Beta is not the single-Manager 1.x deployment below. Embedded of
 
 | Mode | Who runs CPA | CPAMP boundary |
 | --- | --- | --- |
-| Embedded / New Managed or qualified Adopt | Docker `cpamp-runtime` or Native Runtime Supervisor manages official CPA | Ingress + Manager + Runtime; Docker publishes only Ingress `18317`, with one Digest-paired image group; Native launcher manages three processes and the CPA child |
+| Embedded / New Managed or qualified Adopt | Runtime Supervisor inside the single-image container or Native package manages official CPA | Single image `seakee/cpa-manager-plus` (`slim` acquires CPA via the wizard, `full` bundles CPA) or Native launcher supervises Supervisor, Manager, Ingress, and managed CPA internally; Docker publishes only port `18317` and a single `/data` volume (pinned to `<tag>@sha256:<digest>`) |
 | External | The operator's own CPA host/container/service | CPAMP proves/saves the connection, manages supported configuration and Client Keys, and reads status/observations; it does not start, stop, restart, or upgrade external CPA or take over its traffic entry automatically |
 | Lightweight Panel | CPA directly hosts `management.html` | No Manager, SQLite, or Runtime; signs in with CPA Management Key and cannot provide Manager request history |
 

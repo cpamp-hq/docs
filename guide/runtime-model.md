@@ -6,7 +6,7 @@ v2 Beta 的完整模式不等同于下方 1.x 的单 Manager 部署。内置官�
 
 | 模式 | 谁运行 CPA | CPAMP 边界 |
 | --- | --- | --- |
-| Embedded / New Managed、合格 Adopt | Docker 的 `cpamp-runtime` 或 Native Runtime Supervisor 托管官方 CPA | Ingress + Manager + Runtime；Docker 仅公开 Ingress `18317`，三镜像同版 Digest 配对；Native 用 launcher 管理三进程及 CPA 子进程 |
+| Embedded / New Managed、合格 Adopt | 单镜像容器内或 Native 的 Runtime Supervisor 托管官方 CPA | 单镜像 `seakee/cpa-manager-plus`（`slim` 向导按需获取 CPA，`full` 内置 CPA）或 Native 包由 launcher 在内部监管 Supervisor、Manager、Ingress 与托管 CPA；Docker 仅公开 `18317` 端口与单一 `/data` 数据卷（固定 `<tag>@sha256:<digest>`） |
 | External | 操作者自己的 CPA 主机/容器/服务 | CPAMP 验证并保存连接、管理受支持配置与 Client Key、读取状态和观测；不启停、不重启、不升级外部 CPA 进程，不自动接管其流量入口 |
 | Lightweight Panel | CPA 直接托管 `management.html` | 无 Manager、SQLite 或 Runtime；用 CPA Management Key 登录，不能提供 Manager 请求历史 |
 

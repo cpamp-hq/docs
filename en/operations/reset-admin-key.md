@@ -2,17 +2,17 @@
 
 ## v2 Beta: Preserve Data And Installation State
 
-Stop and follow [Backup And Restore](./backup.md) for Manager (`usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present), plus Embedded Runtime/secrets. Reset replaces only Manager's administrator credential. It cannot recover `data.key`, rotate CPA Management Key/Client Keys, reclaim installation, or complete an upgrade. First installation uses [Host Initialize And Handoff](../deployment/docker.md), not Admin reset instead of the wizard.
+Stop and follow [Backup And Restore](./backup.md) for the single `/data` volume (Manager's `usage.sqlite`, WAL/SHM, `data.key`, and `usage-archives/` when present, plus Embedded `/data/runtime` and `/data/runtime-secret`). Reset replaces only Manager's administrator credential. It cannot recover `data.key`, rotate CPA Management Key/Client Keys, reclaim installation, or complete an upgrade. First installation uses [Host Initialize And Handoff](../deployment/docker.md), not Admin reset instead of the wizard.
 
-From the same release Compose directory/project, preserving the three-image Digest pairing:
+From the `docker-compose.yml` directory/project, retaining the digest-pinned `seakee/cpa-manager-plus:<tag>@sha256:<digest>` single image:
 
 ```bash
-docker compose -f docker-compose.v2-embedded.yml stop
-docker compose -f docker-compose.v2-embedded.yml run --rm --no-deps \
-  cpamp-manager reset-admin-key --db-path /data/usage.sqlite
+docker compose stop
+docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus \
+  cpa-manager-plus reset-admin-key --db-path /data/usage.sqlite
 ```
 
-Save the new Admin Key shown once in the terminal. Only after success run `docker compose -f docker-compose.v2-embedded.yml up -d` and sign in at the control base path chosen at installation on the original public entry (default `/console`, for example `http://<host>:18317/console`); v2 does not serve `/management.html`. Do not delete volumes, lock files, or installation records. On failure, leave services stopped and check the actual data path. Keep output out of public logs.
+`-u 10002:10002 --entrypoint cpa-manager-plus` invokes the CLI directly as the unprivileged Manager identity (`10002:10002`), avoiding starting the full PID 1 launcher or changing SQLite/lock file ownership to `0:0`. Save the new Admin Key shown once in the terminal. Only after success run `docker compose up -d` and sign in at the control base path chosen at installation on the original public entry (default `/console`, for example `http://<host>:18317/console`); v2 does not serve `/management.html`. Do not delete volumes, lock files, or installation records. On failure, leave services stopped and check the actual data path. Keep output out of public logs.
 
 For linux/amd64 Native, stop the complete launcher/systemd service and back up first, then run from the package root:
 
@@ -20,7 +20,7 @@ For linux/amd64 Native, stop the complete launcher/systemd service and back up f
 sudo ./bin/cpa-manager-plus reset-admin-key --db-path "$PWD/data/usage.sqlite"
 ```
 
-For an explicit new key, prefer `--admin-key-file` with a private file; Docker also needs that file mounted read-only and the container-side path. After success restart the original service and verify administrator login/CPA connection, rather than rerunning the installer. Upgrade refusals still follow [Upgrade](./update.md) (source baseline `v1.14.10`, minimum CPA `v8.0.55`).
+For an explicit new key, prefer `--admin-key-file` with a private file; Docker also needs that file mounted read-only, readable by UID `10002`, and passed via its container-side path. After success restart the original service and verify administrator login/CPA connection, rather than rerunning the installer. Upgrade refusals still follow [Upgrade](./update.md) (source baseline `v1.14.10`, minimum CPA `v8.0.55`).
 
 ## 1.x Stable: Original Deployment Recovery
 
