@@ -9,13 +9,15 @@ The CPAMP Lightweight Panel is hosted directly by CPA and replaces the official 
 
 ## Shortest Installation Path
 
-1. Set `panel-github-repository` in CPA `config.yaml`.
-2. Confirm that the management panel is not disabled.
-3. Restart or reload CPA.
-4. Open `http://<cpa-host>:8317/management.html`.
-5. Log in with the CPA Management Key.
+- **Try the v2 Beta lightweight panel (for this Beta docs channel)**: CPA's automatic updater reads `releases/latest` only (which stays on **1.x Stable** during Beta), so trying the v2 Beta panel requires manually downloading `management.html` from a published v2 Beta prerelease, setting `disable-auto-update-panel: true`, and placing it at `static/management.html` — jump to [Try The v2 Beta Panel On CPA](#try-the-v2-beta-panel-on-cpa) below.
+- **Track `releases/latest` automatically via `panel-github-repository` (serves the 1.x Stable panel during Beta)**:
+  1. Set `panel-github-repository` in CPA `config.yaml`.
+  2. Confirm that the management panel is not disabled.
+  3. Restart or reload CPA.
+  4. Open `http://<cpa-host>:8317/management.html`.
+  5. Log in with the CPA Management Key.
 
-The rest of this page provides the complete configuration and security notes. Users already familiar with CPA configuration only need the steps above.
+The sections below cover CPA's panel hosting and cache settings first, followed by manual placement for the v2 Beta prerelease panel.
 
 ```text
 Browser
@@ -40,9 +42,11 @@ Browser
 - CPA must be able to reach GitHub Releases, directly or through its configured proxy, to download `management.html`.
 - CPA v8 works: the v2 Beta lightweight panel runs on the `/v0/management` API that CPA v8 still serves; see "v2 Beta And The Lightweight Panel" below.
 
-## Configure CPA
+## Configure CPA (Base Hosting And 1.x Auto-Update Baseline)
 
-Edit CPA `config.yaml`:
+Edit CPA `config.yaml` (note: `disable-auto-update-panel: false` below keeps pulling the 1.x Stable panel from `releases/latest`; set `disable-auto-update-panel: true` as shown further below when manually placing a v2 Beta prerelease panel):
+
+The manual configuration/cache steps below apply only to an independently operated CPA, not CPAMP Managed Runtime. Never hand-edit `/data/runtime/gateway/config.yaml` or managed files under `/data/runtime/supervisor/destination/`. When the bootstrap marker exists, launcher compares the Gateway seed configuration byte-for-byte and refuses startup if it differs; Supervisor also validates persisted destination records. Use supported console operations or import/switch workflows for Managed configuration.
 
 ```yaml
 remote-management:
@@ -122,7 +126,7 @@ Install the v2 Beta panel manually, retaining the cache location and automatic-u
 
 To return to the 1.x panel, delete `static/management.html`, set `disable-auto-update-panel` back to `false`, and restart CPA.
 
-External Full Mode is not this backend-free lightweight panel: it needs Manager while the operator independently runs, upgrades, and backs up external CPA. CPAMP does not take over its host lifecycle; see [Runtime Model](../guide/runtime-model.md). v2 Embedded instead requires the matching three-image Compose/pairing record; copying only `management.html` does not upgrade Full Web. See [Releases And Licensing](../reference/releases.md) for current project MIT, official CPA MIT, and image third-party notice inspection paths.
+External Full Mode is not this backend-free lightweight panel: it needs Manager while the operator independently runs, upgrades, and backs up external CPA. CPAMP does not take over its host lifecycle; see [Runtime Model](../guide/runtime-model.md). v2 Embedded instead delivers the full console through the digest-pinned `seakee/cpa-manager-plus` single image (`slim` or `full` variant; see [v2 Docker Installation](./docker.md)); copying only `management.html` does not upgrade Full Web. See [Releases And Licensing](../reference/releases.md) for current project MIT, official CPA MIT, and image third-party notice inspection paths.
 
 
 ## Lightweight Panel Capabilities
@@ -143,14 +147,11 @@ The lightweight panel does not connect to or read a separately running Manager S
 
 When you need request history, cost analytics, or server-side automation:
 
-1. Start Manager Server with [Docker Deployment](./docker.md) or [Native Packages](./native.md).
-2. Open the Full Mode entry: the control base path chosen at installation for v2 Beta (default `http://<cpamp-host>:18317/console`), `http://<cpamp-host>:18317/management.html` for 1.x Stable.
-3. Complete setup or log in with the CPAMP Admin Key.
-4. Configure the CPA address, CPA Management Key, and request collection.
+1. Start v2 with [v2 Docker Installation](./docker.md) or [linux/amd64 Native Package](./native.md).
+2. Complete browser setup via the host `initialize` Handoff, or open the Control Base Path chosen at installation (default `http://<cpamp-host>:18317/console`) and sign in with the CPAMP Admin Key.
+3. Verify the CPA connection and request collection in the console.
 
-v2 Beta does not serve `/management.html`; it returns 404 and is not the v2 entry.
-
-The lightweight panel may remain on the CPA port, but full capabilities are available only from the Manager Server panel entry.
+Fresh Full Web is not served at `/management.html`; instances upgraded offline from 1.x still use `:18317/management.html` (or `/`), not Fresh's default `/console`. Ingress routes transitional control paths to Manager, which does not make those features available in Fresh. See [Runtime Model](../guide/runtime-model.md) for `/health`, `/status`, and edge-denied `404` routing. The lightweight panel may remain on CPA's `:8317`; do not confuse it with the full CPAMP console.
 
 ## Troubleshooting
 
@@ -159,3 +160,7 @@ The lightweight panel may remain on the CPA port, but full capabilities are avai
 - Remote access is rejected: check `allow-remote`, firewall, and reverse proxy settings.
 - The old 1.x interface returns after installing the v2 Beta panel: confirm `disable-auto-update-panel: true`; otherwise CPA overwrites the manually placed file with the 1.x panel from `releases/latest`.
 - Monitoring is missing: this is expected in Lightweight Mode; use the Manager Server panel.
+
+## 1.x (Before Upgrading)
+
+For 1.x Stable lightweight panel notes and 1.x Full Mode (`:18317/management.html`), see the 1.x Stable documentation at [CPAMP Lightweight Panel (1.x Stable)](https://cpamp-docs.seakee.dev/en/deployment/cpa-panel.html).

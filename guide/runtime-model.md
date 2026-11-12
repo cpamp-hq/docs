@@ -2,11 +2,11 @@
 
 ## v2 Beta：Embedded 与 External
 
-v2 Beta 的完整模式不等同于下方 1.x 的单 Manager 部署。内置官方 CPA 固定为 **`v8.0.55`**；External 目标最低要求 **`v8.0.55`**，仍需通过实际资格检查。1.x 直升基线是精确的 **`v1.14.10`**，见 [升级与回滚](../operations/update.md)。
+v2 Beta 的完整模式不等同于 1.x 的单 Manager 部署。内置官方 CPA 固定为 **`v8.0.55`**；External 目标最低要求 **`v8.0.55`**，仍需通过实际资格检查。1.x 直升基线是精确的 **`v1.14.10`**，见 [升级与回滚](../operations/update.md)。
 
 | 模式 | 谁运行 CPA | CPAMP 边界 |
 | --- | --- | --- |
-| Embedded / New Managed、合格 Adopt | Docker 的 `cpamp-runtime` 或 Native Runtime Supervisor 托管官方 CPA | Ingress + Manager + Runtime；Docker 仅公开 Ingress `18317`，三镜像同版 Digest 配对；Native 用 launcher 管理三进程及 CPA 子进程 |
+| Embedded / New Managed、合格 Adopt | 单镜像容器内或 Native 的 Runtime Supervisor 托管官方 CPA | 单镜像 `seakee/cpa-manager-plus`（`slim` 向导按需获取 CPA，`full` 内置 CPA）或 Native 包由 launcher 在内部监管 Supervisor、Manager、Ingress 与托管 CPA；Docker 仅公开 `18317` 端口与单一 `/data` 数据卷（固定 `<tag>@sha256:<digest>`） |
 | External | 操作者自己的 CPA 主机/容器/服务 | CPAMP 验证并保存连接、管理受支持配置与 Client Key、读取状态和观测；不启停、不重启、不升级外部 CPA 进程，不自动接管其流量入口 |
 | Lightweight Panel | CPA 直接托管 `management.html` | 无 Manager、SQLite 或 Runtime；用 CPA Management Key 登录，不能提供 Manager 请求历史 |
 
@@ -16,74 +16,30 @@ v2 Beta 的完整模式不等同于下方 1.x 的单 Manager 部署。内置官�
 
 外部 Management Key 轮换后，用面板重新绑定并证明当前连接；已被 CPA 拒绝的凭证不应反复重试。Manager 的 `data.key` 与加密数据库必须成套保留。Adopt 的资格拒绝或未完成迁移不是 External 自动降级许可；按向导报告处理，不以更换环境变量或手改记录代替证明。
 
-v2 Beta 的浏览器入口是公开 origin 下的控制台，位于安装时设置的**控制台地址（Control Base Path）**：安装向导默认 **`/console`**（例如 `http://<host>:18317/console`），也可以在向导里改成其他合法路径，前端 API 随之为 `<控制台路径>/api/v2/*`。以向导完成页“登录并进入 CPAMP”指向的地址为准；该路径不能与 `/v1`、`/models`、`/management.html` 等保留路径冲突，向导会拒绝冲突值。v2 不提供 CPAMP 的 `/management.html`，访问该路径会返回 404；Embedded 的 `8317` 与 `9081` 只在容器内，不要另外公开。
+v2 Beta **全新安装**的浏览器入口是公开 origin 下安装时设置的**控制台地址（Control Base Path）**：向导默认 **`/console`**（例如 `http://<host>:18317/console`），前端 API 为 `<控制台路径>/api/v2/*`。以向导完成页“登录并进入 CPAMP”指向的地址为准；路径不能与 `/v1`、`/models`、`/management.html` 等保留路径冲突。Fresh 完整控制台不在 `/management.html` 提供服务；**从 1.x 离线升级的实例仍使用 `/management.html`（或根路径 `/`）与原管理员密钥**，不会因升级自动获得 `/console`。Embedded 的 `8317` 与 `9081` 只在容器内，不要另外公开。
+
+Ingress 还将 `/health`、`/status`、`/`、`/setup`、`/management.html`、`/usage-service/*`、`/v0/management/*` 路由至 Manager，供健康检查及升级过渡使用；路由归属不代表对应功能在 Fresh 中可用。`/v8/management/*`、已退役控制台路径等边缘拒绝请求返回 `404`，不会转发至 CPA。`GET` / `HEAD` 的 `/favicon.ico` 与 `/apple-touch-icon.png` 也由 Manager 处理。
 
 安装：[v2 Docker](../deployment/docker.md) / [linux/amd64 Native](../deployment/native.md)；维护：[备份](../operations/backup.md) / [许可证与发布资产](../reference/releases.md)。
 
-## 1.x Stable 与轻量面板参考
+## 请求与密钥分别发往哪里
 
-本节描述 1.x Stable：完整模式由 Manager Server 在 `:18317/management.html` 托管面板。v2 Beta 请使用上文控制台地址（默认 `/console`），不要把本节的 `:18317/management.html` 当成 v2 入口。
+| 场景 | 请求地址 | 使用的密钥 |
+| --- | --- | --- |
+| **Embedded** 客户端调用模型 | CPAMP 公开 origin 的 `/v1/...`（由 Ingress 转发至容器内 CPA，`8317` 不对外开放） | 向导或控制台签发的普通 CPA Client Key |
+| **External** 客户端调用模型 | 外部 CPA 原有的对外 `/v1/...` 地址 | 普通 CPA Client Key |
+| 打开 **CPAMP 完整模式控制台**（Embedded 或 External） | 全新安装使用控制台地址（默认 `/console`，API 为 `<控制台路径>/api/v2/*`）；1.x 升级实例使用 `/management.html`（或 `/`） | CPAMP Admin Key |
+| 打开 **CPAMP 轻量面板**（无 Manager 后端） | 外部 CPA 的 `http://<cpa-host>:8317/management.html` | CPA Management Key |
 
-CPA 负责接收和转发真实模型请求，CPAMP 负责管理 CPA，并在完整模式下保存请求历史、分析成本和处理账号状态。
-
-普通使用者只需要记住三件事：
-
-1. Codex、Claude Code、OpenCode 等客户端始终连接 CPA，不连接 CPAMP。
-2. CPAMP 轻量面板从 CPA 的 `:8317/management.html` 打开，使用 CPA Management Key。
-3. CPAMP 完整模式从它自己的控制台打开（使用 CPAMP 管理员密钥）：v2 Beta 是安装时设置的控制台地址（默认 `/console`），1.x Stable 是 `:18317/management.html`。
-
-## 请求应该发到哪里
-
-| 操作                   | 地址                            | 使用的密钥         |
-| ---------------------- | ------------------------------- | ------------------ |
-| 客户端请求模型         | CPA 的 `/v1/...` 等模型接口     | CPA 普通 API 密钥  |
-| 使用 CPAMP 轻量面板    | CPA `:8317/management.html`     | CPA Management Key |
-| 使用 CPAMP 完整模式    | CPAMP `:18317/management.html`  | CPAMP 管理员密钥   |
-| CPAMP 完整模式连接 CPA | setup 或配置中心填写的 CPA 地址 | CPA Management Key |
-
-不要把这三类密钥混用。登录失败时，先确认当前打开的是 `8317` 还是 CPAMP 控制台。表中“完整模式”一行的 `:18317/management.html` 属于 1.x Stable；v2 Beta 使用本节开头说明的控制台地址（默认 `/console`）。
-
-## 两种模式的区别
-
-- **轻量面板**：只替换 CPA 官方管理界面，不增加服务或数据库。
-- **完整模式**：增加 Manager Server，用于请求历史、成本分析、服务端巡检、备份和自动化。
-
-不知道应该使用哪一种时，查看[如何选择面板](./choosing-a-panel.md)。
-
-::: details 请求和数据的完整路径
-
-```text
-Codex / Claude Code / 其他客户端
-  -> CPA
-      -> 模型提供商
-      -> 请求日志与用量队列
-
-CPAMP 完整模式
-  -> 从 CPA 读取管理信息和用量事件
-  -> 保存请求历史、价格、巡检和自动化状态
-```
-
-因此：
-
-- 客户端请求失败时，先检查 CPA、Provider、账号和客户端配置。
-- CPAMP 页面没有数据时，先确认请求经过 CPA，再检查请求监控采集。
-- CPAMP 不会独立转发模型请求。
-
-:::
-
-## 什么时候需要修改 CPA 配置
-
-以下能力仍由 CPA 配置控制：
-
-- Provider、模型路由、认证文件和 OAuth。
-- 客户端 API 密钥、配额、日志和插件。
-- 远程管理、用量发布和队列保留时间。
-
-日常操作优先使用 CPAMP 页面。只有页面没有对应字段、部署前准备 CPA 或高级排障时，才需要直接编辑 CPA `config.yaml`。
+不要把 CPAMP Admin Key 或 CPA Management Key 填进普通模型客户端。External 模式下，Manager 通过 CPA Management API 读取状态并消费内存请求队列，不接管外部 CPA 进程或宿主机生命周期。轮询间隔由 `USAGE_POLL_INTERVAL_MS` 设置，默认 `500` 毫秒；须不超过 CPA 内存队列保留时间。
 
 ## 下一步
 
-- 安装：[快速开始](./getting-started.md)
-- 添加模型服务：[AI 提供商](../manual/ai-providers.md)
-- 配置客户端：[客户端接入](../gateway/clients.md)
-- 监控没有数据：[请求监控为空](../troubleshooting/request-monitoring.md)
+- 部署完整模式：[v2 Docker 安装](../deployment/docker.md) 或 [linux/amd64 原生包](../deployment/native.md)
+- 选择完整模式还是轻量面板：[选择使用方式](./choosing-a-panel.md)
+- 配置 Codex、Claude Code、OpenCode 等模型客户端：[接入客户端](../gateway/clients.md)
+- 排查请求监控无数据：[排查监控没有数据](../troubleshooting/request-monitoring.md)
+
+## 1.x（升级前）
+
+1.x Stable 采用单 Manager Server + 外部 CPA 模型，并在 `:18317/management.html` 托管面板；相关架构说明请参阅 1.x 稳定版文档：[CPAMP 与 CPA 的协作关系（1.x Stable）](https://cpamp-docs.seakee.dev/guide/runtime-model.html)。
