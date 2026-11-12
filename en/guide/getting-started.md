@@ -1,4 +1,4 @@
-# Quick Start
+# Quick start
 
 Choose a path based on what you need. Both use the CPAMP interface, but installation and available capabilities differ.
 

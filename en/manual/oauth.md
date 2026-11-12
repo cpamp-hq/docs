@@ -1,4 +1,4 @@
-# OAuth Login
+# OAuth login
 
 OAuth Login adds or reauthorizes accounts. It answers "how do I get a usable credential saved?" Account enablement, batch maintenance, and status decisions belong in [Accounts](./accounts.md).
 
@@ -38,7 +38,7 @@ If CPAMP runs on a remote server, the provider may redirect to `http://localhost
 
 Paste the full callback URL. Do not manually extract `code` or `state`; that can break state matching.
 
-## Vertex Credential Import
+## Vertex credential import
 
 Vertex usually requires a service-account file and a location. After import, check the returned project, email, location, and file name.
 
@@ -55,6 +55,6 @@ Reauthorize when:
 
 After reauth, do not immediately delete old files. Confirm the new file works first, then clean up accounts that are clearly invalid.
 
-## Security Notes
+## Security notes
 
 Authorization links, callback URLs, and auth files can contain sensitive data. Do not paste full values into public issues or chats. For troubleshooting, describe the stage and share sanitized errors.

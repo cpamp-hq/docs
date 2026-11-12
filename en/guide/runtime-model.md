@@ -1,6 +1,6 @@
 # How CPAMP works with CPA
 
-## V2 Beta: embedded and external
+## v2 Beta: embedded and external
 
 Full Mode in v2 Beta is not the single-Manager 1.x deployment. Embedded official CPA is pinned to **`v8.0.55`**; External requires at least **`v8.0.55`** and actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**; see [Upgrade and Rollback](../operations/update.md).
 

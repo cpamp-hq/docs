@@ -1,6 +1,6 @@
 # Upgrade CPA Manager Plus
 
-## V2 Beta: upgrade from 1.x, not an in-place image change
+## v2 Beta: upgrade from 1.x, not an in-place image change
 
 ::: warning Exact baseline and stop conditions
 The minimum direct upgrade version is **`v1.14.10`**; the current CLI accepts only that exact declaration, not every later 1.x release automatically. For `<= v1.14.9`, first upgrade using the original deployment method to `v1.14.10`, verify it, then stop it. Merely changing `--source-version` is not an upgrade. Target CPA requires at least **`v8.0.55`** (Embedded pins that version). Version differences, unknown/newer schemas, a busy source, evidence mismatches, or history differences require operator action; never edit SQLite markers to proceed.

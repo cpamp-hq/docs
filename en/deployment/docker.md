@@ -1,6 +1,6 @@
-# Docker Deployment
+# Docker deployment
 
-## V2: single-image installation
+## v2: single-image installation
 
 ::: warning Choose the correct channel
 This section covers v2 single-image deployment. The existing 1.x single-service and separate CPA examples below remain **1.x Stable** instructions; `bin/install-cpamp.sh` also still installs 1.x by default. Do not mount an existing 1.x volume directly into v2: read [Upgrade and Rollback](../operations/update.md) first.

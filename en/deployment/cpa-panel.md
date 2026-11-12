@@ -100,7 +100,7 @@ rm static/management.html
 
 With `disable-auto-update-panel: true`, CPA downloads the panel only when the cached file is missing and does not perform periodic updates.
 
-## V2 Beta and the Lightweight Panel
+## v2 Beta and the Lightweight Panel
 
 This is the CPAMP v2 Beta publication contract for the lightweight panel. Until the first v2 Beta prerelease is published, the Releases page has no matching file.
 
@@ -109,7 +109,7 @@ This is the CPAMP v2 Beta publication contract for the lightweight panel. Until 
 - **The Management API stays `/v0/management`.** The v2 Beta lightweight panel reads and writes CPA configuration through `/v0/management`, which CPA v8 still serves, and signs in with the CPA v8 Management Key. Moving to `/v8/management` is post-Stable work and is outside the first Beta.
 - **Pre-release acceptance.** `bin/ci/panel-lite-cpa-v8.mjs` verifies on the pinned CPA v8 that the `static/management.html` CPA obtains is byte-identical to the build, `/management.html` answers 200, the Management Key authenticates `/v0/management/config` and a changed configuration field is written to `config.yaml`, and `/management.html` answers 404 when `disable-control-panel: true`.
 
-### Try the v2 Beta Panel on CPA
+### Try the v2 Beta panel on CPA
 
 Automatic updates through `panel-github-repository` use `releases/latest`, not a Beta Prerelease selector. Do not put a prerelease Tag URL in that setting to change channels:
 
