@@ -3,11 +3,11 @@
 先确认你打开的是 CPAMP 完整模式：
 
 ```text
-v2 Beta:      http://<cpamp-host>:18317/console     （默认控制台地址）
+v2 Beta:      https://<cpamp-host>/<control-prefix>   （安装或升级时提交；旧 /console 实例保持不变）
 1.x Stable:   http://<cpamp-host>:18317/management.html
 ```
 
-v2 Beta 的入口是安装时设置的控制台地址，上面是向导默认值；如果安装时改过路径，请换成新路径（前端 API 也在该路径下）。v2 Beta 不提供 `/management.html`，访问返回 404，它不是 v2 入口。
+v2 Beta 的入口是安装或升级时提交的控制入口前缀（新安装不再固定默认 `/console`；此前已提交 `/console` 的旧实例保持不变；前端 API 也位于该路径下）。v2 Beta 不提供 `/management.html`，访问返回 404，它不是 v2 入口。
 
 CPA `:8317/management.html` 上的轻量面板不保存请求历史，因此看不到请求监控属于正常现象。
 
@@ -31,7 +31,7 @@ CPA `:8317/management.html` 上的轻量面板不保存请求历史，因此看�
 
 ## 最常见的修复方法
 
-1. 确认客户端 Base URL 指向 CPA，而不是 CPAMP。
+1. 按部署形态核对客户端 Base URL：v2 Managed 使用接入信息中的 `<origin><inference-prefix>`，不要绕过 Ingress 或公开内部 `8317`；1.x Stable 与 v2 External 使用实际 CPA 地址。
 2. 在 CPA 配置中启用 `usage-statistics-enabled`。
 3. 在 CPAMP 配置中心启用请求监控，并保持自动采集模式。
 4. 让 Manager Server 直接访问 CPA API 端口。
@@ -41,7 +41,7 @@ CPA `:8317/management.html` 上的轻量面板不保存请求历史，因此看�
 
 ::: details 高级诊断：状态字段和采集协议
 
-打开经过认证的 Manager Server `/status`，重点查看：
+v2 在已认证控制台核对请求监控、系统状态与接入信息；需要接口诊断时使用 `<control-prefix>/api/v2/cpamp/status`，不要访问根路径 `/status`。1.x Stable 则打开经过认证的 Manager Server `/status`。重点查看：
 
 | 字段             | 含义                                |
 | ---------------- | ----------------------------------- |

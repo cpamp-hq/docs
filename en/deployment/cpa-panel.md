@@ -148,10 +148,10 @@ The lightweight panel does not connect to or read a separately running Manager S
 When you need request history, cost analytics, or server-side automation:
 
 1. Start v2 with [v2 Docker Installation](./docker.md) or [linux/amd64 Native Package](./native.md).
-2. Complete browser setup via the host `initialize` Handoff, or open the Control Base Path chosen at installation (default `http://<cpamp-host>:18317/console`) and sign in with the CPAMP Admin Key.
+2. Complete browser setup via the host `initialize` Handoff, or open the committed full-console address (`http://<cpamp-host>:18317<control-prefix>`) and sign in with the CPAMP Admin Key. New installations do not use a fixed `/console` path.
 3. Verify the CPA connection and request collection in the console.
 
-Fresh Full Web is not served at `/management.html`; instances upgraded offline from 1.x still use `:18317/management.html` (or `/`), not Fresh's default `/console`. Ingress routes transitional control paths to Manager, which does not make those features available in Fresh. See [Runtime Model](../guide/runtime-model.md) for `/health`, `/status`, and edge-denied `404` routing. The lightweight panel may remain on CPA's `:8317`; do not confuse it with the full CPAMP console.
+Both Fresh and completed 1.x-to-v2 upgrades serve the full console at the control prefix committed by the wizard or `upgrade verify`, without a `/management.html` or `/` compatibility entry. Existing v2 installations retain their committed control prefix. See [Runtime Model](../guide/runtime-model.md) for `/health` and edge-denied routing. The lightweight panel may remain on CPA's `:8317`; do not confuse it with the full CPAMP console.
 
 ## Troubleshooting
 

@@ -62,7 +62,7 @@ The gateway page edits CPA's own `config.yaml` and always saves one group at a t
 
 The proxy URL refuses a URL that embeds credentials. Every other bound stays CPA's business; the page checks types and its own product rules only.
 
-The read-only ownership area lists configuration owned by the API key, provider, account, log and system workspaces. Do not re-edit those fields here.
+The read-only ownership area lists configuration owned by the API key, provider, account, log and system workspaces. Do not re-edit those fields here. Manage Client API Keys, gateway activation verification, recovery, and verified protocol endpoints in the **API Keys** workspace (see [Client Configuration](../gateway/clients.md)); committed Control and Managed Inference access prefixes persist across ordinary updates and have no generic editor here or environment-variable override.
 
 ## Weighted round-robin routing
 

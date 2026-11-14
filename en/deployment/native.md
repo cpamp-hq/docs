@@ -25,7 +25,7 @@ sudo env USAGE_DATA_DIR=/opt/cpa-manager-plus/data \
   ./bin/cpa-manager-plus initialize
 ```
 
-Keep the short-lived `/.well-known/cpamp-bootstrap/ui#handoff=...` output private; it is neither a log entry nor an Admin Key. The generated systemd unit reads **`<home>/cpa-manager-plus.env`**, `/opt/cpa-manager-plus/cpa-manager-plus.env` in this example. Create/edit it without discarding existing settings, and restrict it to root ownership and mode `0600`:
+Keep the short-lived `/.well-known/cpamp-bootstrap/ui#handoff=...` output private (neither Admin Key, Client Key, nor CPA Management Key plaintext is printed to logs or placed in URLs); it is neither a log entry nor an Admin Key. The generated systemd unit reads **`<home>/cpa-manager-plus.env`**, `/opt/cpa-manager-plus/cpa-manager-plus.env` in this example. Create/edit it without discarding existing settings, and restrict it to root ownership and mode `0600`:
 
 ```bash
 sudo touch /opt/cpa-manager-plus/cpa-manager-plus.env
@@ -47,7 +47,7 @@ sudo systemctl restart cpa-manager-plus.service
 sudo systemctl status cpa-manager-plus.service
 ```
 
-Append the entire Handoff path to the public origin in a browser, set an Admin Key, select New Managed / Adopt / External, and complete qualification. For New Managed, save the first Client Key and verify the public entry. After installation, later logins open the control base path chosen during installation (the wizard defaults to `/console`, for example `https://cpamp.example.com/console`; a custom path replaces it and moves the frontend API accordingly); v2 does not serve `/management.html`, which returns 404. Stop the entire service before reissuing `initialize`, resetting Admin, backing up, or migrating; do not run systemd and `cpa-manager-plusctl start` concurrently. Existing 1.x users must follow the [v1.14.10 offline migration and rollback procedure](../operations/update.md), never start v2 directly against the old data directory.
+Append the entire Handoff path to the public origin in a browser, set an Admin Key, and configure the access prefixes—new installations pre-fill separate 16-character CSPRNG prefixes instead of a fixed `/console` default, allow independent custom paths or independent re-randomization, and require an explicit confirmation to share one prefix (External sets only the control prefix and clients call the External CPA's actual URL directly). Then select New Managed / Adopt / External and complete qualification. For New Managed, save the one-time Client Key shown on completion and verify a model request through `<origin><inference-prefix>/v1` (OpenAI) or `<origin><inference-prefix>` (Claude/Gemini native); keep Admin Key and Client Key strictly separate. After installation, later logins open the committed control prefix (for example `https://cpamp.example.com/<your-control-prefix>`, with frontend API `<control-prefix>/api/v2/*`; existing v2 installations that committed `/console` keep it, and old Managed instances without an inference prefix complete it once after signing in without falling back to `/` or unprefixed `/v1`). Ordinary patches preserve committed prefixes with no generic editor or env-var second authority. v2 does not serve `/management.html`, which returns 404. If behind a reverse proxy, forward complete prefixed paths without double-stripping and support SSE and WebSocket ([Reverse Proxy](./reverse-proxy.md)). Stop the entire service before reissuing `initialize`, resetting Admin, backing up, or migrating; do not run systemd and `cpa-manager-plusctl start` concurrently. Existing 1.x users must follow the [v1.14.10 offline migration and rollback procedure](../operations/update.md) (which also configures access prefixes and opens at the committed control prefix, not `/management.html`); never start v2 directly against the old data directory.
 
 Check Native licensing using the actual package's `LICENSE` and `share/licenses/cli-proxy-api/LICENSE`. Container third-party inventory and Provenance paths do not apply to Native; see [Releases and Licensing](../reference/releases.md).
 
@@ -56,7 +56,7 @@ Check Native licensing using the actual package's `LICENSE` and `share/licenses/
 
 Use native packages when Docker is not part of your environment. They fit deployments already managed by systemd, launchd, Windows services, or another process supervisor.
 
-Native mode is still Manager Server mode: the binary serves `/management.html`, stores SQLite data locally, and uses the CPAMP Admin Key for login. The `:18317/management.html` entry in this section belongs to 1.x Stable; v2 Beta uses the control base path chosen at installation (default `/console`). It is not the old "external Usage Service for the CPA-port panel" workflow.
+Native mode is still Manager Server mode: the binary serves `/management.html`, stores SQLite data locally, and uses the CPAMP Admin Key for login. The `:18317/management.html` entry in this section belongs to 1.x Stable; v2 Beta uses the control prefix committed at setup or upgrade (existing `/console` deployments keep `/console`). It is not the old "external Usage Service for the CPA-port panel" workflow.
 
 If you only want to install the CPAMP native package, you can use [One-Click Installer](./installer.md). The script does not install CPA natively; use Docker for a full new deployment.
 

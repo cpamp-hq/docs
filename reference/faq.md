@@ -4,11 +4,11 @@ CPA Manager Plus 的完整监控和分析能力来自 Manager Server。旧 CPA-M
 
 CPAMP 的统计和监控能力来自 Manager Server，浏览器入口按版本区分：
 
-- **v2 Beta**：安装时设置的控制台地址（Control Base Path），向导默认 `/console`，例如 `http://<host>:18317/console`；以向导完成页“登录并进入 CPAMP”指向的地址为准。v2 不提供 `/management.html`，访问返回 404。
+- **v2 Beta**：安装或升级时提交的**控制入口前缀（Control Base Path）**，例如 `https://<host>/<你的控制前缀>`（新安装默认预填 16 位加密随机前缀而不再使用固定 `/console`；此前已提交 `/console` 的旧实例继续保留 `/console`）。v2 不提供 `/management.html`，访问返回 404。
 - **1.x Stable**：Manager Server 托管的面板，例如 `http://<host>:18317/management.html`。
 
 ```text
-v2 Beta:      http://<host>:18317/console     （默认控制台地址）
+v2 Beta:      https://<host>/<control-prefix>   （安装或升级时提交；旧 /console 实例保持不变）
 1.x Stable:   http://<host>:18317/management.html
 ```
 
@@ -23,19 +23,19 @@ v2 Beta:      http://<host>:18317/console     （默认控制台地址）
 | 不增加额外服务，用更清晰的界面替代官方 UI    | [CPAMP 轻量面板](../deployment/cpa-panel.md) |
 | 不使用 Docker，但需要全部功能                | CPAMP 完整模式（原生包）                     |
 
-CPAMP 轻量面板由 CPA 直接托管，是官方 Management Center 的增强替代 UI。它不配置 Manager Server，也不读取 Manager Server SQLite 数据。需要完整 CPAMP 能力时，使用 Docker 或原生包启动 Manager Server，并打开它的浏览器入口：v2 Beta 是安装时设置的控制台地址（默认 `/console`），1.x Stable 是 `:18317/management.html`。
+CPAMP 轻量面板由 CPA 直接托管，是官方 Management Center 的增强替代 UI。它不配置 Manager Server，也不读取 Manager Server SQLite 数据。需要完整 CPAMP 能力时，使用 Docker 或原生包启动 Manager Server，并打开它的浏览器入口：v2 Beta 是安装或升级时提交的控制入口前缀（先前已提交 `/console` 的旧实例保持不变），1.x Stable 是 `:18317/management.html`。
 
 ### 打开面板后应该访问哪个地址？
 
 CPAMP 完整模式的入口取决于版本。
 
-v2 Beta（公开 origin 下、安装时设置的控制台地址，向导默认 `/console`）：
+v2 Beta（公开 origin 下安装或升级时提交的控制前缀；新安装预填独立 16 位加密随机前缀，旧 `/console` 实例保持 `/console`）：
 
 ```text
-http://<host>:18317/console     （默认值；改过控制台地址就换成新路径）
+https://<host>/<control-prefix>   （例如随机前缀或旧实例的 /console）
 ```
 
-控制台和它的前端 API 一起移动：前端调用 `<控制台路径>/api/v2/*`。v2 不提供 `/management.html`，访问该路径返回 404。
+控制台和它的前端 API 一起移动：前端调用 `<control-prefix>/api/v2/*`。Managed（New Managed / Adopt / Upgrade Managed）模型客户端另需使用独立提交的 `<inference-prefix>`（或显式勾选共用后的同一前缀）拼接协议路径；External 模式客户端继续直连外部 CPA 的真实地址。v2 不提供 `/management.html`，访问该路径返回 404。
 
 1.x Stable（Manager Server 托管的面板）：
 
@@ -126,8 +126,8 @@ wget -qO- http://host.docker.internal:8317/healthz
 | CPAMP Full Docker / 原生登录        | CPAMP 管理员密钥，通常以 `cpamp_...` 开头 |
 | CPAMP 首次 setup 连接 CPA           | CPA Management Key                        |
 | CPAMP 轻量面板登录                  | CPA Management Key                        |
-| 普通模型 API 请求                   | CPA API 密钥                              |
-| `GET /v1/models`                    | CPA API 密钥                              |
+| 普通模型 API 请求                   | 客户端 Client API Key（非 Admin / Management Key） |
+| `GET /<inference-prefix>/v1/models`（或 1.x `/v1/models`） | 客户端 Client API Key |
 | setup 后的 CPAMP Manager Server API | CPAMP 管理员密钥                          |
 
 不要混用这些密钥。通过 setup 或面板保存的 CPA 连接会把 CPA Management Key 用 `data.key` 加密后写入 SQLite；一键安装器提供的 env/secret 只作为一次性导入输入，成功后也会写入 SQLite 并从最终运行配置移除。手工 env/secret 部署仍从部署环境读取密钥。CPAMP 轻量面板由浏览器持有 CPA Management Key。
@@ -179,7 +179,7 @@ CPA Management Key 不能用于 CPAMP Manager Server-only API。
 
 修改 CPA panel repository 只会改变 CPA 托管的前端页面。
 
-请求监控和历史统计需要 Manager Server。下面是 1.x Stable 的 Docker 示例，入口是 `:18317/management.html`；v2 Beta 见 [v2 Docker 安装](../deployment/docker.md)，入口是安装时设置的控制台地址（默认 `/console`）：
+请求监控和历史统计需要 Manager Server。下面是 1.x Stable 的 Docker 示例，入口是 `:18317/management.html`；v2 Beta 见 [v2 Docker 安装](../deployment/docker.md)，入口是安装或升级时提交的控制入口前缀（旧 `/console` 实例保持不变）：
 
 ```bash
 docker run -d \
@@ -286,7 +286,7 @@ http://cli-proxy-api:8317
 
 不能。RESP Pub/Sub 和 RESP pop 需要直接连接 CPA API 端口。HTTP queue 可以经过 HTTP proxy。
 
-同域名部署时，阅读 [反向代理](../deployment/reverse-proxy.md)。以下 1.x Stable 路径分流（v2 Beta 单镜像只有一个公开入口，控制台在安装时设置的控制台地址下，默认 `/console`，把整个 origin 转发到 `18317`）：
+同域名部署时，阅读 [反向代理](../deployment/reverse-proxy.md)。以下 1.x Stable 路径分流不适用于 v2 Beta（v2 Beta 单镜像在 `18317` 统一承接 `<control-prefix>` 与 Managed `<inference-prefix>`，反代须原样透传带前缀路径、不能二次剥离，External 模型流量则仍走外部 CPA 真实地址）：
 
 ```text
 /management.html        -> CPAMP
@@ -328,7 +328,11 @@ http://<cpamp-host>:18317/management.html
 
 先完成 setup。`412` 不是这条路径的状态码。
 
-v2 Beta：安装未完成或网关尚未放行时，`/v1/models` 由公开 ingress 返回 `503 gateway pending configuration`。完成向导后到公开 origin 的控制台（默认 `/console`，以向导完成页为准）核对网关状态与 Client Key；放行后 `/v1/*` 直接转发给 CPA，返回什么由 CPA 决定，本文不承诺具体状态码。`:18317/management.html` 在 v2 返回 404。
+v2 Beta：在安装未完成或旧 Managed 实例尚未完成一次性推理前缀补全时，公开 Ingress 保持故障关闭并返回 `503 gateway pending configuration`。完成配置与补全后，无前缀的 `/v1/models` 在 Managed v2 下返回 `404`（不会回退到根路径），模型客户端必须访问 `<inference-prefix>/v1/models` 等带前缀路径（若网关尚未放行也返回 `503`；放行后去掉一次 `<inference-prefix>` 转给 CPA，状态码由 CPA 决定）。External 模式下客户端直连外部 CPA 真实地址。`:18317/management.html` 在 v2 返回 404。
+
+### v2 密钥创建失败或结果未知时可以直接再新建或重发吗？
+
+不要重复新建，也不要盲目重发 `PUT`。v2 只有在“Manager 加密持久化 + CPA 写入 + 真实客户端认证探测”全部通过后才算生效；若发生写入失败（`not_applied`）或超时/结果未知（`effect_unknown`），刷新页面或重启 Manager 会依据原请求 ID 恢复既有规范记录与操作日志——失败状态请对该既有密钥点“重试网关激活”，未知状态请先执行只读“核对激活状态”。其余规则（多密钥无 128 上限、最后一把保护、on-demand 复制与 External rebind）见 [客户端接入](../gateway/clients.md)。
 
 ## 数据与备份
 
@@ -385,7 +389,7 @@ data.key
 CPAMP 轻量面板不使用 Manager Server 分析能力，也不能挂接独立 Manager Server。需要监控、仪表盘、模型价格、API 密钥别名、用量导入导出和服务端巡检时，请打开完整模式入口：
 
 ```text
-v2 Beta:      http://<cpamp-host>:18317/console     （默认控制台地址）
+v2 Beta:      https://<cpamp-host>/<control-prefix>   （安装或升级时提交；旧 /console 实例保持不变）
 1.x Stable:   http://<cpamp-host>:18317/management.html
 ```
 
@@ -408,7 +412,7 @@ rm static/management.html
 
 ### release 里的 management.html 是什么？
 
-`management.html` 是 release 包中的单文件管理面板，作为 CPAMP 轻量面板由 CPA 加载；每个 v2 Beta 预发布同样附带该文件。1.x Stable 的 Manager Server 会托管它，入口是 `:18317/management.html`；v2 Beta 的完整模式改用控制台（安装时设置的控制台地址，默认 `/console`），不提供 `/management.html`（返回 404）。在线文档仍通过 GitHub Pages 访问，不随安装包分发。
+`management.html` 是 release 包中的单文件管理面板，作为 CPAMP 轻量面板由 CPA 加载；每个 v2 Beta 预发布同样附带该文件。1.x Stable 的 Manager Server 会托管它，入口是 `:18317/management.html`；v2 Beta 的完整模式改用安装或升级时提交的控制入口前缀（此前已提交 `/console` 的旧实例保持不变），不提供 `/management.html`（返回 404）。在线文档仍通过 GitHub Pages 访问，不随安装包分发。
 
 ### 在线演示站会连接真实后端吗？
 

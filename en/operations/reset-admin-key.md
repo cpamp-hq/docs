@@ -28,7 +28,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-Save the key immediately and keep terminal output out of public logs or chat transcripts. Restart only after the command succeeds and startup credentials have been aligned as described above, then confirm the CPA connection. Fresh instances use the Control Base Path chosen at installation (default `http://<host>:18317/console`); instances upgraded from 1.x use `http://<host>:18317/management.html` (or `/`).
+Save the key immediately and keep terminal output out of public logs or chat transcripts. Restart only after the command succeeds and startup credentials have been aligned as described above, then confirm the CPA connection. Completed v2 Fresh and upgraded instances both open at their committed Control Base Path (for example `https://<host>/<control-prefix>`, with existing `/console` deployments keeping `/console`; neither uses `/management.html` or `/`).
 
 ```bash
 docker compose up -d

@@ -4,11 +4,11 @@ CPA Manager Plus provides full monitoring and analytics through Manager Server. 
 
 The CPAMP analytics browser entry depends on the version:
 
-- **v2 Beta**: the Control Base Path chosen at installation; the wizard defaults to `/console`, for example `http://<host>:18317/console`. Trust the address behind "Sign in and enter CPAMP" on the completion page. v2 does not serve `/management.html`, which returns 404.
+- **v2 Beta**: the **Control Base Path** committed at installation or upgrade, such as `https://<host>/<your-control-prefix>` (new installations pre-fill a 16-character CSPRNG prefix instead of a fixed `/console` default; existing `/console` deployments keep `/console`). v2 does not serve `/management.html`, which returns 404.
 - **1.x Stable**: the Manager Server-hosted panel, for example `http://<host>:18317/management.html`.
 
 ```text
-v2 Beta:      http://<host>:18317/console     (default control base path)
+v2 Beta:      https://<host>/<control-prefix>   (committed at setup/upgrade; existing /console kept)
 1.x Stable:   http://<host>:18317/management.html
 ```
 
@@ -23,19 +23,19 @@ v2 Beta:      http://<host>:18317/console     (default control base path)
 | Replace the official UI with a clearer interface and no additional service      | [CPAMP Lightweight Panel](../deployment/cpa-panel.md) |
 | No Docker, but all features are required                                        | CPAMP Full Mode (native package)                      |
 
-The CPAMP Lightweight Panel is an enhanced alternative to the official Management Center and is hosted directly by CPA. It does not configure Manager Server or read Manager Server SQLite data. Use Docker or native packages to run Manager Server and open its browser entry: the control base path chosen at installation for v2 Beta (default `/console`), `:18317/management.html` for 1.x Stable.
+The CPAMP Lightweight Panel is an enhanced alternative to the official Management Center and is hosted directly by CPA. It does not configure Manager Server or read Manager Server SQLite data. Use Docker or native packages to run Manager Server and open its browser entry: the control prefix committed at setup or upgrade for v2 Beta (existing `/console` deployments keep `/console`), or `:18317/management.html` for 1.x Stable.
 
 ### Which address should I open?
 
 The CPAMP Full Mode entry depends on the version.
 
-v2 Beta (the control base path chosen at installation under the public origin; the wizard defaults to `/console`):
+v2 Beta (the control prefix committed at installation or upgrade under the public origin; new installations pre-fill a 16-character CSPRNG prefix, while existing `/console` installs keep `/console`):
 
 ```text
-http://<host>:18317/console     (default; replace it if you chose another path)
+https://<host>/<control-prefix>   (your committed random/custom prefix, or existing /console)
 ```
 
-The console and its frontend API move together: the frontend calls `<control-base-path>/api/v2/*`. v2 does not serve `/management.html`; that path returns 404.
+The console and its frontend API move together: the frontend calls `<control-prefix>/api/v2/*`. For Managed (`New Managed` / `Adopt` / `Upgrade Managed`), model clients also use the committed `<inference-prefix>` (or explicit shared prefix) followed by the protocol path; for External, model clients continue using the External CPA's actual URL directly. v2 does not serve `/management.html`; that path returns 404.
 
 1.x Stable (the Manager Server-hosted panel):
 
@@ -126,8 +126,8 @@ wget -qO- http://host.docker.internal:8317/healthz
 | CPAMP Full Docker / native login      | CPAMP Admin Key, usually starting with `cpamp_...` |
 | CPAMP first setup CPA connection      | CPA Management Key                                 |
 | CPAMP Lightweight Panel login         | CPA Management Key                                 |
-| Normal model API calls                | CPA API Key                                        |
-| `GET /v1/models`                      | CPA API Key                                        |
+| Normal model API calls                | Client API Key (not Admin or Management Key)       |
+| `GET /<inference-prefix>/v1/models` (or 1.x `/v1/models`) | Client API Key                 |
 | CPAMP Manager Server APIs after setup | CPAMP Admin Key                                    |
 
 Do not mix these keys. CPA connections saved through setup or the panel are encrypted with `data.key` and written to SQLite. The one-click installer uses env/secret input only for a one-time import; after a successful import it is encrypted into SQLite and removed from the final runtime configuration. Manual env/secret deployments still read the key from their deployment environment. In the CPAMP Lightweight Panel, the browser holds the CPA Management Key.
@@ -179,7 +179,7 @@ The CPA Management Key is not accepted for CPAMP Manager Server-only APIs.
 
 Changing the CPA panel repository only changes the frontend served by CPA.
 
-Request monitoring and historical analytics require Manager Server. The Docker example below is 1.x Stable, with its entry at `:18317/management.html`; for v2 Beta see [v2 Docker Installation](../deployment/docker.md), where the entry is the control base path chosen at installation (default `/console`):
+Request monitoring and historical analytics require Manager Server. The Docker example below is 1.x Stable, with its entry at `:18317/management.html`; for v2 Beta see [v2 Docker Installation](../deployment/docker.md), where the entry is the control prefix committed at installation or upgrade (existing `/console` installs keep `/console`):
 
 ```bash
 docker run -d \
@@ -286,7 +286,7 @@ Do not use a public HTTPS reverse proxy domain.
 
 No. RESP Pub/Sub and RESP pop must connect directly to the CPA API port. HTTP queue can go through an HTTP proxy.
 
-For same-domain deployment, read [Reverse Proxy](../deployment/reverse-proxy.md). The 1.x Stable path split below does not apply to v2 Beta, whose single image exposes one public entry with the console under the control base path chosen at installation (default `/console`; forward the whole origin to `18317`):
+For same-domain deployment, read [Reverse Proxy](../deployment/reverse-proxy.md). The 1.x Stable path split below does not apply to v2 Beta (v2 Beta Ingress on `18317` serves `<control-prefix>` and Managed `<inference-prefix>`, requiring full prefixed pass-through with no stripping, while External model traffic still goes directly to the External CPA's real URL):
 
 ```text
 /management.html        -> CPAMP
@@ -328,7 +328,11 @@ http://<cpamp-host>:18317/management.html
 
 Finish setup first. `412` is not this path's status code.
 
-v2 Beta: while installation is unfinished or the Gateway is not admitted, `/v1/models` is answered by the public ingress with `503 gateway pending configuration`. After completing the wizard, check Gateway status and the Client Key in the console on the public origin (default `/console`; trust the wizard's completion page). Once admitted, `/v1/*` is forwarded to CPA and the status is CPA's own; this page does not promise a specific code. `:18317/management.html` returns 404 in v2.
+v2 Beta: while installation is incomplete or an older Managed v2 installation awaits its one-time inference prefix completion, public ingress stays fail-closed with `503 gateway pending configuration`. Once configured, unprefixed `/v1/models` returns `404` on Managed v2 (no root fallback); clients must call `<inference-prefix>/v1/models` (which returns `503` while admission is pending, and strips `<inference-prefix>` once to forward to CPA once admitted). In External mode, clients call the External CPA's real URL directly. `:18317/management.html` returns 404 in v2.
+
+### What if creating a v2 Client Key fails or returns an unknown outcome?
+
+Do not create a duplicate key or send a blind `PUT`. In v2, a key is verified active only after encrypted Manager persistence, CPA write, and real client-authentication probing succeed. If activation fails (`not_applied`) or times out with an unknown result (`effect_unknown`), refreshing the page or restarting Manager recovers the original canonical key record and operation journal via its request ID: use **Retry gateway activation** on that existing key when failed, or run read-only **Check activation status** first when unknown. See [Client Configuration](../gateway/clients.md) for multi-key support (no 128-key cap), last-key protection, on-demand copy, and External rebind rules.
 
 ## Data and backups
 
@@ -385,7 +389,7 @@ This is expected.
 The CPAMP Lightweight Panel does not use Manager Server analytics and cannot attach to a separate Manager Server. For monitoring, dashboard analytics, model prices, API key aliases, usage import/export, and server inspection, open the Full Mode entry:
 
 ```text
-v2 Beta:      http://<cpamp-host>:18317/console     (default control base path)
+v2 Beta:      https://<cpamp-host>/<control-prefix>   (committed at setup/upgrade; existing /console kept)
 1.x Stable:   http://<cpamp-host>:18317/management.html
 ```
 
@@ -408,7 +412,7 @@ If `Disable Panel Auto Updates` is enabled, CPA only downloads the panel again w
 
 ### What is management.html in a release?
 
-`management.html` is the single-file management panel shipped in release packages and loaded by CPA as the CPAMP Lightweight Panel; each v2 Beta prerelease ships it too. The 1.x Stable Manager Server hosts it at `:18317/management.html`; v2 Beta Full Mode instead serves the console under the Control Base Path (default `/console`) and does not serve `/management.html` (404). The online documentation remains on GitHub Pages and is not distributed with install packages.
+`management.html` is the single-file management panel shipped in release packages and loaded by CPA as the CPAMP Lightweight Panel; each v2 Beta prerelease ships it too. The 1.x Stable Manager Server hosts it at `:18317/management.html`; v2 Beta Full Mode instead serves the console under the control prefix committed at setup or upgrade (existing `/console` deployments keep `/console`) and does not serve `/management.html` (404). The online documentation remains on GitHub Pages and is not distributed with install packages.
 
 ### Does the demo site connect to a real backend?
 

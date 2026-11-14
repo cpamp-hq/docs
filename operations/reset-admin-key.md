@@ -28,7 +28,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-立即妥善保存该密钥，不要让输出进入公开日志或聊天记录。命令成功且已按上述规则同步启动密钥后，再启动服务并核对 CPA 连接。Fresh 实例使用安装时设置的控制台地址（默认 `http://<host>:18317/console`）；从 1.x 升级的实例使用 `http://<host>:18317/management.html`（或 `/`）。
+立即妥善保存该密钥，不要让输出进入公开日志或聊天记录。命令成功且已按上述规则同步启动密钥后，再启动服务并核对 CPA 连接。完成初始化或升级的 v2 实例均使用已提交的控制入口前缀（例如 `https://<host>/<control-prefix>`，此前已提交 `/console` 的旧实例继续使用 `/console`；不再使用 `/management.html` 或 `/`）。
 
 ```bash
 docker compose up -d

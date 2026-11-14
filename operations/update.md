@@ -68,13 +68,14 @@ upgrade_cli external-connect --target /data \
 #   --cpa-base-url 'http://your-cpa-host:8317' \
 #   --management-key-file /upgrade-secrets/cpa-management-key \
 #   --db-path /data/usage.sqlite --data-key-path /data/data.key
-upgrade_cli verify --legacy "$LEGACY_ROOT" --target /data --json
+upgrade_cli verify --legacy "$LEGACY_ROOT" --target /data \
+  --control-base-path '/<你的控制前缀>' --json
 upgrade_cli status --db-path /data/usage.sqlite --json
 fix_manager_ownership
 docker compose up -d
 ```
 
-只有真实连接、身份、模型面及对账证据通过且持久化阶段为 `complete` 才可运行最后的 `fix_manager_ownership` 与 `docker compose up -d` 启动正常产品。缺版本 header 时，`external-connect --cpa-version` 仅用于如实声明实际 CPA 版本，不会把 v7 变成 v8；密钥轮换后使用同一 URL 的 `--reprove` 重新证明，不要反复提交已拒绝凭证。
+只有真实连接、身份、模型面及对账证据通过且持久化阶段为 `complete` 才可运行最后的 `fix_manager_ownership` 与 `docker compose up -d` 启动正常产品。External 升级只传 `--control-base-path`（不要传 `--inference-base-path` 或 `--shared-entry`，否则会返回 `external_inference_prefix_forbidden`），客户端继续直连外部 CPA 真实地址。缺版本 header 时，`external-connect --cpa-version` 仅用于如实声明实际 CPA 版本，不会把 v7 变成 v8；密钥轮换后使用同一 URL 的 `--reprove` 重新证明，不要反复提交已拒绝凭证。
 
 **Managed 路径**：还需导入旧 CPA 的配置/凭证并向容器内实时运行的 Runtime Supervisor（`127.0.0.1:9081`）证明目标，不是用 `external-connect` 连接内部地址。在单镜像中，未完成的升级记录会让容器内 `cpa-manager-plus` 停留在只读升级面并释放 SQLite 写锁，同时由 `cpamp-launcher` 启动 Runtime Supervisor 与 Ingress（升级完成前请在防火墙或反向代理隔离公开业务流量）。先执行 `fix_manager_ownership`，再用临时覆盖文件把原 1.x 数据卷、旧 CPA 目录及其真实 auth 目录只读挂入容器（路径/源 CPA 版本来自实际旧部署，插件选择必须显式给出）：
 
@@ -91,7 +92,7 @@ YAML
 docker compose -f docker-compose.yml -f docker-compose.upgrade.yml up -d
 ```
 
-若使用 **`slim`** 镜像，此时先用浏览器打开公开入口，凭原 1.x 管理员密钥登录只读升级向导，从 CDN / GitHub Release 下载或上传对应的官方 `cli-proxy-api` `linux_<arch>.tar.gz` 以就绪固定摘要的 CPA 引擎（**`full`** 镜像已内置，无需此步）。随后在同一运行容器内执行 `cpa-import`、`verify` 与 `status`：
+若使用 **`slim`** 镜像，此时先用浏览器打开公开入口，凭原 1.x 管理员密钥登录只读升级向导，从 CDN / GitHub Release 下载或上传对应的官方 `cli-proxy-api` `linux_<arch>.tar.gz` 以就绪固定摘要的 CPA 引擎（**`full`** 镜像已内置，无需此步）；也可在升级向导内直接设定并保存独立的控制入口前缀与推理前缀（向导默认分别预填 16 位加密随机前缀，可选显式勾选共用入口，但仍建议保持两者独立）。随后在同一运行容器内执行 `cpa-import`、`verify` 与 `status`：
 
 ```text
 docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
@@ -105,13 +106,15 @@ docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:
   -e CPAMP_RUNTIME_URL=http://127.0.0.1:9081 \
   -e CPAMP_RUNTIME_TOKEN_FILE=/data/runtime-secret/token \
   cpa-manager-plus cpa-manager-plus upgrade verify \
-  --legacy <原LEGACY_ROOT> --target /data --json
+  --legacy <原LEGACY_ROOT> --target /data \
+  --control-base-path '/<你的控制前缀>' \
+  --inference-base-path '/<你的推理前缀>' --json
 docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
   cpa-manager-plus cpa-manager-plus upgrade status \
   --db-path /data/usage.sqlite --json
 ```
 
-这段是参数模板，替换所有尖括号后运行；`--plugins false` 是显式关闭插件的示例，按实际意图选择。`cpa-import` 或 `verify` 的资格与目标证明拒绝时立即停止，保留报告，不手工复制凭证到 `/data/runtime`。`upgrade verify` 必须在同一容器内 Runtime Supervisor 与目标 CPA 处于运行且 Ready 时执行。
+这段是参数模板，替换所有尖括号后运行（Managed 必须同时给出 `--control-base-path` 与 `--inference-base-path`，推荐保持两套独立前缀；若确需共用同一前缀，可设为相同路径并显式加 `--shared-entry`，此时共享入口只放行受支持的模型协议子路径而保持 `/v0`、`/v8`、`/management.html` 等阻断；`--plugins false` 是显式关闭插件的示例，按实际意图选择）。`cpa-import` 或 `verify` 的资格与目标证明拒绝时立即停止，保留报告，不手工复制凭证到 `/data/runtime`。`upgrade verify` 必须在同一容器内 Runtime Supervisor 与目标 CPA 处于运行且 Ready 时执行。
 
 这里升级 CLI 使用 `0:0` 是为了读取仍为 root 私有权限的原 1.x 源及 CPA 凭证；只读挂载不等于 UID `10002` 可读。不要按此身份启动长驻 Manager。CLI 可能生成 root 属主的 Manager WAL/锁文件，所以下面的停机属主修正不可省略；不要修改旧源权限来迁就目标。
 
@@ -124,7 +127,7 @@ fix_manager_ownership
 docker compose up -d
 ```
 
-保留原 1.x 数据与升级备份直到完整验收。升级完成并重启后，访问 `http://<host>:18317/management.html`（或根路径 `/`），使用原 1.x 管理员密钥登录；这条升级路径不会自动建立 Fresh 的 `/console`。核对公开 origin、Client Key、历史/coverage、账号状态与实际模型请求，`/health` 不能代替它们。
+保留原 1.x 数据与升级备份直到完整验收。升级完成并重启后，访问升级时提交的**控制入口前缀**（例如 `http://<host>:18317/<你的控制前缀>` 或反代域名下的对应路径，前端 API 为 `<控制前缀>/api/v2/*`），使用原 1.x 管理员密钥登录；v2 升级完成后不再使用 `/management.html` 或根路径 `/`。随后在控制台核对公开 origin、接入地址与 Client Key 状态（若为 Managed 升级，模型请求须发往 `<origin><inference-prefix>` + 协议路径；若为 External 升级，客户端仍直连外部 CPA 真实地址）、历史/coverage、账号状态与实际模型请求，`/health` 不能代替它们。
 
 ### 精确回滚到原 1.x 数据
 
@@ -165,8 +168,8 @@ upgrade_cli status --db-path /data/usage.sqlite --json
 linux/amd64 Native 使用同版包的 `bin/cpa-manager-plus upgrade ...`，但**不能把所有步骤一律改为停机运行**：
 
 1. 停止旧 1.x Manager / 待导入 CPA 及目标 Native launcher/systemd 栈。用原 1.x 绝对数据目录作为 `--legacy`，新包的绝对 `data/` 作为目标；离线执行 `preflight --target-dir ...` → `run --target ...` → `reconcile --target ...`。`--target-dir` 只属于 `preflight`。自定义备份目录在 `run/reconcile` 中用 `--bundle`，在 `rollback --prepare/--verify` 中用同一路径的 `--backup`。
-2. External 使用宿主机私有凭证文件执行 `external-connect`，必要时同步 `store-cpa-connection`，再离线 `verify`。Managed 则在对账成功后启动已配置的 Native launcher/systemd 服务，保持公开业务隔离；未完成升级时 Manager 保持只读并释放锁，Runtime Supervisor 必须运行。执行同样的 `cpa-import` 参数模板，但所有源/目标/凭证路径改为宿主机绝对路径，并为该 CLI 及随后的 `verify` 提供实际 `CPAMP_RUNTIME_URL`、`CPAMP_RUNTIME_TOKEN_FILE`；`cpa-import` 还需 `CPA_UPSTREAM_URL` 或 `--destination-url`。默认值分别为 `http://127.0.0.1:18318`、`<包根目录>/run/runtime-token` 和 `http://127.0.0.1:8317`，不是 Docker 的 `9081` 与 `/data/runtime-secret/token`。以与 Native Manager 相同的 root 身份执行（如 `sudo env CPAMP_RUNTIME_URL=... CPAMP_RUNTIME_TOKEN_FILE=... CPA_UPSTREAM_URL=... ./bin/cpa-manager-plus upgrade cpa-import ...`）。
-3. `verify` 必须在 Supervisor 与 Managed CPA 运行且 Ready 时执行；`status --db-path <新data目录>/usage.sqlite --json` 确认阶段为 `complete` 后，重启 Native 服务并恢复流量，按上文升级入口验收。
+2. External 使用宿主机私有凭证文件执行 `external-connect`，必要时同步 `store-cpa-connection`，再离线执行 `verify --legacy ... --target ... --control-base-path '/<你的控制前缀>'`。Managed 则在对账成功后启动已配置的 Native launcher/systemd 服务，保持公开业务隔离；未完成升级时 Manager 保持只读并释放锁，Runtime Supervisor 必须运行。执行同样的 `cpa-import` 参数模板，但所有源/目标/凭证路径改为宿主机绝对路径，并为该 CLI 及随后的 `verify`（同样传入 `--control-base-path` 与 `--inference-base-path`）提供实际 `CPAMP_RUNTIME_URL`、`CPAMP_RUNTIME_TOKEN_FILE`；`cpa-import` 还需 `CPA_UPSTREAM_URL` 或 `--destination-url`。默认值分别为 `http://127.0.0.1:18318`、`<包根目录>/run/runtime-token` 和 `http://127.0.0.1:8317`，不是 Docker 的 `9081` 与 `/data/runtime-secret/token`。以与 Native Manager 相同的 root 身份执行（如 `sudo env CPAMP_RUNTIME_URL=... CPAMP_RUNTIME_TOKEN_FILE=... CPA_UPSTREAM_URL=... ./bin/cpa-manager-plus upgrade cpa-import ...`）。
+3. `verify` 必须在 Supervisor 与 Managed CPA 运行且 Ready 时执行；`status --db-path <新data目录>/usage.sqlite --json` 确认阶段为 `complete` 后，重启 Native 服务并恢复流量，访问升级时提交的控制入口前缀验收（Managed 同时按推理前缀验证模型请求）。
 4. Native 回滚前停止整个目标栈（包括公开 Ingress）。`rollback --prepare` 生成的是 **Docker Compose 计划，不是 systemd 服务计划**，不要直接应用到 Native 服务。生成计划时将 `--volume` 绑定原绝对源目录，并传入真实 `--manager-addr`（默认 `127.0.0.1:18319`）。操作者独立恢复原精确 1.x 二进制/服务和原数据，核对实际二进制、数据路径与计划的独立端口，再从宿主机按计划执行 `rollback --verify --legacy ... --target ... --backup ... --status-url http://127.0.0.1:18318/health --manager-addr 127.0.0.1:18319`（替换实际地址）。CLI 的健康身份和数据检查不能代替 Native 二进制/服务身份核对；不要使用容器专用的 `host.docker.internal`。
 
 | 报告/退出码 | 操作 |
@@ -195,6 +198,13 @@ linux/amd64 Native 使用同版包的 `bin/cpa-manager-plus upgrade ...`，但**
    ```
 
    只修改 `usage.sqlite*` 与 `data.key` 的属主（属主变更只改文件元数据，不改写数据库内容）；切勿执行 `chown -R 10002:10002 /data`，`/data/runtime` 必须保持 `0:0`。完成后回到引导页点击“重新检查来源状态”。
+
+
+## 旧版 v2 补丁更新与一次性推理前缀补全
+
+- **普通补丁更新保留既有前缀**：已部署的 v2 实例（包括此前已提交 `/console` 作为控制前缀的实例）在普通补丁更新后原样保留其已提交的 `controlBasePath` 与 `inferenceBasePath`；控制台与环境变量均不提供二次修改入口。
+- **缺少推理前缀的旧 Managed v2 实例**：若升级前仅提交了控制前缀（例如 `/console`）而尚未设置 `inferenceBasePath`，重启后模型网关保持关闭（返回 `503`，不回退到 `/` 或无前缀 `/v1`）。管理员使用原管理员密钥登录既有控制入口（如 `/console`）后，界面会触发**一次性推理前缀补全**：可输入自定义合法前缀或使用预填的 16 位加密随机前缀，也可以在了解安全边界后显式勾选与控制入口共用。补全提交后既有控制前缀保持不变，网关按新推理前缀开放。
+- **早期未记录控制前缀的已完成升级库**：若升级库处于 `complete` 但未提交任何控制前缀，服务会拒绝静默放行；停止写入服务后执行一次 `cpa-manager-plus upgrade verify --target <v2_data_dir> --control-base-path '/<你的控制前缀>' [--inference-base-path '/<你的推理前缀>']`（External 不传推理前缀）即可一次性锁定前缀，无需重新挂载旧 1.x 源。
 
 ## 离线派生索引与数据维护（`cleanup-derived`）
 
