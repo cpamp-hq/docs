@@ -2,7 +2,7 @@
 
 ## v2 Beta: embedded and external
 
-Full Mode in v2 Beta is not the single-Manager 1.x deployment. Embedded official CPA is pinned to **`v8.0.55`**; External requires at least **`v8.0.55`** and actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**; see [Upgrade and Rollback](../operations/update.md).
+Full Mode in v2 Beta is not the single-Manager 1.x deployment. v2 supports **CPA v8** only (releases below v8 are rejected, and future major versions are not promised): Embedded official CPA is pinned to **`v8.0.55`**; External requires CPA v8 at **`v8.0.55`** or newer within v8 plus actual qualification. The exact 1.x direct upgrade baseline is **`v1.14.10`**, and positive Managed upgrade sources (`upgrade cpa-import`) must also already run CPA v8 before stopping and importing (not only the v2 destination); see [Upgrade and Rollback](../operations/update.md).
 
 | Mode | Who runs CPA | CPAMP boundary |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Full Mode in v2 Beta is not the single-Manager 1.x deployment. Embedded official
 
 **External** first proves the connection and Management Key. Supported configuration does not imply host filesystem/lifecycle authority. Rule writes stay read-only without an exclusive write window; writable scalar fields follow actual capabilities. Usage statistics require explicit administrator confirmation rather than automatic changes to external CPA. Its operator remains responsible for CPA upgrades, TLS/networking, configuration/OAuth backups, and availability. Clients retain the external CPA's real entry; Manager completion does not reroute them automatically.
 
-After external Management Key rotation, rebind and prove the current connection in the panel; do not repeatedly retry credentials CPA already rejected. Retain Manager `data.key` with its encrypted database. A refused or incomplete Adopt migration does not authorize automatic External fallback: follow the wizard report, not environment changes or manually edited records.
+After external Management Key rotation, rebind and prove the current connection in the panel; do not repeatedly retry credentials CPA already rejected. Retain Manager `data.key` with its encrypted database. Public Fresh **Adopt** admits only an existing network CPA v8 (`network_existing`) and still refuses `legacy_managed` sources (compiled internal qualification does not open `legacy_managed` on the public Fresh wizard; 1.x managed CPA migrates only through offline [Upgrade `cpa-import`](../operations/update.md)). A refused or incomplete Adopt migration does not authorize automatic External fallback: follow the wizard report, not environment changes or manually edited records.
 
 For **v2 Beta**, the Full Mode browser entry is the **Control Base Path** committed at installation or upgrade (new installations pre-fill a 16-character CSPRNG prefix instead of defaulting to `/console`, with independent custom/random controls; existing `/console` deployments keep `/console`), and the frontend API lives at `<control-prefix>/api/v2/*`. Trust the "Sign in and enter CPAMP" link or your committed upgrade prefix; prefixes cannot collide with reserved paths such as `/v1`, `/v1beta`, `/models`, `/management.html`, or `/.well-known`. **Neither fresh v2 installs nor completed 1.x->v2 upgrades serve the console at `/management.html` or `/`**. Embedded `8317` and `9081` remain internal and must not be published separately.
 

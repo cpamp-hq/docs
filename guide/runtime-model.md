@@ -2,7 +2,7 @@
 
 ## v2 Beta：Embedded 与 External
 
-v2 Beta 的完整模式不等同于 1.x 的单 Manager 部署。内置官方 CPA 固定为 **`v8.0.55`**；External 目标最低要求 **`v8.0.55`**，仍需通过实际资格检查。1.x 直升基线是精确的 **`v1.14.10`**，见 [升级与回滚](../operations/update.md)。
+v2 Beta 的完整模式不等同于 1.x 的单 Manager 部署。v2 仅支持 **CPA v8**（拒绝低于 v8 的版本，也不承诺未来主版本）：内置官方 CPA 固定为 **`v8.0.55`**；External 目标要求 CPA v8 且最低为 **`v8.0.55`**，仍需通过实际资格检查。1.x 直升基线是精确的 **`v1.14.10`**，且正向 Managed 升级来源（`upgrade cpa-import`）在停机导入前也须已升级到 CPA v8（不仅目标为 v8），见 [升级与回滚](../operations/update.md)。
 
 | 模式 | 谁运行 CPA | CPAMP 边界 |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ v2 Beta 的完整模式不等同于 1.x 的单 Manager 部署。内置官方 CPA
 
 **External** 安装先验证连接与 Management Key，配置界面的支持范围不等于获得宿主机写入/生命周期权限。规则写入无独占窗口时保持只读；可写标量按实际能力处理。使用量统计需要管理员显式确认，未确认不会自动改写外部 CPA。外部 CPA 仍由操作者负责升级、TLS/网络、配置/OAuth 凭证备份及可用性；客户端继续使用外部 CPA 的实际入口，不因 Manager 安装完成而自动改道。
 
-外部 Management Key 轮换后，用面板重新绑定并证明当前连接；已被 CPA 拒绝的凭证不应反复重试。Manager 的 `data.key` 与加密数据库必须成套保留。Adopt 的资格拒绝或未完成迁移不是 External 自动降级许可；按向导报告处理，不以更换环境变量或手改记录代替证明。
+外部 Management Key 轮换后，用面板重新绑定并证明当前连接；已被 CPA 拒绝的凭证不应反复重试。Manager 的 `data.key` 与加密数据库必须成套保留。公开 Fresh 安装向导的 **Adopt** 仅接纳网络中既有的 CPA v8（`network_existing`），仍拒绝 `legacy_managed` 来源（编译期内部资格不代表在公开 Fresh 入口开放该类别；1.x 托管 CPA 只能走离线 [升级 `cpa-import`](../operations/update.md)）。Adopt 的资格拒绝或未完成迁移不是 External 自动降级许可；按向导报告处理，不以更换环境变量或手改记录代替证明。
 
 v2 Beta 完整模式的浏览器入口是安装或升级时提交的**控制入口前缀（Control Base Path）**（新安装不再默认 `/console`，而是默认预填 16 位加密随机前缀，支持独立自定义或重新随机；此前已提交 `/console` 的旧实例继续保留 `/console`），前端 API 为 `<控制前缀>/api/v2/*`。以向导完成页“登录并进入 CPAMP”或升级确认前缀为准；路径不能与 `/v1`、`/v1beta`、`/models`、`/management.html`、`/.well-known` 等保留路径冲突。**无论全新安装还是从 1.x 离线升级完成的 v2 实例，都不再提供 `/management.html` 或根路径 `/` 控制台**。Embedded 的 `8317` 与 `9081` 只在容器内，不要另外公开。
 

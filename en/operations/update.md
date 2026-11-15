@@ -3,7 +3,7 @@
 ## v2 Beta: upgrade from 1.x, not an in-place image change
 
 ::: warning Exact baseline and stop conditions
-The minimum direct upgrade version is **`v1.14.10`**; the current CLI accepts only that exact declaration, not every later 1.x release automatically. For `<= v1.14.9`, first upgrade using the original deployment method to `v1.14.10`, verify it, then stop it. Merely changing `--source-version` is not an upgrade. Target CPA requires at least **`v8.0.55`** (Embedded pins that version). Version differences, unknown/newer schemas, a busy source, evidence mismatches, or history differences require operator action; never edit SQLite markers to proceed.
+The minimum direct upgrade version is **`v1.14.10`**; the current CLI accepts only that exact declaration, not every later 1.x release automatically. For `<= v1.14.9`, first upgrade using the original deployment method to `v1.14.10`, verify it, then stop it. Merely changing `--source-version` is not an upgrade. v2 supports **CPA v8** only (releases below v8 are rejected, and future major versions are not promised): Embedded pins official **`v8.0.55`**; External requires CPA v8 at **`v8.0.55`** or newer within v8 plus actual qualification; and **Managed positive upgrade sources (`cpa-import`) must also already run CPA v8** (if the 1.x stack's managed CPA is below `8.0.0`, upgrade CPA inside the 1.x stack to CPA v8 and verify it before stopping—not only the v2 destination). Version differences, unknown/newer schemas, a busy source, evidence mismatches, or history differences require operator action; never edit SQLite markers to proceed.
 :::
 
 1. Prepare `docker-compose.yml` in a dedicated directory following [v2 Docker Installation](../deployment/docker.md): use the single service `cpa-manager-plus`, the single volume `cpamp-data:/data` (keeping `stop_grace_period: 150s`, at least `CPAMP_DRAIN_TIMEOUT` + `60s`), and pin `seakee/cpa-manager-plus` to an exact Beta tag + digest (`slim` such as `2.0.0-beta.1@sha256:<digest>`, or `full` such as `2.0.0-beta.1-full@sha256:<digest>` for offline/bundled CPA; `:latest`, `:preview`, `:1`, and `:1.14` stay on 1.x Stable during Beta, and v2 image tags have no `v` prefix). Verify the matching prerelease notes and `checksums.txt`; `releases/latest` and the installer remain 1.x Stable.
@@ -54,7 +54,7 @@ Continue only after each step succeeds. `run` performs backup/copy-in, not the c
 
 ### Finish CPA connection and final verification
 
-**External path**: the CPA operator independently upgrades/configures CPA to at least `v8.0.55` and makes it reachable from the CLI container. Put the real Management Key in a private host file `upgrade-secrets/cpa-management-key`, not a command argument. Replace the example URL; if the external CPA URL or Management Key changed compared with the 1.x source, also run `store-cpa-connection` once before `verify`:
+**External path**: the CPA operator independently upgrades/configures the external CPA to **CPA v8** at `v8.0.55` or newer within v8 (passing actual qualification; releases below v8 are refused with `external_cpa_version_unsupported`, and future major versions are not promised) and makes it reachable from the CLI container. Put the real Management Key in a private host file `upgrade-secrets/cpa-management-key`, not a command argument. Replace the example URL; if the external CPA URL or Management Key changed compared with the 1.x source, also run `store-cpa-connection` once before `verify`:
 
 ```bash
 upgrade_cli external-connect --target /data \
@@ -77,7 +77,7 @@ docker compose up -d
 
 Run the final `fix_manager_ownership` and `docker compose up -d` only after connection, identity, model surface, and reconciliation pass and the persisted stage is `complete`. External upgrades take `--control-base-path` only (do not pass `--inference-base-path` or `--shared-entry`, which fail closed with `external_inference_prefix_forbidden`), and clients keep calling the External CPA's actual URL directly. If the version header is absent, `external-connect --cpa-version` only declares the actual CPA version; it does not turn v7 into v8. After rotating the key, use `--reprove` at the same URL to prove it again rather than repeatedly presenting rejected credentials.
 
-**Managed path**: import the old CPA configuration/credentials and prove the destination against the in-container Runtime Supervisor (`127.0.0.1:9081`); do not use `external-connect` against an internal address instead. In the single image, an unfinished Upgrade record keeps `cpa-manager-plus` on the read-only Upgrade surface with the SQLite write lock released while `cpamp-launcher` runs Runtime Supervisor and Ingress (isolate public client traffic at the host firewall or reverse proxy until acceptance). Run `fix_manager_ownership` first, then start the service with a temporary Compose override mounting the 1.x Manager source, old CPA directory, and real CPA auth directory read-only (paths/source version must come from the old deployment, and plugin choice must be explicit):
+**Managed path**: import the old CPA configuration/credentials and prove the destination against the in-container Runtime Supervisor (`127.0.0.1:9081`); do not use `external-connect` against an internal address instead. **Source CPA version gate**: the stopped 1.x managed CPA source must itself already be **CPA v8** (`8.0.0` or newer within major 8, such as `v8.0.55`). Any declared or stack-detected (`compose.yaml` / `.env` `CPA_IMAGE`) CPA release `< 8.0.0` or outside major 8 is refused with `upgrade_cpa_version_unsupported` before staging or writing anything (`--cpa-version` cannot override a `< 8` stack image tag; CPA v8 still loads legacy unversioned `config.yaml` files without `config-version: 8`, and moving tags, digests, or unresolvable references require passing the exact CPA v8 release via `--cpa-version` or fail with `upgrade_cpa_version_required`). `cpa-import` binds the destination under its compiled upgrade qualification without promoting it into a public Fresh installation record (public Fresh Adopt still refuses `legacy_managed`). In the single image, an unfinished Upgrade record keeps `cpa-manager-plus` on the read-only Upgrade surface with the SQLite write lock released while `cpamp-launcher` runs Runtime Supervisor and Ingress (isolate public client traffic at the host firewall or reverse proxy until acceptance). Run `fix_manager_ownership` first, then start the service with a temporary Compose override mounting the 1.x Manager source, old CPA directory, and real CPA auth directory read-only (paths/source CPA v8 version must come from the old deployment, and plugin choice must be explicit):
 
 ```text
 fix_manager_ownership
@@ -101,7 +101,7 @@ docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:
   cpa-manager-plus cpa-manager-plus upgrade cpa-import \
   --legacy <original-LEGACY_ROOT> --target /data \
   --cpa-dir /legacy-cpa --cpa-auth-dir /legacy-cpa-auth \
-  --cpa-version <actual-source-CPA-version> --plugins false --json
+  --cpa-version <actual-source-CPA-v8-version-e.g.-8.0.55> --plugins false --json
 docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
   -e CPAMP_RUNTIME_URL=http://127.0.0.1:9081 \
   -e CPAMP_RUNTIME_TOKEN_FILE=/data/runtime-secret/token \
@@ -178,6 +178,7 @@ linux/amd64 Native uses the matching package's `bin/cpa-manager-plus upgrade ...
 | `1` | Blocked/refused/acknowledgement required: read the report and stop automation |
 | `2` | Usage, environment, or retryable error: resolve the cause before retry |
 | `upgrade_source_version_unsupported` / `upgrade_source_version_undeclared` | Check the actual release and exact `v1.14.10` declaration |
+| `upgrade_cpa_version_unsupported` / `upgrade_cpa_version_required` / `external_cpa_version_unsupported` | Managed source or External CPA is below v8 (or outside major 8), or lacks an exact CPA v8 version declaration: upgrade CPA to CPA v8 first (inside the 1.x stack before stopping for Managed `cpa-import`; CPA v8 at `v8.0.55` or newer with qualification for External) and pass the exact `--cpa-version` when required |
 | `upgrade_source_busy` / `upgrade_store_locked` | Stop the actual source/target Manager; do not remove lock files to proceed |
 | `upgrade_source_changed` | Source is changing: stop all writers and reassess source/backup |
 | `upgrade_rollback_image_unpinned` / `upgrade_rollback_volume_unbound` | Provide the exact old image and original volume mapping, not a new empty volume |

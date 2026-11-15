@@ -272,7 +272,7 @@ RESP mode must directly reach the CPA API port. It cannot pass through a normal 
 USAGE_COLLECTOR_MODE=auto
 ```
 
-Use CPA `v6.10.8+` for the HTTP usage queue, or CPA `v7.1.39+` for the current recommended metadata set.
+On 1.x Stable, use CPA `v6.10.8+` for the HTTP usage queue or the 1.x historical recommendation `v7.1.39+`; v2 Beta supports CPA v8 only (Embedded pins `v8.0.55`, External requires CPA v8 at `v8.0.55` or newer within v8 plus actual qualification, rejecting `< 8` without promising future major versions).
 
 If you must use RESP, set CPA URL to a direct address:
 

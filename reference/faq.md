@@ -272,7 +272,7 @@ RESP 模式必须直连 CPA API 端口，不能穿过普通 HTTP 反代。推荐
 USAGE_COLLECTOR_MODE=auto
 ```
 
-使用 CPA `v6.10.8+` 的 HTTP 用量队列，或使用当前推荐的 CPA `v7.1.39+`。
+1.x Stable 可使用 CPA `v6.10.8+` 的 HTTP 用量队列或 1.x 历史推荐的 CPA `v7.1.39+`；v2 Beta 仅支持 CPA v8（Embedded 固定 `v8.0.55`，External 要求 CPA v8 且最低 `v8.0.55` 并通过真实资格检查，拒绝 `< 8` 且不承诺未来主版本）。
 
 如果必须使用 RESP，CPA URL 应该是直连地址：
 

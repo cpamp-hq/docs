@@ -3,7 +3,7 @@
 ## v2 Beta：从 1.x 升级，不是原地换镜像
 
 ::: warning 精确基线与停止条件
-最低直接升级版本为 **`v1.14.10`**，当前 CLI 只接受这个精确声明，不代表所有更高 1.x 都自动合格。`<= v1.14.9` 必须先按原部署方式升级到 `v1.14.10`，验证正常后再停机；不要仅把 `--source-version` 改为该值。目标 CPA 最低 **`v8.0.55`**（Embedded 固定为该版本）。版本不符、未知/更新的 schema、源忙碌、证据失配或历史差异都必须按报告处理，不能修改 SQLite 标记来继续。
+最低直接升级版本为 **`v1.14.10`**，当前 CLI 只接受这个精确声明，不代表所有更高 1.x 都自动合格。`<= v1.14.9` 必须先按原部署方式升级到 `v1.14.10`，验证正常后再停机；不要仅把 `--source-version` 改为该值。v2 仅支持 **CPA v8**（拒绝低于 v8 的版本，也不承诺未来主版本）：Embedded 固定为官方 **`v8.0.55`**；External 要求 CPA v8 且最低 **`v8.0.55`** 并通过真实资格检查；**Managed 正向升级来源（`cpa-import`）也须先为 CPA v8**（若 1.x 栈内托管 CPA 仍低于 `8.0.0`，须先在 1.x 栈内将其升级到 CPA v8 并验证正常后再停机导入，不仅目标为 v8）。版本不符、未知/更新的 schema、源忙碌、证据失配或历史差异都必须按报告处理，不能修改 SQLite 标记来继续。
 :::
 
 1. 按 [v2 Docker 安装](../deployment/docker.md) 准备独立目录中的 `docker-compose.yml`：使用单一服务 `cpa-manager-plus`、单一数据卷 `cpamp-data:/data`（保持 `stop_grace_period: 150s`，至少为 `CPAMP_DRAIN_TIMEOUT` + `60s`），并将 `seakee/cpa-manager-plus` 固定到精确 Beta 标签与摘要（`slim` 如 `2.0.0-beta.1@sha256:<digest>`，离线/预置 CPA 的 `full` 如 `2.0.0-beta.1-full@sha256:<digest>`；Beta 期间 `:latest`、`:preview`、`:1`、`:1.14` 仍指向 1.x Stable，v2 镜像标签不带 `v` 前缀）。同时核对对应预发布说明与 `checksums.txt`；`releases/latest` 与安装脚本仍属于 1.x Stable。
@@ -54,7 +54,7 @@ upgrade_cli reconcile --legacy "$LEGACY_ROOT" \
 
 ### 完成 CPA 连接与最终核验
 
-**External 路径**：由 CPA 操作者独立升级/配置 CPA 至至少 `v8.0.55`，使其可从 CLI 容器访问。把真实 Management Key 写入宿主机私有文件 `upgrade-secrets/cpa-management-key`（不要放入命令行）。以下 URL 为示例，必须替换；若目标外部 CPA 的 URL 或 Management Key 相比原 1.x 已变更，还需先执行一次 `store-cpa-connection` 同步目标库连接：
+**External 路径**：由 CPA 操作者独立将外部 CPA 升级/配置至 **CPA v8** 且最低 `v8.0.55`（须通过真实资格检查；低于 v8 会以 `external_cpa_version_unsupported` 拒绝，也不承诺未来主版本），使其可从 CLI 容器访问。把真实 Management Key 写入宿主机私有文件 `upgrade-secrets/cpa-management-key`（不要放入命令行）。以下 URL 为示例，必须替换；若目标外部 CPA 的 URL 或 Management Key 相比原 1.x 已变更，还需先执行一次 `store-cpa-connection` 同步目标库连接：
 
 ```bash
 upgrade_cli external-connect --target /data \
@@ -77,7 +77,7 @@ docker compose up -d
 
 只有真实连接、身份、模型面及对账证据通过且持久化阶段为 `complete` 才可运行最后的 `fix_manager_ownership` 与 `docker compose up -d` 启动正常产品。External 升级只传 `--control-base-path`（不要传 `--inference-base-path` 或 `--shared-entry`，否则会返回 `external_inference_prefix_forbidden`），客户端继续直连外部 CPA 真实地址。缺版本 header 时，`external-connect --cpa-version` 仅用于如实声明实际 CPA 版本，不会把 v7 变成 v8；密钥轮换后使用同一 URL 的 `--reprove` 重新证明，不要反复提交已拒绝凭证。
 
-**Managed 路径**：还需导入旧 CPA 的配置/凭证并向容器内实时运行的 Runtime Supervisor（`127.0.0.1:9081`）证明目标，不是用 `external-connect` 连接内部地址。在单镜像中，未完成的升级记录会让容器内 `cpa-manager-plus` 停留在只读升级面并释放 SQLite 写锁，同时由 `cpamp-launcher` 启动 Runtime Supervisor 与 Ingress（升级完成前请在防火墙或反向代理隔离公开业务流量）。先执行 `fix_manager_ownership`，再用临时覆盖文件把原 1.x 数据卷、旧 CPA 目录及其真实 auth 目录只读挂入容器（路径/源 CPA 版本来自实际旧部署，插件选择必须显式给出）：
+**Managed 路径**：还需导入旧 CPA 的配置/凭证并向容器内实时运行的 Runtime Supervisor（`127.0.0.1:9081`）证明目标，不是用 `external-connect` 连接内部地址。**来源 CPA 版本门禁**：待导入的 1.x 托管 CPA 自身必须已是 **CPA v8**（`8.0.0` 起的 v8 主版本内版本，例如 `v8.0.55`）；任何显式声明或从旧栈 `compose.yaml` / `.env`（`CPA_IMAGE`）检测到的 `< 8.0.0` 或非 v8 主版本都会在创建目标或写入前以 `upgrade_cpa_version_unsupported` 拒绝（传入 `--cpa-version` 也不能覆盖栈内 `< 8` 的旧镜像声明；CPA v8 仍可加载无 `config-version: 8` 的旧语法 `config.yaml`，若旧栈使用浮动标签、摘要或无法解析版本引用，须通过 `--cpa-version` 如实提供精确 CPA v8 版本，否则以 `upgrade_cpa_version_required` 拒绝）。`cpa-import` 在编译期升级资格下连接目标 CPA，不会把它提升为公开 Fresh 安装记录（公开 Fresh 向导的 Adopt 仍拒绝 `legacy_managed`）。在单镜像中，未完成的升级记录会让容器内 `cpa-manager-plus` 停留在只读升级面并释放 SQLite 写锁，同时由 `cpamp-launcher` 启动 Runtime Supervisor 与 Ingress（升级完成前请在防火墙或反向代理隔离公开业务流量）。先执行 `fix_manager_ownership`，再用临时覆盖文件把原 1.x 数据卷、旧 CPA 目录及其真实 auth 目录只读挂入容器（路径/源 CPA v8 版本来自实际旧部署，插件选择必须显式给出）：
 
 ```text
 fix_manager_ownership
@@ -101,7 +101,7 @@ docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:
   cpa-manager-plus cpa-manager-plus upgrade cpa-import \
   --legacy <原LEGACY_ROOT> --target /data \
   --cpa-dir /legacy-cpa --cpa-auth-dir /legacy-cpa-auth \
-  --cpa-version <实际源CPA版本> --plugins false --json
+  --cpa-version <实际源CPA-v8版本，如8.0.55> --plugins false --json
 docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
   -e CPAMP_RUNTIME_URL=http://127.0.0.1:9081 \
   -e CPAMP_RUNTIME_TOKEN_FILE=/data/runtime-secret/token \
@@ -178,6 +178,7 @@ linux/amd64 Native 使用同版包的 `bin/cpa-manager-plus upgrade ...`，但**
 | `1` | 阻塞/拒绝/待确认：读报告，停止自动推进 |
 | `2` | 用法、环境或可重试错误：排除原因后再重试 |
 | `upgrade_source_version_unsupported` / `upgrade_source_version_undeclared` | 核对实际源版本和精确 `v1.14.10` 声明 |
+| `upgrade_cpa_version_unsupported` / `upgrade_cpa_version_required` / `external_cpa_version_unsupported` | Managed 源或外部 CPA 低于 v8（或不在 CPA v8 主版本内），或缺少精确 CPA v8 版本声明：先将 CPA 升级到 CPA v8（Managed 须先在 1.x 栈内升级后再停机导入；External 要求 CPA v8 且最低 `v8.0.55` 并通过资格检查），必要时如实传入精确 `--cpa-version` |
 | `upgrade_source_busy` / `upgrade_store_locked` | 停止真实源/目标 Manager，不能移除锁文件规避 |
 | `upgrade_source_changed` | 源仍在变化；停止所有写入，重新评估源和备份 |
 | `upgrade_rollback_image_unpinned` / `upgrade_rollback_volume_unbound` | 提供精确旧镜像和原卷映射，不能改用新空卷 |

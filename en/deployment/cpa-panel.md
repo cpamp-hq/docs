@@ -36,7 +36,7 @@ Browser
 
 ## Requirements
 
-- The 1.x Stable panel retains its existing CPA compatibility range. v2 Beta panel acceptance targets pinned official CPA `v8.0.55`, and External Full Mode also requires at least `v8.0.55`; older README recommendations do not prove Beta qualification.
+- The 1.x Stable panel retains its historical CPA compatibility range. v2 Beta supports CPA v8 only (releases below v8 are rejected, and future major versions are not promised): lightweight panel acceptance targets pinned official CPA `v8.0.55`, and External Full Mode requires CPA v8 at `v8.0.55` or newer within v8 plus actual qualification; 1.x CPA recommendations do not prove Beta qualification.
 - Configure `remote-management.secret-key`; otherwise the Management API and panel are disabled.
 - Keep `remote-management.disable-control-panel` set to `false`.
 - CPA must be able to reach GitHub Releases, directly or through its configured proxy, to download `management.html`.

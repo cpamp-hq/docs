@@ -105,13 +105,16 @@ setup 后：
 
 请求监控依赖 CPA 用量发布和 CPA 用量队列。
 
-最低要求：
+- **v2 Beta**：仅支持 **CPA v8**（拒绝低于 v8 的版本，也不承诺未来主版本）。Embedded 官方 CPA 固定为 **`v8.0.55`**；External 要求 CPA v8 且最低 **`v8.0.55`** 并通过真实资格检查；正向 Managed 升级来源（`upgrade cpa-import`）也须已为 CPA v8。
+- **1.x Stable**（仅限 1.x 历史兼容范围）：
+
+1.x Stable 最低要求：
 
 ```text
 CPA v6.10.8+ 支持 HTTP 用量队列
 ```
 
-推荐：
+1.x Stable 推荐：
 
 ```text
 CPA v7.1.39+

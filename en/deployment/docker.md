@@ -62,7 +62,7 @@ docker compose exec -T -u 10002:10002 cpa-manager-plus cpa-manager-plus initiali
 In the browser, set and save the CPAMP Admin Key, then configure access prefixes and the installation mode (new v2 installations no longer default to a fixed `/console` path):
 
 - **Control Base Path** and **Managed Inference Base Path**: the wizard pre-fills **separate 16-character CSPRNG prefixes** (for example `/<16-char-random>`) and lets you customize or randomize each independently. Keeping them independent is the default and recommended posture so control traffic and model traffic stay isolated; sharing one prefix requires explicitly enabling the shared-entry opt-in (under shared entry, Ingress forwards only supported model protocol subpaths while keeping `/v0`, `/v8`, `/management.html`, health, and OAuth callbacks blocked).
-- **Installation modes**: choose **New Managed** (new managed CPA; on `slim`, the wizard prepares the pinned CPA engine before Managed setup completes), **Adopt** (qualify and migrate an existing CPA; on `slim`, the wizard also prepares the pinned CPA engine first), or **External** (connect to an independently operated CPA, supported on both `full` and `slim`). **External configures only the Control prefix** (no Manager inference prefix or shared entry); clients keep calling the External CPA's actual URL directly. Adopt/External are not unconditional success paths: resolve the wizard's source, version, credential, or evidence refusals and stop if admission fails; do not edit installation records manually. External requires at least CPA `v8.0.55`; see [Runtime Model](../guide/runtime-model.md).
+- **Installation modes**: v2 supports **CPA v8** only (pinned official `v8.0.55` for Managed; releases below v8 are rejected, and future major versions are not promised). Choose **New Managed** (new managed CPA; on `slim`, the wizard prepares the pinned CPA engine before Managed setup completes), **Adopt** (qualify and migrate an existing network CPA v8, `network_existing`; the public Fresh wizard still refuses `legacy_managed` sources, so 1.x managed CPA uses offline [Upgrade `cpa-import`](../operations/update.md); on `slim`, the wizard also prepares the pinned CPA engine first), or **External** (connect to an independently operated CPA, supported on both `full` and `slim`). **External configures only the Control prefix** (no Manager inference prefix or shared entry); clients keep calling the External CPA's actual URL directly. Adopt/External are not unconditional success paths: resolve the wizard's source, version, credential, or evidence refusals and stop if admission fails; do not edit installation records manually. External requires CPA v8 at `v8.0.55` or newer within v8 plus actual qualification; see [Runtime Model](../guide/runtime-model.md).
 - **Existing earlier v2 installations**: an existing v2 instance that already committed `/console` (or another control prefix) keeps it across updates. If an earlier Managed v2 instance has no committed inference prefix yet, signing in at the existing control entry prompts a one-time inference prefix completion dialog (independent custom/random prefix or explicit shared-entry opt-in); until completed, the model gateway stays closed with no fallback to `/` or unprefixed `/v1`. Once committed, prefixes persist across ordinary patches with no generic UI editor or environment-variable second authority.
 
 For New Managed, save the one-time installation Client Key displayed on the completion page (it is not re-emitted on wizard reload; see [Connect Clients](../gateway/clients.md) for the Key Workspace and client rules) and verify a model request through the inference entry (for example OpenAI base `<origin><inference-prefix>/v1`, Claude/Gemini native base `<origin><inference-prefix>`) before sending production traffic. Admin Key, CPA Management Key, and Client Key are strictly separate credentials—never mix them or place plaintext secrets in URLs or logs. A successful process `/health` is not installation completion or Gateway readiness: require wizard completion, committed prefixes, routing verification, and client connectivity.
@@ -104,7 +104,7 @@ Before deployment, confirm:
 - Persistent `/data` storage mounted and backed up.
 - Exactly one CPAMP Manager Server consuming one CPA usage queue.
 
-Recommended CPA version:
+1.x Stable recommended CPA version (1.x Stable historical compatibility only; v2 supports CPA v8 only and rejects `< 8`):
 
 ```text
 v7.1.39+
@@ -340,7 +340,7 @@ When `USAGE_COLLECTOR_MODE=auto`, Manager Server tries these paths in order:
 
 RESP Pub/Sub and RESP pop must connect directly to the CPA API port, usually `8317`. Normal HTTP reverse proxies do not work for RESP. HTTP usage queue can go through an HTTP proxy.
 
-If you see `unsupported RESP prefix 'H'`, the RESP collector is probably connected to an HTTP address. Prefer `auto` or `http`, and confirm CPA is at least `v6.10.8+`.
+If you see `unsupported RESP prefix 'H'`, the RESP collector is probably connected to an HTTP address. Prefer `auto` or `http`, and confirm CPA meets the channel requirement (at least `v6.10.8+` on 1.x Stable; v2 supports CPA v8 only).
 
 :::
 

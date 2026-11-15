@@ -4,6 +4,10 @@ Use this guide when migrating from the old `seakee/cpa-manager` / CPA-Manager pr
 
 If you never used the old `seakee/cpa-manager`, skip this page and use [Quick Start](../guide/getting-started.md).
 
+::: warning This direct migration targets 1.x Stable; reaching v2 Beta is a two-step path
+The direct volume/directory compatibility migration on this page moves legacy `seakee/cpa-manager` into **CPAMP 1.x Stable** (`:18317/management.html`). Never mount an old `cpa-manager` (or 1.x) data volume directly at **v2 Beta** `/data`, and note that public Fresh Adopt refuses `legacy_managed` sources. To move on to **v2 Beta**, first migrate to **1.x Stable `v1.14.10`** here and verify health, upgrade CPA to **CPA v8** (v2 supports CPA v8 only, rejecting `< 8` without promising future major versions: Embedded pins `v8.0.55`, Managed `cpa-import` requires the 1.x managed CPA source to already run CPA v8, and External requires CPA v8 at `v8.0.55` or newer within v8 plus actual qualification), then follow [Upgrade CPAMP](../operations/update.md) for offline copy-in and reconciliation.
+:::
+
 ## Key changes
 
 - The image name changed from `seakee/cpa-manager` to `seakee/cpa-manager-plus`.
@@ -14,7 +18,7 @@ If you never used the old `seakee/cpa-manager`, skip this page and use [Quick St
 
 ## Before migration
 
-1. Check the CPA version: `v7.1.0+` is recommended, and HTTP usage queue needs at least `v6.10.8+`.
+1. Check the CPA version (1.x Stable historical compatibility): 1.x Stable recommends `v7.1.0+`, and HTTP usage queue needs at least `v6.10.8+` (if you plan to continue to v2 Beta afterward, the source or external CPA must be upgraded to CPA v8 as noted above).
 2. Locate the old Manager Server data:
    - Docker volume is commonly `cpa-manager-data`.
    - Host directory mounts usually map to container `/data`.

@@ -89,7 +89,7 @@ remote-management:
 
 Even when both containers are in the same Docker network, CPA usually does not see the request source as `localhost`, so `allow-remote: true` is required.
 
-Recommended CPA version:
+1.x Stable recommended CPA version (1.x Stable historical compatibility only; v2 Beta supports CPA v8 only—pinned `v8.0.55` for Embedded, CPA v8 at `v8.0.55` or newer within v8 plus actual qualification for External—rejecting `< 8` without promising future major versions):
 
 ```text
 v7.1.39+

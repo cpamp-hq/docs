@@ -4,6 +4,10 @@
 
 如果你没有使用过旧 `seakee/cpa-manager`，不需要阅读本页，直接使用[快速开始](../guide/getting-started.md)。
 
+::: warning 本页迁移路径面向 1.x Stable，升级 v2 Beta 须分两步执行
+本页的直接挂卷/目录兼容迁移只把旧 `seakee/cpa-manager` 迁移到 **CPAMP 1.x Stable**（入口 `:18317/management.html`）。切勿将旧 `cpa-manager`（或 1.x）数据卷直接挂到 **v2 Beta** 的 `/data`，公开 Fresh 向导的 Adopt 也拒绝 `legacy_managed` 来源。若最终目标是 **v2 Beta**，请先按本页迁移到 **1.x Stable `v1.14.10`** 并验证运行正常，同时将 CPA 升级到 **CPA v8**（v2 仅支持 CPA v8，拒绝 `< 8` 且不承诺未来主版本：Embedded 固定 `v8.0.55`，Managed `cpa-import` 要求原 1.x 托管 CPA 来源已为 CPA v8，External 要求 CPA v8 且最低 `v8.0.55` 并通过真实资格检查），再按[更新 CPAMP](../operations/update.md) 执行离线 copy-in 与对账。
+:::
+
 ## 关键变化
 
 - 镜像名从 `seakee/cpa-manager` 变为 `seakee/cpa-manager-plus`。
@@ -14,7 +18,7 @@
 
 ## 迁移前检查
 
-1. 确认 CPA 本体版本：推荐 `v7.1.0+`，HTTP 用量队列至少需要 `v6.10.8+`。
+1. 确认 CPA 本体版本（1.x Stable 历史兼容范围）：1.x Stable 推荐 `v7.1.0+`，HTTP 用量队列至少需要 `v6.10.8+`（若后续还需升级到 v2 Beta，则源或外部 CPA 必须升级到 CPA v8，见上方说明）。
 2. 确认旧 Manager Server 数据位置：
    - Docker volume 常见为 `cpa-manager-data`。
    - 宿主机目录挂载通常映射到容器 `/data`。

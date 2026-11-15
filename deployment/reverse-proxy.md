@@ -89,7 +89,7 @@ remote-management:
 
 两个容器即使在同一个 Docker network 内，CPA 看到的访问来源也通常不是 `localhost`，所以 `allow-remote: true` 是必要的。
 
-推荐 CPA 版本：
+1.x Stable 推荐 CPA 版本（仅限 1.x Stable 历史兼容范围；v2 Beta 仅支持 CPA v8，内置固定 `v8.0.55`，External 要求 CPA v8 且最低 `v8.0.55` 并通过真实资格检查，拒绝 `< 8` 且不承诺未来主版本）：
 
 ```text
 v7.1.39+

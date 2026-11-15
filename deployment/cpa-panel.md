@@ -36,7 +36,7 @@ CPAMP 轻量面板由 CPA 直接托管，用 CPA Manager Plus 的界面替换官
 
 ## 前置条件
 
-- 1.x Stable 面板保留原 CPA 兼容范围；v2 Beta 面板按固定官方 CPA `v8.0.55` 验收，External 完整模式最低也要求 `v8.0.55`，不能将旧 README 的 CPA 推荐版本当成 Beta 资格证明。
+- 1.x Stable 面板保留原 CPA 历史兼容范围；v2 Beta 仅支持 CPA v8（拒绝低于 v8 的版本，也不承诺未来主版本）：轻量面板按固定官方 CPA `v8.0.55` 验收，External 完整模式要求 CPA v8 且最低为 `v8.0.55` 并通过真实资格检查，不能将 1.x 的旧 CPA 推荐版本当成 Beta 资格证明。
 - CPA 必须配置 `remote-management.secret-key`，否则 Management API 和面板无法使用。
 - `remote-management.disable-control-panel` 必须为 `false`。
 - CPA 需要能够访问 GitHub Release，或通过它已经配置的代理下载 `management.html`。

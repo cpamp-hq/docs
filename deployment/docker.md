@@ -62,7 +62,7 @@ docker compose exec -T -u 10002:10002 cpa-manager-plus cpa-manager-plus initiali
 在浏览器中先设置并保存 CPAMP Admin Key，再完成访问前缀与安装模式配置（新安装不再使用固定的 `/console` 默认值）：
 
 - **控制入口前缀（Control Base Path）**与 **Managed 推理前缀（Inference Base Path）**：向导默认分别预填互相独立的 **16 位加密随机前缀**（例如 `/<随机16字符>`），支持各自独立自定义或独立重新随机生成。默认推荐保持两套前缀独立，将控制台与模型流量隔离；若确需共用同一前缀，必须显式勾选“共用同一入口”确认项（共用模式下仅放行受支持的模型协议子路径，`/v0`、`/v8`、`/management.html`、健康检查与 OAuth 回调等仍保持阻断）。
-- **安装模式**：选择 **New Managed**（新建托管 CPA；`slim` 镜像会在安装完成前先由向导准备固定版本 CPA 引擎）、**Adopt**（收纳迁移既有 CPA；`slim` 镜像同样会先由向导准备固定版本 CPA 引擎）或 **External**（连接独立维护的外部 CPA，`full` 与 `slim` 均支持）。**External 只设置控制前缀**，不分配推理前缀、也不能共享入口，客户端仍直接连接外部 CPA 的真实地址。Adopt / External 不是无条件成功路径：遇到向导提示的源配置、版本、凭据或证据拒绝时必须按提示修正或中止，不得手改安装记录绕过。External 要求外部 CPA 至少为 `v8.0.55`，详见[运行时模型说明](../guide/runtime-model.md)。
+- **安装模式**：v2 仅支持 **CPA v8**（内置官方固定版本 `v8.0.55`；拒绝低于 v8 的版本，也不承诺未来主版本）。选择 **New Managed**（新建托管 CPA；`slim` 镜像会在安装完成前先由向导准备固定版本 CPA 引擎）、**Adopt**（收纳迁移网络中既有的 CPA v8，即 `network_existing`；公开 Fresh 向导仍拒绝 `legacy_managed` 来源，1.x 托管 CPA 须走离线[升级 `cpa-import`](../operations/update.md)；`slim` 镜像同样会先由向导准备固定版本 CPA 引擎）或 **External**（连接独立维护的外部 CPA，`full` 与 `slim` 均支持）。**External 只设置控制前缀**，不分配推理前缀、也不能共享入口，客户端仍直接连接外部 CPA 的真实地址。Adopt / External 不是无条件成功路径：遇到向导提示的源配置、版本、凭据或证据拒绝时必须按提示修正或中止，不得手改安装记录绕过。External 要求外部 CPA 为 CPA v8 且最低 `v8.0.55`，并须通过真实资格检查，详见[运行时模型说明](../guide/runtime-model.md)。
 - **既有的旧版 v2 实例**：先前版本已经提交过 `/console` 等控制前缀的实例，升级后会继续保留既有控制前缀；若是尚未设置推理前缀的旧 Managed 实例，管理员登录现有控制入口后会触发一次性推理前缀补全引导（可自定义/随机独立前缀，或显式勾选与控制入口共用），补全前网关保持关闭且不回退到根路径 `/` 或无前缀 `/v1`。访问前缀一经提交即固化保存在本地加密数据库，普通补丁更新会原样保留，不提供通用页面修改入口或环境变量覆盖。
 
 New Managed 完成后会在完成页**一次性展示**安装生成的首把 Client Key（关闭或刷新向导后不再重发；密钥工作区及接入规则见[接入客户端](../gateway/clients.md)），随后应通过统一推理入口（例如 OpenAI 基础地址 `<origin><inference-prefix>/v1`，Claude/Gemini 原生基础地址 `<origin><inference-prefix>`）完成首次模型请求验证再接入业务流量。Admin Key、CPA Management Key 与 Client Key 职责严格分离，不可混用，也不要把明文密钥放入 URL 或日志。进程 `/health` 返回 200 不代表安装完成或网关已放行，必须以向导完成、前缀提交、路由校验与客户端实测为准。
@@ -104,7 +104,7 @@ http://<host>:18317/management.html
 - 挂载并备份持久化 `/data`。
 - 同一个 CPA 用量队列只由一个 CPAMP Manager Server 消费。
 
-推荐 CPA 版本：
+1.x Stable 推荐 CPA 版本（仅限 1.x Stable 历史兼容范围；v2 仅支持 CPA v8，拒绝 `< 8`）：
 
 ```text
 v7.1.39+
@@ -340,7 +340,7 @@ volumes:
 
 RESP Pub/Sub 和 RESP pop 需要直接连接 CPA API 端口，通常是 `8317`。普通 HTTP 反向代理不适用于 RESP。HTTP 用量队列可以经过 HTTP proxy。
 
-如果看到 `unsupported RESP prefix 'H'`，通常表示 RESP 采集器连到了 HTTP 地址。优先改用 `auto` 或 `http`，并确认 CPA 版本至少为 `v6.10.8+`。
+如果看到 `unsupported RESP prefix 'H'`，通常表示 RESP 采集器连到了 HTTP 地址。优先改用 `auto` 或 `http`，并确认 CPA 版本满足要求（1.x Stable 至少为 `v6.10.8+`；v2 仅支持 CPA v8）。
 
 :::
 

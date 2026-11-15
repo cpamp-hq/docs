@@ -1,6 +1,6 @@
 # 重置管理员密钥
 
-忘记 CPAMP 管理员密钥时，在停机状态下使用 `reset-admin-key` 重置 Manager 的管理员登录凭证。该命令只替换 SQLite 中的 `settings.admin_credential_v1`（盐与 HMAC 摘要），不会恢复丢失的 `/data/data.key`，不会修改 `/data/runtime` 或 `/data/runtime-secret/token`，也不会轮换 CPA Management Key / Client Key、重新认领全新安装或完成未结束的升级。全新安装请使用 [Host initialize 与 Handoff](../deployment/docker.md)，升级中的拒绝按 [升级与回滚](./update.md)（精确基线 `v1.14.10`、目标 CPA 最低 `v8.0.55`）处理。
+忘记 CPAMP 管理员密钥时，在停机状态下使用 `reset-admin-key` 重置 Manager 的管理员登录凭证。该命令只替换 SQLite 中的 `settings.admin_credential_v1`（盐与 HMAC 摘要），不会恢复丢失的 `/data/data.key`，不会修改 `/data/runtime` 或 `/data/runtime-secret/token`，也不会轮换 CPA Management Key / Client Key、重新认领全新安装或完成未结束的升级。全新安装请使用 [Host initialize 与 Handoff](../deployment/docker.md)，升级中的拒绝按 [升级与回滚](./update.md)（精确基线 `v1.14.10`；v2 仅支持 CPA v8：Embedded 固定 `v8.0.55`，External 要求 CPA v8 且最低 `v8.0.55` 并通过资格检查，Managed 升级来源也须先为 CPA v8）处理。
 
 ## 执行前检查
 

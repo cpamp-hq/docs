@@ -1,6 +1,6 @@
 # Reset Admin Key
 
-Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize and Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade and Rollback](./update.md) (exact baseline `v1.14.10`, minimum target CPA `v8.0.55`).
+Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize and Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade and Rollback](./update.md) (exact baseline `v1.14.10`; v2 supports CPA v8 only: Embedded pins `v8.0.55`, External requires CPA v8 at `v8.0.55` or newer with qualification, and Managed upgrade sources must also already run CPA v8).
 
 ## Before you run it
 

@@ -107,13 +107,16 @@ After setup:
 
 Request monitoring requires CPA usage publishing and the CPA usage queue.
 
-Minimum:
+- **v2 Beta**: supports **CPA v8** only (releases below v8 are rejected, and future major versions are not promised). Embedded official CPA is pinned to **`v8.0.55`**; External requires CPA v8 at **`v8.0.55`** or newer within v8 plus actual qualification; positive Managed upgrade sources (`upgrade cpa-import`) must also already run CPA v8.
+- **1.x Stable** (1.x historical compatibility only):
+
+1.x Stable minimum:
 
 ```text
 CPA v6.10.8+ for HTTP usage queue
 ```
 
-Recommended:
+1.x Stable recommended:
 
 ```text
 CPA v7.1.39+

@@ -13,7 +13,7 @@
 | **全新安装（Docker 推荐）** | 使用单一镜像 `seakee/cpa-manager-plus` 并按 `<tag>@sha256:<digest>` 固定摘要（`slim` 标签如 `2.0.0-beta.1` 在向导中从 CDN / GitHub Release 或本地上传获取 CPA，`full` 标签如 `2.0.0-beta.1-full` 内置 CPA；Beta 期间 `:latest`、`:preview`、`:1`、`:1.14` 保持 1.x Stable，v2 镜像标签不带 `v` 前缀），通过 `initialize` Handoff 在浏览器完成安装并设定控制/推理前缀（默认预填独立 16 位随机前缀而不再固定 `/console`；`:18317/management.html` 在 v2 返回 404）。见 [v2 Docker 安装](./docker.md)。 |
 | **无 Docker 的 Linux x86_64 主机** | 使用 `cpa-manager-plus-native-v2_<ver>_linux_amd64.tar.gz` 原生归档（不提供 v2 的 macOS、Windows 或 `linux/arm64` 原生包）。见 [原生包部署](./native.md)。 |
 | **仅在现有 CPA 上试用轻量面板** | 从已发布的 v2 Beta 预发布手动下载单文件 `management.html` 并关闭自动更新。见 [CPAMP 轻量面板](./cpa-panel.md#在-cpa-上试用-v2-beta-面板)。 |
-| **从已有 1.x 升级到 v2 Beta** | 先将 1.x 实例升级到精确基线 **`v1.14.10`**（目标 CPA 最低 **`v8.0.55`**），再为 v2 挂载全新空 `/data` 卷并将原 1.x 卷只读挂到 `/legacy:ro`，执行离线预检、copy-in 与四域对账。见 [升级与回滚](../operations/update.md)。 |
+| **从已有 1.x 升级到 v2 Beta** | 先将 1.x 实例升级到精确基线 **`v1.14.10`**；v2 仅支持 **CPA v8**（拒绝 `< 8` 且不承诺未来主版本：Embedded 固定 **`v8.0.55`**，External 要求 CPA v8 且最低 **`v8.0.55`** 并通过真实资格检查，Managed 升级来源在停机执行 `cpa-import` 前也须先在 1.x 栈内升级到 CPA v8），再为 v2 挂载全新空 `/data` 卷并将原 1.x 卷只读挂到 `/legacy:ro`，执行离线预检、copy-in 与四域对账。见 [升级与回滚](../operations/update.md)。 |
 
 v2 Beta 无论全新安装还是从 1.x 离线升级完成后，均打开安装/升级时提交的**控制入口前缀**（此前已提交 `/console` 的旧实例继续保留 `/console`），不再提供 `/management.html` 或根路径 `/` 控制台。Ingress 路由隔离与故障关闭规则见 [运行模型](../guide/runtime-model.md)。单镜像标签是部署示例，不代表当前发布脚本已完成发布；实际可用资产及平台限制见 [发布资产与门禁](../reference/releases.md)。
 
