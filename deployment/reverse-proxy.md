@@ -155,27 +155,56 @@ services:
 
 ## Nginx HTTP 示例
 
-以下完整拆分示例面向 **1.x Stable** 的 `/management.html` 面板。若部署 **v2 Beta**，请勿复用这里的 `location = / { return 302 /management.html; }` 或 1.x 路径拆分——直接在 `server {}` 中保留 SSE 与 WebSocket 转发头，将完整路径透传到 `http://cpamp`（`18317`），不要在 `proxy_pass` 末尾加路径改写或用 `rewrite` 剥离前缀：
+以下完整拆分示例面向 **1.x Stable** 的 `/management.html` 面板。若部署 **v2 Beta**，请勿复用这里的 `location = / { return 302 /management.html; }` 或 1.x 路径拆分——下面是一份可直接作为最小 `nginx.conf` 使用的 **v2 Beta 自包含完整示例**（`events` + `http` 作用域内的 `map $http_upgrade $connection_upgrade`、`upstream cpamp` 与 `server` 均在同一配置中定义，不会出现未定义变量 `$connection_upgrade`；若采用 `conf.d/*.conf` 拆分目录，请把 `map` 留在 `nginx.conf` 的 `http {}` 块，并把 `upstream` 与 `server` 放入 `conf.d/`；若 Nginx 与 CPAMP 在同一 Docker Compose 网络中，将 `127.0.0.1:18317` 改为 `cpa-manager-plus:18317`）：
 
 ```nginx
-# v2 Beta 反代关键片段（不剥离前缀、不做根路径跳转/回退、支持 SSE 与 WebSocket）
-location / {
-    proxy_http_version 1.1;
-    proxy_buffering off;
-    proxy_cache off;
-    proxy_read_timeout 3600s;
-    proxy_send_timeout 3600s;
-    proxy_set_header Host              $host;
-    proxy_set_header X-Real-IP         $remote_addr;
-    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header Upgrade           $http_upgrade;
-    proxy_set_header Connection        $connection_upgrade;
-    proxy_pass http://cpamp; # 不要写成 http://cpamp/; 保持原始 URI 完整透传
+# v2 Beta 最小完整 nginx.conf（map 位于 http 作用域，支持 SSE 与 WebSocket，保留原始编码 URI）
+events {
+    worker_connections 1024;
+}
+
+http {
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    upstream cpamp {
+        server 127.0.0.1:18317; # Docker Compose 同网络部署请改为 cpa-manager-plus:18317
+    }
+
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        client_max_body_size 64m;
+        merge_slashes off; # 保留重复斜杠与原始编码 URI，交由 CPAMP Ingress 严格校验
+
+        location / {
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+            proxy_set_header Host              $http_host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade           $http_upgrade;
+            proxy_set_header Connection        $connection_upgrade;
+            proxy_pass http://cpamp; # 保持无 URI 形式（不要加末尾 /，也不要用 rewrite），确保原始编码 URI 完整透传
+        }
+    }
 }
 ```
 
-CPAMP Ingress 会自行校验并处理 `<control-prefix>`、`<inference-prefix>` 与允许的引导/健康检查路径，并自动拒绝无前缀 `/v1/*`、`/management.html`、`/v8/management/*` 等未授权路径。如果你在反代层做了额外路径白名单，必须同时完整放行 `<control-prefix>`、`<inference-prefix>`（含其下的 SSE 与 WebSocket 子路径，如 `/v1/responses`、`/openai/v1/...`、`/backend-api/codex/...`）、首次认领阶段的 `/.well-known/cpamp-bootstrap`（完成安装后可关闭）以及 `/health`、`/v0/resource/plugins/`，且同样禁止剥离前缀。External 模式下，模型流量直接走外部 CPA 自己的域名与反代，不经过 CPAMP 的 `18317`。
+关键边界说明：
+
+- **无 URI `proxy_pass` 与原始编码 URI**：`proxy_pass http://cpamp;` 必须保持不带任何 URI/末尾 `/` 的形式，并且不要配合 `rewrite` 或 `$uri` 改写路径，再叠加 `merge_slashes off;` 避免 Nginx 合并 `//` 或先解码再重编码 `%XX`，从而把客户端发送的原始编码 URI 完整透传给 CPAMP Ingress（`18317`）校验与剥离前缀。
+- **SSE 与 WebSocket**：`proxy_http_version 1.1;`、`proxy_buffering off;`、`proxy_request_buffering off;`、`proxy_cache off;`、长超时（`3600s`）以及 `Upgrade` / `Connection $connection_upgrade` 共同保障 `<inference-prefix>` 下的流式 SSE 与 WebSocket（如 `/v1/responses`、`/openai/v1/...`、`/backend-api/codex/...`）稳定工作。
+- **路径与白名单**：CPAMP Ingress 会自行校验 `<control-prefix>`、`<inference-prefix>`、首次认领阶段的 `/.well-known/cpamp-bootstrap`、`/health`、`/v0/resource/plugins/`，并自动拒绝无前缀 `/v1/*`、`/management.html`、`/v8/management/*`。若在反代层追加白名单，也必须完整放行这些前缀与引导/健康检查路径，且严禁剥离前缀。
+- **External 模式边界**：在 External 模式下，CPAMP 不分配 `<inference-prefix>`，也不经 `18317` 代理模型推理流量；这里的反代只服务于 CPAMP 控制面，客户端模型请求直接发往外部 CPA 自己的域名与反代（不要在 CPAMP 虚拟主机下补充无前缀 `/v1/*` 或回退到 `:8317`，若外部 CPA 另有反代也应阻止公网访问 `/v8/management/*`）。
 
 下方是 **1.x Stable** 的 `nginx.conf` 拆分示例：
 

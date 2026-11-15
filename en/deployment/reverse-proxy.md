@@ -155,27 +155,56 @@ If CPA already runs on the host machine, omit the CPA service and point the Ngin
 
 ## Nginx HTTP example
 
-The full split example below targets the **1.x Stable** `/management.html` panel. For **v2 Beta**, do not reuse `location = / { return 302 /management.html; }` or the 1.x path split—forward complete prefixed paths unchanged to `http://cpamp` (`18317`) with SSE and WebSocket headers intact, and never add a trailing path on `proxy_pass` or `rewrite` away a prefix:
+The full split example below targets the **1.x Stable** `/management.html` panel. For **v2 Beta**, do not reuse `location = / { return 302 /management.html; }` or the 1.x path split—the snippet below is a **self-contained minimal v2 Beta `nginx.conf`** (`events` plus `http`-scoped `map $http_upgrade $connection_upgrade`, `upstream cpamp`, and `server` all live in the same config so `$connection_upgrade` is never undefined; if you use a `conf.d/*.conf` layout instead, keep `map` inside `http {}` in `nginx.conf` and place `upstream`/`server` in `conf.d/`, switching `127.0.0.1:18317` to `cpa-manager-plus:18317` when Nginx shares the Docker Compose network):
 
 ```nginx
-# Key v2 Beta reverse-proxy block (no prefix stripping, no root redirect/fallback, SSE + WebSocket enabled)
-location / {
-    proxy_http_version 1.1;
-    proxy_buffering off;
-    proxy_cache off;
-    proxy_read_timeout 3600s;
-    proxy_send_timeout 3600s;
-    proxy_set_header Host              $host;
-    proxy_set_header X-Real-IP         $remote_addr;
-    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header Upgrade           $http_upgrade;
-    proxy_set_header Connection        $connection_upgrade;
-    proxy_pass http://cpamp; # Do not append a trailing slash or rewrite away prefixes
+# Self-contained minimal v2 Beta nginx.conf (http-scoped map, SSE + WebSocket enabled, exact encoded URI preserved)
+events {
+    worker_connections 1024;
+}
+
+http {
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    upstream cpamp {
+        server 127.0.0.1:18317; # Use cpa-manager-plus:18317 when Nginx shares the Docker Compose network
+    }
+
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        client_max_body_size 64m;
+        merge_slashes off; # Preserve duplicate slashes and raw encoded URIs for strict CPAMP Ingress checks
+
+        location / {
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+            proxy_set_header Host              $http_host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade           $http_upgrade;
+            proxy_set_header Connection        $connection_upgrade;
+            proxy_pass http://cpamp; # Keep no-URI proxy_pass (no trailing / and no rewrite) so the exact encoded URI is forwarded unchanged
+        }
+    }
 }
 ```
 
-CPAMP Ingress itself validates `<control-prefix>`, `<inference-prefix>`, and permitted bootstrap/health routes, and rejects unprefixed `/v1/*`, `/management.html`, and `/v8/management/*`. If you add an extra allowlist at the reverse proxy, allow the full `<control-prefix>`, `<inference-prefix>` (including SSE and WebSocket subpaths such as `/v1/responses`, `/openai/v1/...`, and `/backend-api/codex/...`), `/.well-known/cpamp-bootstrap` during initial setup, `/health`, and `/v0/resource/plugins/`, still without stripping prefixes. In External mode, model traffic goes directly to your External CPA's own domain/proxy rather than CPAMP `18317`.
+Key boundaries:
+
+- **No-URI `proxy_pass` and exact encoded URI**: keep `proxy_pass http://cpamp;` with no URI or trailing `/`, avoid `rewrite` or `$uri` rewrites, and keep `merge_slashes off;` so Nginx does not collapse `//` or decode/re-encode `%XX` segments before forwarding—delivering the exact client-sent encoded URI to CPAMP Ingress (`18317`) for strict prefix validation and stripping.
+- **SSE and WebSocket**: `proxy_http_version 1.1;`, `proxy_buffering off;`, `proxy_request_buffering off;`, `proxy_cache off;`, long `3600s` timeouts, `Upgrade $http_upgrade`, and `Connection $connection_upgrade` support streaming SSE and WebSocket routes under `<inference-prefix>` (such as `/v1/responses`, `/openai/v1/...`, and `/backend-api/codex/...`).
+- **Path rules and allowlists**: CPAMP Ingress itself validates `<control-prefix>`, `<inference-prefix>`, `/.well-known/cpamp-bootstrap` during initial claim, `/health`, and `/v0/resource/plugins/`, and rejects unprefixed `/v1/*`, `/management.html`, and `/v8/management/*`. Any proxy-level allowlist must forward those complete prefixes and bootstrap/health paths without stripping prefixes.
+- **External mode boundary**: in External mode, CPAMP does not allocate an `<inference-prefix>` or proxy model traffic through `18317`. This proxy block only fronts the CPAMP control plane; model clients connect directly to the External CPA's own domain and reverse proxy (do not add an unprefixed `/v1/*` route or `:8317` fallback to the CPAMP vhost, and keep `/v8/management/*` blocked from public access on any External CPA proxy).
 
 Full **1.x Stable** `nginx.conf` split example:
 
