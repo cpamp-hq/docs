@@ -4,7 +4,7 @@ CPAMP 的请求历史、配置和加密凭证都在本机。备份时最容易�
 
 ## 持久化目录与必备备份项
 
-v2 Beta 从 **`v1.14.10`** 离线升级，目标 CPA 最低 **`v8.0.55`**；备份不是迁移授权，迁移仍须通过 [升级预检与对账](./update.md)。v2 单镜像将全部持久化状态保存在单一命名卷 `cpamp-data`（容器内 `/data`），备份时必须成套保留：
+v2 Beta 从 **`v1.14.10`** 离线升级，且仅支持 **CPA v8**（拒绝低于 v8 的版本，也不承诺未来主版本：Embedded 固定 **`v8.0.55`**，External 要求 CPA v8 且最低 **`v8.0.55`** 并通过真实资格检查，Managed 升级来源在执行 `cpa-import` 前也须先为 CPA v8）；备份不是迁移授权，迁移仍须通过 [升级预检与对账](./update.md)。v2 单镜像将全部持久化状态保存在单一命名卷 `cpamp-data`（容器内 `/data`），备份时必须成套保留：
 
 `cpamp-data` 是 Compose 逻辑卷键，不是固定的 Docker 卷名；未覆盖卷名时实际名称为 `<project>_cpamp-data`。以下命令始终复用同一 Compose 项目，避免用裸 `docker run -v cpamp-data:/data` 误建空卷；需要直接挂卷时，先用运行容器的 `docker inspect` 核对实际 `.Mounts`。
 

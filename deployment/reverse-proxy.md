@@ -2,15 +2,23 @@
 
 如果你想用同一个域名访问 CPAMP 面板和 CPA API，就需要明确分流规则。HTTP 面板和 HTTP API 可以走反向代理；RESP Pub/Sub / RESP pop 不能走普通 HTTP 反向代理。
 
-::: warning v2 Beta 的入口与 1.x 不同
-v2 Beta 单镜像只公开 `18317` 一个端口，由 Ingress 统一路由：控制台位于安装时设置的**控制台地址（Control Base Path）**下，向导默认 `/console`（例如 `https://your-domain.com/console`），前端调用同一路径下的 `/api/v2/*`；如果安装时换成别的合法路径，控制台和前端 API 一起移动。控制台路径本身不带尾斜杠（默认值下 `/console/` 返回 404），且只在浏览器式导航（`Accept: text/html`）下返回页面；`/management.html` 在 v2 返回 404。因此 v2 不需要本页的 1.x 路径分流，把整个域名转发到 `18317` 即可，反向代理不需要改写控制台路径。下表、Nginx 示例和排障项描述的是 1.x Stable 的 `/management.html` 面板。
+::: warning v2 Beta 的入口、前缀与反代规则不同于 1.x
+v2 Beta 在单镜像与原生包中只对外公开 `18317` 一个 Ingress 端口，**新安装不再使用固定的 `/console` 默认路径或无前缀 `/v1/*`**：
+
+- 控制台位于安装或升级时提交的 **Control Base Path**（例如 `/<随机16字符>`，前端 API 位于 `<control-prefix>/api/v2/*`；先前已提交 `/console` 的旧 v2 实例继续保留 `/console`）。
+- Managed（New Managed / Adopt / Upgrade Managed）模型流量位于独立的 **Inference Base Path**（或显式确认的共用前缀），格式为 `<origin><inference-prefix>` + 原始协议路径。
+- **External 模式**不分配 Manager 推理前缀：模型客户端直连外部 CPA 的真实 URL（由外部 CPA 自管反代与入口），CPAMP 只提供 `<control-prefix>` 控制台。
+- 反向代理**必须完整透传带前缀路径到 `18317`**，**禁止在反代层剥离前缀**（CPAMP Ingress 会在内部剥离一次，反代先剥离会导致二次剥离或 404），也**禁止添加根路径 `/` 跳转到控制台或把根路径回退到无前缀 `/v1`**；同时须保留 **SSE 流式**（关闭 `proxy_buffering`、长读超时）与 **WebSocket**（`Upgrade` / `Connection`）支持。
+
+下文路径分流表、1.x Nginx 拆分示例与 `/management.html` 排障项面向 **1.x Stable**（以及需要代理外部 CPA 时参考）。
 :::
 
-本文按 1.x Stable 的同域名部署来说明：
+本文按 1.x Stable 的同域名部署来说明（v2 Beta 规则见下文「v2 Beta 反向代理说明」与末尾验证）：
 
 - CPAMP 1.x 面板：`https://your-domain.com/management.html`
-- CPAMP v2 Beta 控制台：`https://your-domain.com/console`（默认控制台地址，以向导完成页为准）
-- CPA / CLI Proxy API：`https://your-domain.com/v1/...`
+- CPAMP v2 Beta 控制台：`https://your-domain.com/<control-prefix>`（先前已提交 `/console` 的旧实例继续为 `/console`）
+- CPAMP v2 Beta Managed 推理入口：`https://your-domain.com/<inference-prefix>/...`（External 模式使用外部 CPA 自身真实域名/路径）
+- CPA / CLI Proxy API（1.x 或 External 直连）：`https://your-domain.com/v1/...`
 - CPA OAuth 回调、Codex API、Amp 路由等 CPA 侧接口
 
 本文适用于 1.x Stable 的 Full Docker / Manager Server 模式。CPAMP 轻量面板由 CPA 自己托管 `/management.html`，通常不需要这套混合分流。
@@ -27,7 +35,7 @@ v2 Beta 单镜像只公开 `18317` 一个端口，由 Ingress 统一路由：控
 
 ## 路径边界
 
-下表是 1.x Stable 的分流规则（v2 Beta 把整个 origin 转发到 `18317`，无需逐路径分流）：
+下表是 **1.x Stable** 的分流规则（v2 Beta 把带前缀请求或整个 origin 原样透传给 `18317` Ingress，不要按此表拆分或剥离前缀）：
 
 | 流量                                         | 推荐后端         | 说明                                                                                                    |
 | -------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------- |
@@ -43,7 +51,7 @@ v2 Beta 单镜像只公开 `18317` 一个端口，由 Ingress 统一路由：控
 | 未明确归属的新路径                           | CPA `:8317`      | 避免阻断 CPA 未来新增接口（`/v8/management/*` 除外，见上）。                                            |
 | RESP Pub/Sub / RESP pop                      | 直连 CPA `:8317` | 不能经过 HTTP 反向代理。                                                                                |
 
-上述 `/v8/management/config/api-keys[/*]` 只读路由属于 1.x Stable 的 `/management.html` 管理面。v2 Beta 不提供 `/management.html`，公开 Ingress 也拒绝整个 `/v8/management/*`；沙箱化插件 iframe 是跨站取用者，两者都不可达。
+上述 `/v8/management/config/api-keys[/*]` 只读路由属于 1.x Stable 的 `/management.html` 管理面。v2 Beta 不提供 `/management.html`，公开 Ingress 也拒绝整个 `/v8/management/*`（即使在共用前缀模式下也不放行 `/v8` 与 `/v0`）；沙箱化插件 iframe 是跨站取用者，两者都不可达。
 
 1.x Stable 推荐架构：
 
@@ -81,7 +89,7 @@ remote-management:
 
 两个容器即使在同一个 Docker network 内，CPA 看到的访问来源也通常不是 `localhost`，所以 `allow-remote: true` 是必要的。
 
-推荐 CPA 版本：
+1.x Stable 推荐 CPA 版本（仅限 1.x Stable 历史兼容范围；v2 Beta 仅支持 CPA v8，内置固定 `v8.0.55`，External 要求 CPA v8 且最低 `v8.0.55` 并通过真实资格检查，拒绝 `< 8` 且不承诺未来主版本）：
 
 ```text
 v7.1.39+
@@ -147,7 +155,58 @@ services:
 
 ## Nginx HTTP 示例
 
-以下示例面向 1.x Stable 的 `/management.html` 面板。v2 Beta 只需把整个 origin 转发到 `18317`，不要复用这里的路径分流。
+以下完整拆分示例面向 **1.x Stable** 的 `/management.html` 面板。若部署 **v2 Beta**，请勿复用这里的 `location = / { return 302 /management.html; }` 或 1.x 路径拆分——下面是一份可直接作为最小 `nginx.conf` 使用的 **v2 Beta 自包含完整示例**（`events` + `http` 作用域内的 `map $http_upgrade $connection_upgrade`、`upstream cpamp` 与 `server` 均在同一配置中定义，不会出现未定义变量 `$connection_upgrade`；若采用 `conf.d/*.conf` 拆分目录，请把 `map` 留在 `nginx.conf` 的 `http {}` 块，并把 `upstream` 与 `server` 放入 `conf.d/`；若 Nginx 与 CPAMP 在同一 Docker Compose 网络中，将 `127.0.0.1:18317` 改为 `cpa-manager-plus:18317`）：
+
+```nginx
+# v2 Beta 最小完整 nginx.conf（map 位于 http 作用域，支持 SSE 与 WebSocket，保留原始编码 URI）
+events {
+    worker_connections 1024;
+}
+
+http {
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    upstream cpamp {
+        server 127.0.0.1:18317; # Docker Compose 同网络部署请改为 cpa-manager-plus:18317
+    }
+
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        client_max_body_size 64m;
+        merge_slashes off; # 保留重复斜杠与原始编码 URI，交由 CPAMP Ingress 严格校验
+
+        location / {
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+            proxy_set_header Host              $http_host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade           $http_upgrade;
+            proxy_set_header Connection        $connection_upgrade;
+            proxy_pass http://cpamp; # 保持无 URI 形式（不要加末尾 /，也不要用 rewrite），确保原始编码 URI 完整透传
+        }
+    }
+}
+```
+
+关键边界说明：
+
+- **无 URI `proxy_pass` 与原始编码 URI**：`proxy_pass http://cpamp;` 必须保持不带任何 URI/末尾 `/` 的形式，并且不要配合 `rewrite` 或 `$uri` 改写路径，再叠加 `merge_slashes off;` 避免 Nginx 合并 `//` 或先解码再重编码 `%XX`，从而把客户端发送的原始编码 URI 完整透传给 CPAMP Ingress（`18317`）校验与剥离前缀。
+- **SSE 与 WebSocket**：`proxy_http_version 1.1;`、`proxy_buffering off;`、`proxy_request_buffering off;`、`proxy_cache off;`、长超时（`3600s`）以及 `Upgrade` / `Connection $connection_upgrade` 共同保障 `<inference-prefix>` 下的流式 SSE 与 WebSocket（如 `/v1/responses`、`/openai/v1/...`、`/backend-api/codex/...`）稳定工作。
+- **路径与白名单**：CPAMP Ingress 会自行校验 `<control-prefix>`、`<inference-prefix>`、首次认领阶段的 `/.well-known/cpamp-bootstrap`、`/health`、`/v0/resource/plugins/`，并自动拒绝无前缀 `/v1/*`、`/management.html`、`/v8/management/*`。若在反代层追加白名单，也必须完整放行这些前缀与引导/健康检查路径，且严禁剥离前缀。
+- **External 模式边界**：在 External 模式下，CPAMP 不分配 `<inference-prefix>`，也不经 `18317` 代理模型推理流量；这里的反代只服务于 CPAMP 控制面，客户端模型请求直接发往外部 CPA 自己的域名与反代（不要在 CPAMP 虚拟主机下补充无前缀 `/v1/*` 或回退到 `:8317`，若外部 CPA 另有反代也应阻止公网访问 `/v8/management/*`）。
+
+下方是 **1.x Stable** 的 `nginx.conf` 拆分示例：
 
 在 `nginx.conf` 的 `http {}` 块中加入：
 
@@ -349,16 +408,25 @@ Linux Docker 环境则建议把 CPA 和 CPAMP 放到同一个 Docker network，�
 
 ## 验证
 
-配置完成后按顺序验证。下面的命令面向 1.x Stable 的 `/management.html` 面板。
+配置完成后按顺序验证。下方前半部分面向 **v2 Beta**，后半部分命令面向 **1.x Stable** 的 `/management.html` 面板。
 
-v2 Beta 的控制台入口是安装时设置的控制台地址（默认 `/console`，以下命令按默认值举例），不带尾斜杠（`/console/` 返回 404），并且只在浏览器式导航下返回页面，所以验证时必须声明 `Accept: text/html`：
+v2 Beta 控制台位于安装或升级时提交的 `<control-prefix>`（先前已提交 `/console` 的旧实例保持不变），只在浏览器式导航（`Accept: text/html`）下返回页面，因此验证时必须声明 `Accept: text/html`：
 
 ```bash
-# v2 Beta 控制台应返回 200；入口不带尾斜杠
-curl -sI -H 'Accept: text/html' https://your-domain.com/console
+# 1. v2 Beta 控制台在携带 Accept: text/html 时应返回 200（请替换为实际提交的 <control-prefix>）
+curl -sI -H 'Accept: text/html' https://your-domain.com/<control-prefix>
+
+# 2. Managed 模式模型推理接口应带 <inference-prefix>，使用普通 Client Key（不剥离前缀）
+curl -i https://your-domain.com/<inference-prefix>/v1/models \
+  -H "Authorization: Bearer 你的 Client API 密钥"
+
+# 3. 未加前缀的 /v1/models 在 Managed v2 下不应回退放行（应返回 404，或未补全前返回 503）
+curl -i https://your-domain.com/v1/models
 ```
 
-不带 `Accept: text/html` 的 `curl -I https://your-domain.com/console`（curl 默认发送 `Accept: */*`）返回 404 属于预期行为，不代表控制台不可用。其余公开路径以实际安装后的控制台状态为准。
+不带 `Accept: text/html` 的 `curl -I https://your-domain.com/<control-prefix>`（curl 默认发送 `Accept: */*`）返回 404 属于预期行为，不代表控制台不可用。External 模式下请直接向外部 CPA 的真实地址验证 `/v1/models`。其余公开路径与端口状态以控制台“接入信息 / 密钥工作区”显示为准。
+
+以下是 **1.x Stable** 验证命令：
 
 ```bash
 # 1. CPAMP 面板能打开

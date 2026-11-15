@@ -1,6 +1,6 @@
 # 重置管理员密钥
 
-忘记 CPAMP 管理员密钥时，在停机状态下使用 `reset-admin-key` 重置 Manager 的管理员登录凭证。该命令只替换 SQLite 中的 `settings.admin_credential_v1`（盐与 HMAC 摘要），不会恢复丢失的 `/data/data.key`，不会修改 `/data/runtime` 或 `/data/runtime-secret/token`，也不会轮换 CPA Management Key / Client Key、重新认领全新安装或完成未结束的升级。全新安装请使用 [Host initialize 与 Handoff](../deployment/docker.md)，升级中的拒绝按 [升级与回滚](./update.md)（精确基线 `v1.14.10`、目标 CPA 最低 `v8.0.55`）处理。
+忘记 CPAMP 管理员密钥时，在停机状态下使用 `reset-admin-key` 重置 Manager 的管理员登录凭证。该命令只替换 SQLite 中的 `settings.admin_credential_v1`（盐与 HMAC 摘要），不会恢复丢失的 `/data/data.key`，不会修改 `/data/runtime` 或 `/data/runtime-secret/token`，也不会轮换 CPA Management Key / Client Key、重新认领全新安装或完成未结束的升级。全新安装请使用 [Host initialize 与 Handoff](../deployment/docker.md)，升级中的拒绝按 [升级与回滚](./update.md)（精确基线 `v1.14.10`；v2 仅支持 CPA v8：Embedded 固定 `v8.0.55`，External 要求 CPA v8 且最低 `v8.0.55` 并通过资格检查，Managed 升级来源也须先为 CPA v8）处理。
 
 ## 执行前检查
 
@@ -28,7 +28,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-立即妥善保存该密钥，不要让输出进入公开日志或聊天记录。命令成功且已按上述规则同步启动密钥后，再启动服务并核对 CPA 连接。Fresh 实例使用安装时设置的控制台地址（默认 `http://<host>:18317/console`）；从 1.x 升级的实例使用 `http://<host>:18317/management.html`（或 `/`）。
+立即妥善保存该密钥，不要让输出进入公开日志或聊天记录。命令成功且已按上述规则同步启动密钥后，再启动服务并核对 CPA 连接。完成初始化或升级的 v2 实例均使用已提交的控制入口前缀（例如 `https://<host>/<control-prefix>`，此前已提交 `/console` 的旧实例继续使用 `/console`；不再使用 `/management.html` 或 `/`）。
 
 ```bash
 docker compose up -d

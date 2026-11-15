@@ -45,7 +45,7 @@ http://<host>:18317/management.html
 
 Log in with the CPAMP Admin Key saved or printed by the installer. See [Install Full Mode](../deployment/installer.md) for details.
 
-`bin/install-cpamp.sh` installs 1.x Stable by default, and its entry is the `:18317/management.html` URL above. For v2 Beta, install from [v2 Docker](../deployment/docker.md) or the [linux/amd64 native package](../deployment/native.md); the v2 browser entry is the control base path chosen at installation (the wizard defaults to `/console`, for example `http://<host>:18317/console`), and `:18317/management.html` returns 404 in v2.
+`bin/install-cpamp.sh` installs 1.x Stable by default, using the `:18317/management.html` entry above. For **v2 Beta**, install from [v2 Docker](../deployment/docker.md) or the [linux/amd64 native package](../deployment/native.md): run `cpa-manager-plus initialize` on the host, open the claim URL in a browser to set your Admin Key, and configure the access prefixes (the wizard pre-fills separate 16-character CSPRNG Control and Managed Inference prefixes rather than defaulting to `/console`, lets you customize or randomize each independently, and requires explicit opt-in to share one prefix; External configures only the Control prefix while clients keep calling the External CPA's real URL). `:18317/management.html` returns 404 in v2. To migrate an existing 1.x deployment, follow [Upgrade CPAMP](../operations/update.md).
 
 ## First CPA connection
 
@@ -67,7 +67,7 @@ If the installer did not save a CPA connection, enter these values when Full Mod
 ### Full Mode
 
 - 1.x Stable: you can log in to `:18317/management.html` with the CPAMP Admin Key.
-- v2 Beta: you can open the control base path shown on the wizard's completion page (default `/console`, for example `http://<host>:18317/console`) and log in; `:18317/management.html` returning 404 is expected.
+- v2 Beta: open the control prefix committed during setup or upgrade (existing `/console` deployments keep `/console`; if an older Managed v2 instance lacks an inference prefix, sign in to complete the one-time inference prefix step first) and sign in with your Admin Key; `:18317/management.html` returning 404 is expected. Managed clients call `<origin><inference-prefix>` followed by the protocol path (such as `<origin><inference-prefix>/v1` for OpenAI and `<origin><inference-prefix>` for Claude/Gemini native routes), whereas External clients keep calling the External CPA's actual URL, always with a separate Client API Key; see [Client Configuration](../gateway/clients.md).
 - Dashboard shows that CPA is connected.
 - Monitoring shows an event after a real request passes through CPA.
 - Usage Analytics shows the corresponding tokens and estimated cost.

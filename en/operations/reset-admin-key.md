@@ -1,6 +1,6 @@
 # Reset Admin Key
 
-Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize and Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade and Rollback](./update.md) (exact baseline `v1.14.10`, minimum target CPA `v8.0.55`).
+Use `reset-admin-key` while the service is stopped when you need to replace Manager's administrator login credential. The command updates only `settings.admin_credential_v1` (salt and HMAC digest) in SQLite. It cannot recover a lost `/data/data.key`, does not modify `/data/runtime` or `/data/runtime-secret/token`, and does not rotate the CPA Management Key / Client Keys, claim a Fresh installation, or finish an incomplete upgrade. For first installation use [Host Initialize and Handoff](../deployment/docker.md); for upgrade refusals follow [Upgrade and Rollback](./update.md) (exact baseline `v1.14.10`; v2 supports CPA v8 only: Embedded pins `v8.0.55`, External requires CPA v8 at `v8.0.55` or newer with qualification, and Managed upgrade sources must also already run CPA v8).
 
 ## Before you run it
 
@@ -28,7 +28,7 @@ New admin key: cpamp_...
 Save this value now. It will not be shown again.
 ```
 
-Save the key immediately and keep terminal output out of public logs or chat transcripts. Restart only after the command succeeds and startup credentials have been aligned as described above, then confirm the CPA connection. Fresh instances use the Control Base Path chosen at installation (default `http://<host>:18317/console`); instances upgraded from 1.x use `http://<host>:18317/management.html` (or `/`).
+Save the key immediately and keep terminal output out of public logs or chat transcripts. Restart only after the command succeeds and startup credentials have been aligned as described above, then confirm the CPA connection. Completed v2 Fresh and upgraded instances both open at their committed Control Base Path (for example `https://<host>/<control-prefix>`, with existing `/console` deployments keeping `/console`; neither uses `/management.html` or `/`).
 
 ```bash
 docker compose up -d

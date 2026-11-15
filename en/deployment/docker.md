@@ -57,13 +57,17 @@ docker compose exec -T -u 10002:10002 cpa-manager-plus cpa-manager-plus initiali
 # docker exec -u 10002:10002 cpa-manager-plus cpa-manager-plus initialize
 ```
 
-`initialize` is a one-shot host-authorized operation. It prints `/.well-known/cpamp-bootstrap/ui#handoff=...`. Append the **entire output, including the fragment**, to your public origin and open it in a browser. This short-lived claim credential must not enter screenshots or service logs. To reissue/resume, stop the writable Manager first, run `docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus cpa-manager-plus initialize`, then `up -d` again; do not delete the database to reset installation.
+`initialize` is a one-shot host-authorized operation. It prints `/.well-known/cpamp-bootstrap/ui#handoff=...` (only the claim fragment—never Admin Key, Client Key, or CPA Management Key secrets in URLs or logs). Append the **entire output, including the fragment**, to your public origin and open it in a browser. This short-lived claim credential must not enter screenshots or service logs. To reissue/resume, stop the writable Manager first, run `docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus cpa-manager-plus initialize`, then `up -d` again; do not delete the database to reset installation.
 
-In the browser, set and save the CPAMP Admin Key, then choose **New Managed** (new managed CPA; on `slim`, the wizard prepares the pinned CPA engine before Managed setup completes), **Adopt** (qualify and migrate an existing CPA; on `slim`, the wizard also prepares the pinned CPA engine first), or **External** (connect to an independently operated CPA, supported on both `full` and `slim`). Adopt/External are not unconditional success paths: resolve the wizard's source, version, credential, or evidence refusals and stop if admission fails; do not edit installation records manually. External requires at least CPA `v8.0.55`; see [Runtime Model](../guide/runtime-model.md).
+In the browser, set and save the CPAMP Admin Key, then configure access prefixes and the installation mode (new v2 installations no longer default to a fixed `/console` path):
 
-For New Managed, save the one-time first Client Key and verify model requests through the public entry before sending production traffic. Admin Key, CPA Management Key, and Client Key are different credentials. A successful process `/health` is not installation completion or Gateway readiness: require the wizard's completion, routing verification, and client connectivity.
+- **Control Base Path** and **Managed Inference Base Path**: the wizard pre-fills **separate 16-character CSPRNG prefixes** (for example `/<16-char-random>`) and lets you customize or randomize each independently. Keeping them independent is the default and recommended posture so control traffic and model traffic stay isolated; sharing one prefix requires explicitly enabling the shared-entry opt-in (under shared entry, Ingress forwards only supported model protocol subpaths while keeping `/v0`, `/v8`, `/management.html`, health, and OAuth callbacks blocked).
+- **Installation modes**: v2 supports **CPA v8** only (pinned official `v8.0.55` for Managed; releases below v8 are rejected, and future major versions are not promised). Choose **New Managed** (new managed CPA; on `slim`, the wizard prepares the pinned CPA engine before Managed setup completes), **Adopt** (qualify and migrate an existing network CPA v8, `network_existing`; the public Fresh wizard still refuses `legacy_managed` sources, so 1.x managed CPA uses offline [Upgrade `cpa-import`](../operations/update.md); on `slim`, the wizard also prepares the pinned CPA engine first), or **External** (connect to an independently operated CPA, supported on both `full` and `slim`). **External configures only the Control prefix** (no Manager inference prefix or shared entry); clients keep calling the External CPA's actual URL directly. Adopt/External are not unconditional success paths: resolve the wizard's source, version, credential, or evidence refusals and stop if admission fails; do not edit installation records manually. External requires CPA v8 at `v8.0.55` or newer within v8 plus actual qualification; see [Runtime Model](../guide/runtime-model.md).
+- **Existing earlier v2 installations**: an existing v2 instance that already committed `/console` (or another control prefix) keeps it across updates. If an earlier Managed v2 instance has no committed inference prefix yet, signing in at the existing control entry prompts a one-time inference prefix completion dialog (independent custom/random prefix or explicit shared-entry opt-in); until completed, the model gateway stays closed with no fallback to `/` or unprefixed `/v1`. Once committed, prefixes persist across ordinary patches with no generic UI editor or environment-variable second authority.
 
-After the wizard completes, later logins open the **control base path** chosen at installation on the same public origin (the wizard defaults to `/console`, for example `http://<host>:18317/console`; a custom path moves both the console and its frontend API `<control-base-path>/api/v2/*`, so trust the "Sign in and enter CPAMP" link on the completion page). v2 does not serve `/management.html`; it returns 404 and is not the v2 entry.
+For New Managed, save the one-time installation Client Key displayed on the completion page (it is not re-emitted on wizard reload; see [Connect Clients](../gateway/clients.md) for the Key Workspace and client rules) and verify a model request through the inference entry (for example OpenAI base `<origin><inference-prefix>/v1`, Claude/Gemini native base `<origin><inference-prefix>`) before sending production traffic. Admin Key, CPA Management Key, and Client Key are strictly separate credentials—never mix them or place plaintext secrets in URLs or logs. A successful process `/health` is not installation completion or Gateway readiness: require wizard completion, committed prefixes, routing verification, and client connectivity.
+
+After the wizard completes, later logins open the committed **control prefix** on the same public origin (for example `https://cpamp.example.com/<your-control-prefix>`, with frontend API `<control-prefix>/api/v2/*`; existing `/console` deployments keep `/console`). v2 does not serve `/management.html`, which returns 404. If placed behind Nginx/Caddy, forward full prefixed paths without stripping them twice and keep SSE and WebSocket support enabled; see [Reverse Proxy](./reverse-proxy.md).
 
 ## 1.X Stable: manual deployment reference
 
@@ -71,7 +75,7 @@ Docker is the simplest path for a new deployment. The CPAMP image contains Manag
 
 If you want the script to check the environment and generate Compose files for you, start with [One-Click Installer](./installer.md). The rest of this page is for manual Compose maintenance or merging CPAMP into an existing deployment.
 
-For new 1.x Stable deployments, use the Manager Server-hosted panel (v2 Beta uses the control base path above, default `/console`):
+For new 1.x Stable deployments, use the Manager Server-hosted panel (v2 Beta uses the control prefix committed during setup or upgrade; existing `/console` deployments keep `/console`):
 
 ```text
 http://<host>:18317/management.html
@@ -100,7 +104,7 @@ Before deployment, confirm:
 - Persistent `/data` storage mounted and backed up.
 - Exactly one CPAMP Manager Server consuming one CPA usage queue.
 
-Recommended CPA version:
+1.x Stable recommended CPA version (1.x Stable historical compatibility only; v2 supports CPA v8 only and rejects `< 8`):
 
 ```text
 v7.1.39+
@@ -336,7 +340,7 @@ When `USAGE_COLLECTOR_MODE=auto`, Manager Server tries these paths in order:
 
 RESP Pub/Sub and RESP pop must connect directly to the CPA API port, usually `8317`. Normal HTTP reverse proxies do not work for RESP. HTTP usage queue can go through an HTTP proxy.
 
-If you see `unsupported RESP prefix 'H'`, the RESP collector is probably connected to an HTTP address. Prefer `auto` or `http`, and confirm CPA is at least `v6.10.8+`.
+If you see `unsupported RESP prefix 'H'`, the RESP collector is probably connected to an HTTP address. Prefer `auto` or `http`, and confirm CPA meets the channel requirement (at least `v6.10.8+` on 1.x Stable; v2 supports CPA v8 only).
 
 :::
 

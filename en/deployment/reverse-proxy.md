@@ -2,15 +2,23 @@
 
 Use a reverse proxy when one domain needs to serve both the CPAMP panel and CPA APIs. HTTP panels and HTTP APIs can be proxied; RESP Pub/Sub and RESP pop cannot go through a normal HTTP reverse proxy.
 
-::: warning The v2 Beta entry differs from 1.x
-The v2 Beta single image publishes only port `18317`, routed by Ingress: the console lives under the **Control Base Path** chosen at installation (the wizard defaults to `/console`, for example `https://your-domain.com/console`) and its frontend calls `/api/v2/*` under the same path; installing with another valid path moves both. The console path itself has no trailing slash (`/console/` returns 404 under the default), returns a page only on browser-style navigation (`Accept: text/html`), and `/management.html` returns 404 in v2. v2 therefore does not need the 1.x path split on this page; forward the whole domain to `18317`, and the reverse proxy does not need to rewrite the console path. The table, Nginx example, and troubleshooting entries below describe the 1.x Stable `/management.html` panel.
+::: warning v2 Beta entries, prefixes, and proxy rules differ from 1.x
+v2 Beta exposes only one Ingress port (`18317`) across single-image and native builds, and **new installations no longer use a fixed `/console` default or unprefixed `/v1/*`**:
+
+- The console lives at the **Control Base Path** committed at installation or upgrade (for example `/<16-char-random>`, with frontend APIs at `<control-prefix>/api/v2/*`; existing v2 deployments that already committed `/console` keep `/console`).
+- Managed (`New Managed`, `Adopt`, `Upgrade Managed`) model traffic lives under an **Inference Base Path** (or an explicitly confirmed shared prefix) as `<origin><inference-prefix>` followed by the original protocol subpath.
+- **External mode** does not allocate a Manager inference prefix: clients connect directly to the External CPA's actual URL (with its own reverse proxy/ownership), while CPAMP serves only `<control-prefix>`.
+- Your reverse proxy **must forward full prefixed paths unchanged to `18317`**: **never strip prefixes before forwarding** (CPAMP Ingress strips `<inference-prefix>` once internally; stripping at the proxy causes double-stripping or 404s), **never add a `/` redirect or unprefixed `/v1` fallback**, and keep **SSE streaming** (`proxy_buffering off`, long read timeout) plus **WebSocket** (`Upgrade` / `Connection`) working.
+
+The split table, 1.x Nginx example, and `/management.html` troubleshooting below target **1.x Stable** (and external CPA proxy references).
 :::
 
-This guide uses a 1.x Stable same-domain setup:
+This guide uses a 1.x Stable same-domain setup (see the v2 Beta notes and verification below for v2):
 
 - CPAMP 1.x panel: `https://your-domain.com/management.html`
-- CPAMP v2 Beta console: `https://your-domain.com/console` (default control base path; trust the wizard's completion page)
-- CPA / CLI Proxy API: `https://your-domain.com/v1/...`
+- CPAMP v2 Beta console: `https://your-domain.com/<control-prefix>` (existing `/console` installs keep `/console`)
+- CPAMP v2 Beta Managed inference: `https://your-domain.com/<inference-prefix>/...` (External uses the External CPA's own real URL)
+- CPA / CLI Proxy API (1.x or direct External): `https://your-domain.com/v1/...`
 - CPA OAuth callbacks, Codex API, Amp routes, and other CPA-side endpoints
 
 This applies to 1.x Stable Full Docker / Manager Server mode. CPA itself serves `/management.html` for the CPAMP Lightweight Panel, so this mixed routing is usually unnecessary.
@@ -27,7 +35,7 @@ For most deployments, use separate domains or subdomains for CPAMP and CPA. Read
 
 ## Route boundaries
 
-The table below is the 1.x Stable split (v2 Beta forwards the whole origin to `18317` and needs no per-path routing):
+The table below is the **1.x Stable** split (for v2 Beta, pass full prefixed paths—or the whole origin—unchanged to Ingress `18317` without splitting or stripping):
 
 | Traffic                                      | Recommended backend | Notes                                                                                                                                                  |
 | -------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -43,7 +51,7 @@ The table below is the 1.x Stable split (v2 Beta forwards the whole origin to `1
 | New paths without explicit ownership         | CPA `:8317`         | Avoid blocking future CPA endpoints, except `/v8/management/*` (see above).                                                                             |
 | RESP Pub/Sub / RESP pop                      | Direct CPA `:8317`  | Cannot go through an HTTP reverse proxy.                                                                                                               |
 
-This `/v8/management/config/api-keys[/*]` read-only route belongs to the 1.x Stable `/management.html` management surface. v2 Beta does not serve `/management.html`, and the public Ingress refuses the whole `/v8/management/*` namespace; a sandboxed plugin iframe is a cross-site fetch client, so neither can reach it.
+This `/v8/management/config/api-keys[/*]` read-only route belongs to the 1.x Stable `/management.html` management surface. v2 Beta does not serve `/management.html`, and the public Ingress refuses the whole `/v8/management/*` namespace (even under shared-entry mode, `/v8` and `/v0` stay blocked); a sandboxed plugin iframe is a cross-site fetch client, so neither can reach it.
 
 1.x Stable recommended architecture:
 
@@ -81,7 +89,7 @@ remote-management:
 
 Even when both containers are in the same Docker network, CPA usually does not see the request source as `localhost`, so `allow-remote: true` is required.
 
-Recommended CPA version:
+1.x Stable recommended CPA version (1.x Stable historical compatibility only; v2 Beta supports CPA v8 only—pinned `v8.0.55` for Embedded, CPA v8 at `v8.0.55` or newer within v8 plus actual qualification for External—rejecting `< 8` without promising future major versions):
 
 ```text
 v7.1.39+
@@ -147,7 +155,58 @@ If CPA already runs on the host machine, omit the CPA service and point the Ngin
 
 ## Nginx HTTP example
 
-The example below targets the 1.x Stable `/management.html` panel. For v2 Beta, forward the whole origin to `18317` instead of reusing this path split.
+The full split example below targets the **1.x Stable** `/management.html` panel. For **v2 Beta**, do not reuse `location = / { return 302 /management.html; }` or the 1.x path split—the snippet below is a **self-contained minimal v2 Beta `nginx.conf`** (`events` plus `http`-scoped `map $http_upgrade $connection_upgrade`, `upstream cpamp`, and `server` all live in the same config so `$connection_upgrade` is never undefined; if you use a `conf.d/*.conf` layout instead, keep `map` inside `http {}` in `nginx.conf` and place `upstream`/`server` in `conf.d/`, switching `127.0.0.1:18317` to `cpa-manager-plus:18317` when Nginx shares the Docker Compose network):
+
+```nginx
+# Self-contained minimal v2 Beta nginx.conf (http-scoped map, SSE + WebSocket enabled, exact encoded URI preserved)
+events {
+    worker_connections 1024;
+}
+
+http {
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    upstream cpamp {
+        server 127.0.0.1:18317; # Use cpa-manager-plus:18317 when Nginx shares the Docker Compose network
+    }
+
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        client_max_body_size 64m;
+        merge_slashes off; # Preserve duplicate slashes and raw encoded URIs for strict CPAMP Ingress checks
+
+        location / {
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+            proxy_set_header Host              $http_host;
+            proxy_set_header X-Real-IP         $remote_addr;
+            proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade           $http_upgrade;
+            proxy_set_header Connection        $connection_upgrade;
+            proxy_pass http://cpamp; # Keep no-URI proxy_pass (no trailing / and no rewrite) so the exact encoded URI is forwarded unchanged
+        }
+    }
+}
+```
+
+Key boundaries:
+
+- **No-URI `proxy_pass` and exact encoded URI**: keep `proxy_pass http://cpamp;` with no URI or trailing `/`, avoid `rewrite` or `$uri` rewrites, and keep `merge_slashes off;` so Nginx does not collapse `//` or decode/re-encode `%XX` segments before forwarding—delivering the exact client-sent encoded URI to CPAMP Ingress (`18317`) for strict prefix validation and stripping.
+- **SSE and WebSocket**: `proxy_http_version 1.1;`, `proxy_buffering off;`, `proxy_request_buffering off;`, `proxy_cache off;`, long `3600s` timeouts, `Upgrade $http_upgrade`, and `Connection $connection_upgrade` support streaming SSE and WebSocket routes under `<inference-prefix>` (such as `/v1/responses`, `/openai/v1/...`, and `/backend-api/codex/...`).
+- **Path rules and allowlists**: CPAMP Ingress itself validates `<control-prefix>`, `<inference-prefix>`, `/.well-known/cpamp-bootstrap` during initial claim, `/health`, and `/v0/resource/plugins/`, and rejects unprefixed `/v1/*`, `/management.html`, and `/v8/management/*`. Any proxy-level allowlist must forward those complete prefixes and bootstrap/health paths without stripping prefixes.
+- **External mode boundary**: in External mode, CPAMP does not allocate an `<inference-prefix>` or proxy model traffic through `18317`. This proxy block only fronts the CPAMP control plane; model clients connect directly to the External CPA's own domain and reverse proxy (do not add an unprefixed `/v1/*` route or `:8317` fallback to the CPAMP vhost, and keep `/v8/management/*` blocked from public access on any External CPA proxy).
+
+Full **1.x Stable** `nginx.conf` split example:
 
 Add this to the `http {}` block in `nginx.conf`:
 
@@ -352,16 +411,25 @@ For Linux Docker environments, it is usually better to put CPA and CPAMP in the 
 
 ## Verification
 
-After configuring Nginx, test in this order. The commands below target the 1.x Stable `/management.html` panel.
+After configuring Nginx, test in this order. The first block targets **v2 Beta**; the commands afterward target the **1.x Stable** `/management.html` panel.
 
-The v2 Beta console entry is the control base path chosen at installation (default `/console`, used in the commands below) and has no trailing slash (`/console/` returns 404). It only returns the page on browser-style navigation, so the check must declare `Accept: text/html`:
+The v2 Beta console lives at the `<control-prefix>` committed at setup or upgrade (existing `/console` deployments keep `/console`) and returns HTML only on browser-style navigation (`Accept: text/html`):
 
 ```bash
-# The v2 Beta console should return 200; the entry has no trailing slash
-curl -sI -H 'Accept: text/html' https://your-domain.com/console
+# 1. v2 Beta console should return 200 with Accept: text/html (substitute your committed <control-prefix>)
+curl -sI -H 'Accept: text/html' https://your-domain.com/<control-prefix>
+
+# 2. Managed inference requests must include <inference-prefix> and a Client Key (unstripped)
+curl -i https://your-domain.com/<inference-prefix>/v1/models \
+  -H "Authorization: Bearer your Client API Key"
+
+# 3. Unprefixed /v1/models must not fall back on Managed v2 (404 once configured, or 503 while pending)
+curl -i https://your-domain.com/v1/models
 ```
 
-A plain `curl -I https://your-domain.com/console` (curl sends `Accept: */*` by default) returns 404 by design; that does not mean the console is unavailable. Use the console's reported state for the remaining public paths.
+A plain `curl -I https://your-domain.com/<control-prefix>` (curl sends `Accept: */*` by default) returns 404 by design; that does not mean the console is unavailable. In External mode, test `/v1/models` directly against the External CPA's actual URL. Check the console's Access Info / Key Workspace for the verified endpoints.
+
+**1.x Stable** verification commands:
 
 ```bash
 # 1. CPAMP panel should be reachable

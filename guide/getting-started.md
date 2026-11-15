@@ -4,8 +4,8 @@
 
 | 你的情况                                 | 推荐路线                                  |
 | ---------------------------------------- | ----------------------------------------- |
-| 已有 CPA，只想换一个更清晰的管理界面     | [CPAMP 轻量面板](#路线一安装轻量面板)     |
-| 需要请求历史、成本分析、账号巡检或自动化 | [CPAMP 完整模式](#路线二安装完整模式)     |
+| 已有 CPA，只想换一个更清晰的管理界面     | [CPAMP 轻量面板](#路线一-安装轻量面板)     |
+| 需要请求历史、成本分析、账号巡检或自动化 | [CPAMP 完整模式](#路线二-安装完整模式)     |
 | 还不确定                                 | 先看[如何选择面板](./choosing-a-panel.md) |
 
 ## 路线一：安装轻量面板
@@ -45,7 +45,7 @@ http://<host>:18317/management.html
 
 使用安装器保存或输出的 CPAMP 管理员密钥登录。详细说明见 [安装完整模式](../deployment/installer.md)。
 
-`bin/install-cpamp.sh` 默认安装 1.x Stable，入口就是上面的 `:18317/management.html`。v2 Beta 请按 [v2 Docker](../deployment/docker.md) 或 [linux/amd64 原生包](../deployment/native.md) 安装；v2 的浏览器入口是安装时设置的控制台地址（向导默认 `/console`，例如 `http://<host>:18317/console`），`:18317/management.html` 在 v2 返回 404。
+`bin/install-cpamp.sh` 默认安装 1.x Stable，入口就是上面的 `:18317/management.html`。**v2 Beta** 请按 [v2 Docker](../deployment/docker.md) 或 [linux/amd64 原生包](../deployment/native.md) 安装：通过宿主命令 `cpa-manager-plus initialize` 获取认领链接并在浏览器完成向导（设置 Admin Key、配置独立随机生成的控制入口前缀与 Managed 推理前缀——新安装不再默认 `/console`，也可各自自定义或显式确认共用入口；External 只设控制前缀且客户端直连外部 CPA 真实地址）。`:18317/management.html` 在 v2 返回 404；若是从 1.x 离线升级，请先阅读[更新与升级](../operations/update.md)。
 
 ## 首次连接 CPA
 
@@ -67,7 +67,7 @@ http://<host>:18317/management.html
 ### 完整模式
 
 - 1.x Stable：可以用 CPAMP 管理员密钥登录 `:18317/management.html`。
-- v2 Beta：可以打开向导完成页给出的控制台地址（默认 `/console`，例如 `http://<host>:18317/console`）并登录；`:18317/management.html` 返回 404 属于预期。
+- v2 Beta：打开安装或升级时提交的控制入口前缀（先前已提交 `/console` 的旧实例继续使用 `/console`；若为旧 Managed 实例升级后缺少推理前缀，登录后先完成一次性推理前缀补全）并用 Admin Key 登录；`:18317/management.html` 返回 404 属于预期。Managed 客户端请求发往 `<origin><inference-prefix>` + 协议路径（例如 OpenAI `<origin><inference-prefix>/v1`，Claude/Gemini `<origin><inference-prefix>`），External 客户端继续使用外部 CPA 的真实地址，均使用独立的 Client API Key，详情见[客户端接入](../gateway/clients.md)。
 - 仪表盘显示 CPA 已连接。
 - 发送一条真实请求后，请求监控出现记录。
 - 用量分析可以看到对应的 Token 和成本估算。

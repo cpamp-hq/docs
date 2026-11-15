@@ -4,7 +4,7 @@ CPAMP keeps request history, configuration, and encrypted credentials on the hos
 
 ## Persistent layout and required backup set
 
-v2 Beta's offline upgrade source is **`v1.14.10`** and target CPA requires at least **`v8.0.55`**. A backup does not authorize migration: follow [Upgrade Preflight and Reconciliation](./update.md). The v2 single image persists all state inside one named volume `cpamp-data` (mounted at `/data`), which must be backed up as a complete set:
+v2 Beta upgrades offline from **`v1.14.10`** and supports **CPA v8** only (rejecting releases below v8 without promising future major versions: Embedded pins **`v8.0.55`**, External requires CPA v8 at **`v8.0.55`** or newer within v8 plus actual qualification, and Managed upgrade sources must also already run CPA v8 before `cpa-import`). A backup does not authorize migration: follow [Upgrade Preflight and Reconciliation](./update.md). The v2 single image persists all state inside one named volume `cpamp-data` (mounted at `/data`), which must be backed up as a complete set:
 
 `cpamp-data` is a Compose logical volume key, not a fixed Docker volume name. Without an explicit name override, Docker uses `<project>_cpamp-data`. The commands below reuse the same Compose project to avoid creating an empty volume with plain `docker run -v cpamp-data:/data`; inspect the running container's actual `.Mounts` with `docker inspect` before mounting a volume directly.
 

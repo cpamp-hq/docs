@@ -36,7 +36,7 @@ CPAMP 轻量面板由 CPA 直接托管，用 CPA Manager Plus 的界面替换官
 
 ## 前置条件
 
-- 1.x Stable 面板保留原 CPA 兼容范围；v2 Beta 面板按固定官方 CPA `v8.0.55` 验收，External 完整模式最低也要求 `v8.0.55`，不能将旧 README 的 CPA 推荐版本当成 Beta 资格证明。
+- 1.x Stable 面板保留原 CPA 历史兼容范围；v2 Beta 仅支持 CPA v8（拒绝低于 v8 的版本，也不承诺未来主版本）：轻量面板按固定官方 CPA `v8.0.55` 验收，External 完整模式要求 CPA v8 且最低为 `v8.0.55` 并通过真实资格检查，不能将 1.x 的旧 CPA 推荐版本当成 Beta 资格证明。
 - CPA 必须配置 `remote-management.secret-key`，否则 Management API 和面板无法使用。
 - `remote-management.disable-control-panel` 必须为 `false`。
 - CPA 需要能够访问 GitHub Release，或通过它已经配置的代理下载 `management.html`。
@@ -148,10 +148,10 @@ External 完整模式不是这个无后端的轻量面板：它需要 Manager，
 当你需要请求历史、成本分析或服务端自动化时：
 
 1. 按 [v2 Docker 安装](./docker.md) 或 [linux/amd64 原生包](./native.md) 启动 v2 服务。
-2. 通过 `initialize` Handoff 打开浏览器完成首次向导，或访问安装时设置的控制台地址（默认 `http://<cpamp-host>:18317/console`）并用 CPAMP 管理员密钥登录。
+2. 通过 `initialize` Handoff 打开浏览器完成首次向导，或访问安装时提交的完整控制台地址（`http://<cpamp-host>:18317<control-prefix>`）并用 CPAMP 管理员密钥登录；新安装不固定使用 `/console`。
 3. 在控制台核对 CPA 连接与请求采集状态。
 
-Fresh 全新安装的完整控制台不在 `/management.html` 提供服务；从 1.x 离线升级的实例仍使用 `:18317/management.html`（或 `/`），不是 Fresh 的默认 `/console`。Ingress 将兼容性控制路径转交 Manager，但不代表它们在 Fresh 中可用；健康检查 `/health`、`/status` 及边缘拒绝返回 `404` 的规则见 [运行模型](../guide/runtime-model.md)。CPA `:8317` 上的轻量面板仍可保留，不要与 CPAMP 完整控制台混用。
+Fresh 与从 1.x 升级完成的 v2 完整控制台都位于向导或 `upgrade verify` 提交的管理前缀，不在 `/management.html` 或 `/` 提供兼容入口。既有 v2 实例保留已经提交的管理前缀。健康检查 `/health` 及边缘拒绝路由规则见 [运行模型](../guide/runtime-model.md)。CPA `:8317` 上的轻量面板仍可保留，不要与 CPAMP 完整控制台混用。
 
 ## 常见问题
 

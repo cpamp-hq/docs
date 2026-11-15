@@ -134,7 +134,7 @@ Common causes:
 
 ## CPA version upgrade regression checklist
 
-CPAMP supports CPA v8 and later only. When the pinned CPA version is upgraded, re-verify:
+CPAMP v2 supports CPA v8 only (the bundled managed runtime is pinned to official `v8.0.55`; releases below v8 are rejected, and future major versions are not qualified by this release). When updating the pinned CPA v8 version, re-verify:
 
 1. **Plugin v0 endpoints** — `/v0/management/plugins`, `/v0/management/plugins/<id>/enabled`, `/v0/management/plugins/<id>/config`, and `/v0/management/plugin-store` still exist with the same semantics. Plugin enable/disable and configuration exist only in `v0`; `/v8/management` does not replace them.
 2. **Management path ownership** — `cpaBuiltinManagementPathHeads` must match CPA's current built-in routes. If the "not built-in means plugin" test drifts, plugin endpoints are classified wrongly in either direction.

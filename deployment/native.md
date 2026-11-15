@@ -25,7 +25,7 @@ sudo env USAGE_DATA_DIR=/opt/cpa-manager-plus/data \
   ./bin/cpa-manager-plus initialize
 ```
 
-记录命令输出的短期 `/.well-known/cpamp-bootstrap/ui#handoff=...`；不要把它当成日志或管理员密钥。生成的 systemd 服务读取 **`<home>/cpa-manager-plus.env`**，此例为 `/opt/cpa-manager-plus/cpa-manager-plus.env`。创建/编辑时保留该文件已有配置，并限制为 root 所有、`0600`：
+记录命令输出的短期 `/.well-known/cpamp-bootstrap/ui#handoff=...`（命令不会向日志或 URL 输出管理员密钥、客户端密钥或 CPA 管理密钥）；不要把它当成日志或管理员密钥。生成的 systemd 服务读取 **`<home>/cpa-manager-plus.env`**，此例为 `/opt/cpa-manager-plus/cpa-manager-plus.env`。创建/编辑时保留该文件已有配置，并限制为 root 所有、`0600`：
 
 ```bash
 sudo touch /opt/cpa-manager-plus/cpa-manager-plus.env
@@ -47,7 +47,7 @@ sudo systemctl restart cpa-manager-plus.service
 sudo systemctl status cpa-manager-plus.service
 ```
 
-在浏览器将公开 origin 与完整 Handoff 路径拼接，设置 Admin Key、选择 New Managed / Adopt / External 并完成资格检查；New Managed 保存首次 Client Key 并验证公开入口。安装完成后，后续登录打开安装时设置的控制台地址（向导默认 `/console`，例如 `https://cpamp.example.com/console`；改了路径就换成新路径，前端 API 随之变化）；v2 不提供 `/management.html`，访问返回 404。重新签发 `initialize`、重置管理员密钥、备份或迁移前先停止整个服务；不要并行运行 systemd 和 `cpa-manager-plusctl start`。升级已有 1.x 必须使用 [v1.14.10 离线迁移和回滚手册](../operations/update.md)，不得指向原 1.x 目录直接启动 v2。
+在浏览器将公开 origin 与完整 Handoff 路径拼接，设置 Admin Key、配置独立随机生成的控制入口前缀与（Managed/Adopt 所需的）推理前缀（新安装不再使用固定的 `/console` 默认值；支持独立自定义/重新随机，或显式勾选共用入口确认项；External 仅配置控制前缀且客户端直连外部 CPA 真实地址），再选择 New Managed / Adopt / External 并完成资格检查（v2 仅支持 CPA v8，内置固定 `v8.0.55`，拒绝 `< 8` 且不承诺未来主版本；公开 Fresh Adopt 仅接纳网络既有 CPA v8 `network_existing` 并拒绝 `legacy_managed`；External 要求 CPA v8 且最低 `v8.0.55` 并通过真实资格检查）。New Managed 会在完成页一次性展示首次 Client Key，随后应按实际推理前缀（如 OpenAI `<origin><inference-prefix>/v1`，Claude/Gemini `<origin><inference-prefix>`）完成首次请求验证；Admin Key 与 Client Key 严格分离。安装完成后，后续登录打开提交的控制前缀（例如 `https://cpamp.example.com/<你的控制前缀>`，前端 API 位于 `<控制前缀>/api/v2/*`；此前已提交 `/console` 的旧 v2 实例继续保留 `/console`，若缺少推理前缀则在登录后完成一次性补全，且不会回退到 `/` 或无前缀 `/v1`）；普通补丁升级会保留已提交前缀，没有通用前缀编辑页或环境变量覆盖开关。v2 不提供 `/management.html`，访问返回 404。若前置反向代理，须完整透传带前缀路径（不要二次剥离）并支持 SSE 与 WebSocket，见[反向代理](./reverse-proxy.md)。重新签发 `initialize`、重置管理员密钥、备份或迁移前先停止整个服务；不要并行运行 systemd 和 `cpa-manager-plusctl start`。升级已有 1.x 必须使用 [v1.14.10 离线迁移和回滚手册](../operations/update.md)（Managed 升级来源在停机导入前也须已升级到 CPA v8；升级验证同样会要求配置控制/推理前缀，完成后进入对应控制前缀，而非 `/management.html`），不得指向原 1.x 目录直接启动 v2。
 
 当前 Native 包的许可证查验以实际包内 `LICENSE` 与 `share/licenses/cli-proxy-api/LICENSE` 为准；镜像的第三方清单与 Provenance 路径不适用于 Native，见 [发布与许可证](../reference/releases.md)。
 
@@ -56,7 +56,7 @@ sudo systemctl status cpa-manager-plus.service
 
 不想使用 Docker 时，可以直接运行 CPAMP 原生包。它适合已有进程管理、systemd、launchd 或 Windows 服务托管习惯的环境。
 
-原生包模式仍然是 Manager Server 模式：二进制会托管 `/management.html`，本地保存 SQLite 数据，并使用 CPAMP 管理员密钥登录。本节的 `:18317/management.html` 入口属于 1.x Stable；v2 Beta 使用安装时设置的控制台地址（默认 `/console`）。它不是旧 CPA-Manager 的“给 CPA 端口面板外接 Usage Service”工作流。
+原生包模式仍然是 Manager Server 模式：二进制会托管 `/management.html`，本地保存 SQLite 数据，并使用 CPAMP 管理员密钥登录。本节的 `:18317/management.html` 入口属于 1.x Stable；v2 Beta 使用安装或升级时提交的控制前缀（已有 `/console` 实例保持不变）。它不是旧 CPA-Manager 的“给 CPA 端口面板外接 Usage Service”工作流。
 
 如果只想安装 CPAMP 原生包，可以使用 [一键安装脚本](./installer.md)。脚本不会原生安装 CPA；完整新部署仍建议用 Docker。
 
@@ -80,7 +80,7 @@ sudo systemctl status cpa-manager-plus.service
 - CPAMP 数据目录持久化并纳入备份。
 - 同一个 CPA 用量队列只由一个 CPAMP Manager Server 消费。
 
-推荐 CPA 版本：
+1.x Stable 推荐 CPA 版本（仅限 1.x Stable 历史兼容范围；v2 仅支持 CPA v8，拒绝 `< 8`）：
 
 ```text
 v7.1.39+
