@@ -23,6 +23,10 @@ The v2 Beta `release-info.json` contract uses `schema_version: 2`, `migration_re
 
 **In-app updates do not offer v2:** `v1.14.10` Stable checks do not select v2 Beta. Manually selecting beta still rejects schema-2 ReleaseInfo, so no available v2 update is shown. Current v2 builds likewise do not offer v2 targets through in-app updates; the producer contract does not add v2 consumer support. Installation or later updates require reading the matching release notes and explicitly selecting one asset group, not automatic image replacement. For 1.x migration, follow [Offline Copy-In, Reconciliation, and Rollback](../operations/update.md), backing up `data.key`, SQLite WAL/SHM, and `usage-archives/`.
 
+### Current source changes (unreleased)
+
+- Fresh installation and upgrade completion screens can copy access details without keys. The read-only [`access show`](../deployment/docker.md#recover-a-forgotten-access-prefix) command recovers a forgotten prefix from the Docker host without resetting it or rerunning migration.
+
 ## Current licensing and inspectable files
 
 **The current repository root `LICENSE` is MIT**, and images copy that file. Official CPA's MIT LICENSE is distributed separately; third-party dependencies retain their own terms. Future licensing proposals are not effective licenses. CPAMP's MIT license does not imply that every bundled dependency uses MIT. Inspect the actual distributed files and matching license texts.
@@ -76,7 +80,7 @@ The Native package carries CPAMP's root `LICENSE` (and `share/licenses/cpamp/LIC
 
 ## Related operations
 
-- Offline migration from 1.x (exact baseline `v1.14.10`) and rollback: [Upgrade CPA Manager Plus](../operations/update.md)
+- Migration from 1.x (compatible `v1.14.x` sources) and rollback: [Upgrade CPA Manager Plus](../operations/update.md)
 - Full offline `/data` volume backup and restore: [Backup and Restore](../operations/backup.md)
 - Replace a forgotten administrator credential: [Reset Admin Key](../operations/reset-admin-key.md)
 - CPA lightweight panel cache clearing and manual Beta placement: [Updates and Cache](../deployment/cpa-panel.md#updates-and-cache)

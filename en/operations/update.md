@@ -2,214 +2,111 @@
 
 ## v2 Beta: upgrade from 1.x, not an in-place image change
 
-::: warning Exact baseline and stop conditions
-The minimum direct upgrade version is **`v1.14.10`**; the current CLI accepts only that exact declaration, not every later 1.x release automatically. For `<= v1.14.9`, first upgrade using the original deployment method to `v1.14.10`, verify it, then stop it. Merely changing `--source-version` is not an upgrade. v2 supports **CPA v8** only (releases below v8 are rejected, and future major versions are not promised): Embedded pins official **`v8.0.55`**; External requires CPA v8 at **`v8.0.55`** or newer within v8 plus actual qualification; and **Managed positive upgrade sources (`cpa-import`) must also already run CPA v8** (if the 1.x stack's managed CPA is below `8.0.0`, upgrade CPA inside the 1.x stack to CPA v8 and verify it before stopping—not only the v2 destination). Version differences, unknown/newer schemas, a busy source, evidence mismatches, or history differences require operator action; never edit SQLite markers to proceed.
+::: warning Supported sources, stop conditions, and verification scope
+- **Supported sources are proven v1.14.x installations**: the preflight admits a source only after checking both the physical schema and the semantic profile of the 1.x data (history, pricing, coverage, identity, and related domains). It does not require the exact `v1.14.10` patch, and it does not make every 1.x release eligible. Older 1.x installations must first be upgraded inside their original deployment to a supported v1.14.x release and verified. An unknown source patch stays unknown; `--source-version` is only a truthful declaration and never turns an incompatible format into a compatible one.
+- **CPA support is the v8 major only** (`8.0.0` and later 8.x; 7.x and 9+ are refused, and future major versions are not promised). A `full` image bundles the official pinned `v8.0.55`; Managed import requires the original 1.x managed CPA to already be CPA v8 (below v8, upgrade it inside the 1.x stack and verify before stopping); External requires a CPA that is already v8 and serves a v8 configuration document.
+- **Structurally unsupported or unsafe-to-classify sources, configuration, and encrypted paths are refused before any stop**: for example an old Manager using external `CPA_MANAGER_CONFIG`, an external data-key secret or a `config.json` mount, data paths that cannot be classified safely, nested source mounts, multiple different published ports, or `host`/`none` networking; a refusal does not stop the old service. The source data's own schema/profile is judged by the offline preflight after the stop; an incompatible source is never written into the target, the original data is unchanged, and recovery or an explicit rollback uses the same `--state-dir` after correction.
+- The Docker flow on this page was exercised in a synthetic v1.14.x rehearsal through preflight, backup, copy-in, reconciliation, browser Managed import, verification, and activation. That is **development verification**, not release certification, and it does not promise support for every deployment shape.
 :::
 
-1. Prepare `docker-compose.yml` in a dedicated directory following [v2 Docker Installation](../deployment/docker.md): use the single service `cpa-manager-plus`, the single volume `cpamp-data:/data` (keeping `stop_grace_period: 150s`, at least `CPAMP_DRAIN_TIMEOUT` + `60s`), and pin `seakee/cpa-manager-plus` to an exact Beta tag + digest (`slim` such as `2.0.0-beta.1@sha256:<digest>`, or `full` such as `2.0.0-beta.1-full@sha256:<digest>` for offline/bundled CPA; `:latest`, `:preview`, `:1`, and `:1.14` stay on 1.x Stable during Beta, and v2 image tags have no `v` prefix). Verify the matching prerelease notes and `checksums.txt`; `releases/latest` and the installer remain 1.x Stable.
-2. Save the exact 1.x image/binary, Compose, environment, and volume mapping. Stop the old Manager; also stop the old CPA when migrating a managed CPA. Back up `usage.sqlite`, WAL/SHM, `data.key`, `usage-archives/` when present, configuration, and secrets; see [Backup](./backup.md). Prevent all other source writers.
-3. Give v2 a **separate new `/data` volume** (`cpamp-data`). Keep the original 1.x volume unchanged and mounted read-only at `/legacy:ro` only during upgrade/rollback steps. Source roots must not overlap target/backup roots; scratch snapshots must be outside source and target. Follow the preflight disk-space report.
+Default Docker upgrades no longer require assembling one-shot CLI commands by hand. Run `bin/upgrade-cpamp-v2.sh` from the same v2 source version: it discovers the source, takes the backup, copies in, reconciles, and creates the separate target, then the browser completes the CPA and access-route decisions. The old multi-command `run`/`cpa-import`/`verify`/ownership-correction loop remains only as the advanced CLI path (see Native and the CLI engine below), not the normal Docker flow. For `full`/`slim` image capabilities, see [v2 Docker Installation](../deployment/docker.md).
 
-Image tags are examples for versions actually published; current v2 release producers are rehearsal-only, so single-image build support does not establish an available Release, tag, or multi-architecture publication. See [Release Assets and Gates](../reference/releases.md). `cpamp-data` is a Compose logical key; the actual Docker volume is normally `<project>_cpamp-data`. Reuse the same project's `docker compose run/exec` rather than substituting `docker run` with bare `cpamp-data`.
+### Step 1: prepare the script, image, and an isolated state directory
 
-### Docker: offline preflight, copy-in, and four-domain reconciliation
+1. **Pin an exact v2 image**: `--image` must be a full reference to an actual v2 release, for example the slim `seakee/cpa-manager-plus:2.0.0-beta.1`, the full `seakee/cpa-manager-plus:2.0.0-beta.1-full`, or a full reference with `@sha256:<digest>`. Mutable tags such as `latest`, `slim`, and `full` are refused; the script also checks the image's OCI version and 40-character revision, so a locally built image without those labels cannot be the target. Whether that version is published is covered by [Release Assets and Gates](../reference/releases.md).
+2. **Obtain and review the script**: the script lives in the same v2 source version at `bin/upgrade-cpamp-v2.sh`. It is not a separate release asset, and this page provides no download URL. Extract the file from the v2 tag/commit you selected (for example `git show <tag>:bin/upgrade-cpamp-v2.sh > upgrade-cpamp-v2.sh`), save it on the Docker host, review it, and then run the saved local file.
+3. **Choose an isolated state directory**: `--state-dir` holds the operation manifest (no credentials). It must be outside the original Manager data and CPA configuration/authentication directories, and it must not resolve into them through symlinks, VM shared aliases, or the current working directory; the default is `.cpamp-v2-<Manager ID prefix>` under the current directory. The script refuses overlapping paths before creating anything.
+4. **Keep the source read-only**: the original 1.x containers, data, configuration, authentication, and the script's backup are never deleted or changed. The target `/data`, `/runtime`, and backup are three separate new volumes, and the script prints their names. Before upgrading, still keep an additional copy of the original data as described in [Backup](./backup.md).
 
-Run from the v2 `docker-compose.yml` directory. `LEGACY_MOUNT` is the **actual old volume name** (check `docker inspect`), not a new empty volume. For a bind-mounted source, set both `LEGACY_MOUNT` and `LEGACY_ROOT` to the same actual absolute host path so the container and rollback plan agree. Replace the example volume name. One-shot CLI runs invoke `--entrypoint cpa-manager-plus` directly (defaulting to `0:0` so they can read the `0:0`-owned read-only 1.x `/legacy` mount without modifying it), and `fix_manager_ownership` transfers only Manager-owned files under `/data` to `10002:10002` before service startup (never touching `/data/runtime`):
+### Step 2: run the script on the Docker host
 
-```bash
-export LEGACY_MOUNT='actual-1x-manager-volume'
-export LEGACY_ROOT='/legacy'
-umask 077
-mkdir -p upgrade-secrets
-docker compose stop
-upgrade_cli() {
-  docker compose run --rm --no-deps -u 0:0 --entrypoint cpa-manager-plus \
-    --add-host host.docker.internal:host-gateway \
-    -v "$LEGACY_MOUNT:$LEGACY_ROOT:ro" \
-    -v "$PWD/upgrade-secrets":/upgrade-secrets:ro \
-    cpa-manager-plus upgrade "$@"
-}
-fix_manager_ownership() {
-  docker compose run --rm --no-deps -u 0:0 --entrypoint sh cpa-manager-plus -ec '
-    chown -h 10002:10002 /data/usage.sqlite* /data/data.key
-    for d in /data/usage-archives /data/upgrade-backup; do
-      [ -e "$d" ] && chown -R 10002:10002 "$d"
-    done
-  '
-}
-upgrade_cli preflight --legacy "$LEGACY_ROOT" \
-  --source-version v1.14.10 --target-dir /data --json
-```
-
-Require exit `0` and `ready: true`, then execute these separately:
+The command below is a template: replace every angle-bracket placeholder and do not copy the example values literally.
 
 ```bash
-upgrade_cli run --legacy "$LEGACY_ROOT" \
-  --source-version v1.14.10 --target /data --json
-upgrade_cli reconcile --legacy "$LEGACY_ROOT" \
-  --source-version v1.14.10 --target /data --json
+bash upgrade-cpamp-v2.sh \
+  --image '<full-v2-image-reference: fixed-version-tag-or-@sha256-digest>' \
+  --manager '<old-Manager-name-or-ID>' \
+  --cpa '<associated-CPA-name-or-ID>' \
+  --cpa-version '<actual-CPA-v8-release>' \
+  --source-version '<actual-v1.14.x-release>' \
+  --mode managed \
+  --state-dir '/absolute/isolated-state-directory'
 ```
 
-Continue only after each step succeeds. `run` performs backup/copy-in, not the complete upgrade; its default backup is the target's `upgrade-backup/`. `reconcile` compares **`retained`, `pricing`, `coverage`, and `history`**; inapplicable domains must state why. Review permanently incomplete UTC days individually before repeating the same `reconcile` command with `--acknowledge YYYY-MM-DD` for each day. `--acknowledge-parity-gaps` accepts only reported parity days already lost by old versions, not other measured mismatches. Do not add acknowledgements blindly or interpret them as restoring lost history.
+Do not add `--confirm` on the first run. The script pulls or verifies the image, inspects the source and mounts read-only, then prints the objects it will stop, the backup, target volumes, published endpoint, origin, networks, and CPA impact. After checking the plan, type `UPGRADE` when prompted; alternatively re-run the same command with `--confirm` after that review. `--confirm` only skips the interactive prompt; it does not mean the script checked the plan for you.
 
-### Finish CPA connection and final verification
+- Without `--manager`, the script accepts only a unique old Compose Manager (the `cpa-manager-plus` service); without `--cpa`, it looks for the associated CPA in the same Compose project, and asks for an explicit choice when no unique object exists. The old Manager's data directory must sit on one exact mount together with `usage.sqlite`/`data.key`; do not work around it by mounting a broad host parent.
+- `--mode managed` (the default when both the source CPA's configuration and authentication mounts are available) stops only the selected old Manager and its associated old CPA. `--mode external` stops only the old Manager and leaves the old CPA running. Old containers are never deleted, and original data is never modified.
+- When `--source-version`/`--cpa-version` are omitted, the script and engine decide from image tags, OCI versions, and actual evidence; a version that cannot be proven stays unknown. Declare them truthfully when needed; they are not overrides for the format or version gates.
+- Other optional flags: `--source-mount` (the old Manager's data mount destination), `--network` (an existing Docker network that reaches the external CPA), and `--public-host`/`--public-origin` (see below). The script never exposes the Docker socket to the web UI or Manager and never recursively changes ownership of the source or runtime trees. The Manager stays `10002`; only a transient restricted root worker performs the fixed target-ownership repair.
+- If reconciliation needs historical decisions, the script still prints the Upgrade-only UI address. Those acknowledgements must be made item by item in the browser; the script never accepts gaps silently.
 
-**External path**: the CPA operator independently upgrades/configures the external CPA to **CPA v8** at `v8.0.55` or newer within v8 (passing actual qualification; releases below v8 are refused with `external_cpa_version_unsupported`, and future major versions are not promised) and makes it reachable from the CLI container. Put the real Management Key in a private host file `upgrade-secrets/cpa-management-key`, not a command argument. Replace the example URL; if the external CPA URL or Management Key changed compared with the 1.x source, also run `store-cpa-connection` once before `verify`:
+### Step 3: complete CPA and access routes in the browser
+
+Open the Upgrade UI address the script prints, and sign in with the **original Manager administrator key** (not a CPA Management Key). While the upgrade is unfinished, the script prints the fixed bootstrap surface `/.well-known/cpamp-bootstrap/ui`, which its local probe gets `200` from; do not assume the root path `/` opens the upgrade page, and do not rewrite the address by hand. Identity comes from the copied original store, so the existing administrator key is retained and no new key is created. While the upgrade is unfinished, `/health` may return `503`; that is expected, so do not use `/health` to judge failure.
+
+1. **Read-only preflight and history confirmation**: confirm the listed historical days and any parity gaps. Accepting a gap only records that you know about it; it does not restore deleted events. When mismatch dates exceed the single-page display cap (366 days) and the list is truncated, review the complete reconciliation report first and then explicitly check the option to confirm all historical mismatch dates in the wizard before continuing.
+2. **Choose the CPA target**: select "Managed CPA · Recommended" to import the source CPA, or "External CPA · Alternate" to connect an independently reachable CPA explicitly. Managed requires an **explicit** choice of "Keep plugins disabled (recommended)" or "Enable plugins"; plugins may run privileged capabilities. A `full` image already has the engine; `slim` first prepares the official pinned CPA artifact in the wizard (download or upload with digest verification).
+3. **Access prefixes**: Managed configures the control entry and an independent inference prefix (two independent 16-character random prefixes by default, each customizable; sharing requires an explicit toggle). External configures the control prefix only; model inference still connects directly to the external CPA. Do not treat installation/bootstrap endpoints or management APIs (for example `/.well-known/cpamp-bootstrap`, `<control-prefix>/api/v2/*`) as model APIs; model traffic uses only the inference prefix or the external CPA address.
+4. **Complete upgrade verification**: "Run the verification" is the only completion gate. After it passes, select "Activate v2 and restart" so the controlled container restart makes the committed routes effective.
+5. **Final acceptance**: open the canonical console `<origin><control-prefix>` (no `/ui` suffix; management API at `<control-prefix>/api/v2/*`) and sign in with the original administrator key. For Managed, request `<origin><inference-prefix>/v1/models` with the correct Client Key and expect `200`; a wrong key must return `401`. For External, verify the external CPA model endpoint directly. Do not run normal migration terminal commands afterwards (`cpa-import`/`verify`/ownership correction or repeated `docker compose up`); for recovery, return to the script with the same `--state-dir`.
+
+Copy access details without keys from the completion page. To recover only a forgotten prefix, run [`cpa-manager-plus access show`](../deployment/docker.md#recover-a-forgotten-access-prefix) in the target v2 container. This does not require rerunning the upgrade or keeping the original `--state-dir`.
+
+### Step 4: recovery, re-run, and explicit rollback
+
+Recovery means re-running the script with the same `--state-dir`. The script binds the original Manager/CPA identities, image, volumes, mounts, and origin; conflicting flags are refused rather than overwritten. A completed operation is not migrated again; the script never rolls back automatically and never pretends a lossless return is possible after v2 writes. After completion and activation, a rerun prints `<origin><committed-control-prefix>`. Open it as printed: do not append `/ui` or return to the retired `/.well-known/cpamp-bootstrap/ui`.
 
 ```bash
-upgrade_cli external-connect --target /data \
-  --cpa-base-url 'http://your-cpa-host:8317' \
-  --management-key-file /upgrade-secrets/cpa-management-key --json
-# Run only if the external CPA URL or Management Key differs from what 1.x stored:
-# docker compose run --rm --no-deps --entrypoint cpa-manager-plus \
-#   --add-host host.docker.internal:host-gateway \
-#   -v "$PWD/upgrade-secrets":/upgrade-secrets:ro \
-#   cpa-manager-plus store-cpa-connection \
-#   --cpa-base-url 'http://your-cpa-host:8317' \
-#   --management-key-file /upgrade-secrets/cpa-management-key \
-#   --db-path /data/usage.sqlite --data-key-path /data/data.key
-upgrade_cli verify --legacy "$LEGACY_ROOT" --target /data \
-  --control-base-path '/<your-control-prefix>' --json
-upgrade_cli status --db-path /data/usage.sqlite --json
-fix_manager_ownership
-docker compose up -d
+bash upgrade-cpamp-v2.sh --state-dir '/absolute/isolated-state-directory'
+bash upgrade-cpamp-v2.sh --state-dir '/absolute/isolated-state-directory' --rollback
 ```
 
-Run the final `fix_manager_ownership` and `docker compose up -d` only after connection, identity, model surface, and reconciliation pass and the persisted stage is `complete`. External upgrades take `--control-base-path` only (do not pass `--inference-base-path` or `--shared-entry`, which fail closed with `external_inference_prefix_forbidden`), and clients keep calling the External CPA's actual URL directly. If the version header is absent, `external-connect --cpa-version` only declares the actual CPA version; it does not turn v7 into v8. After rotating the key, use `--reprove` at the same URL to prove it again rather than repeatedly presenting rejected credentials.
+`--rollback` is explicit: the script first checks the source identity, the verified target, and the three operation volumes, then stops that target and restarts only the old containers that were actually running before the upgrade. It does **not** migrate v2 writes back to 1.x. The v2 data, backup, and runtime volumes are retained for diagnosis and printed again. Do not continue the same operation after a rollback; a new upgrade must re-evaluate the source.
 
-**Managed path**: import the old CPA configuration/credentials and prove the destination against the in-container Runtime Supervisor (`127.0.0.1:9081`); do not use `external-connect` against an internal address instead. **Source CPA version gate**: the stopped 1.x managed CPA source must itself already be **CPA v8** (`8.0.0` or newer within major 8, such as `v8.0.55`). Any declared or stack-detected (`compose.yaml` / `.env` `CPA_IMAGE`) CPA release `< 8.0.0` or outside major 8 is refused with `upgrade_cpa_version_unsupported` before staging or writing anything (`--cpa-version` cannot override a `< 8` stack image tag; CPA v8 still loads legacy unversioned `config.yaml` files without `config-version: 8`, and moving tags, digests, or unresolvable references require passing the exact CPA v8 release via `--cpa-version` or fail with `upgrade_cpa_version_required`). `cpa-import` binds the destination under its compiled upgrade qualification without promoting it into a public Fresh installation record (public Fresh Adopt still refuses `legacy_managed`). In the single image, an unfinished Upgrade record keeps `cpa-manager-plus` on the read-only Upgrade surface with the SQLite write lock released while `cpamp-launcher` runs Runtime Supervisor and Ingress (isolate public client traffic at the host firewall or reverse proxy until acceptance). Run `fix_manager_ownership` first, then start the service with a temporary Compose override mounting the 1.x Manager source, old CPA directory, and real CPA auth directory read-only (paths/source CPA v8 version must come from the old deployment, and plugin choice must be explicit):
+### When 1.x data was mounted directly into `/data`
 
-```text
-fix_manager_ownership
-cat > docker-compose.upgrade.yml <<'YAML'
-services:
-  cpa-manager-plus:
-    volumes:
-      - <old-Manager-mount-source>:<original-LEGACY_ROOT>:ro
-      - <old-CPA-absolute-directory>:/legacy-cpa:ro
-      - <old-CPA-auth-absolute-directory>:/legacy-cpa-auth:ro
-YAML
-docker compose -f docker-compose.yml -f docker-compose.upgrade.yml up -d
-```
+The 1.x lock files and `data.key` are owned by `0:0`, while the v2 Manager runs as `10002:10002`. Mounting the original 1.x volume directly into v2 at `/data` is unsupported: v2 stops on the read-only bootstrap page and reports `source_ownership_unavailable`, leaving the original database and key untouched.
 
-When using the **`slim`** image, first open the public entry in a browser, sign in to the read-only Upgrade wizard with the original 1.x Admin Key, and download from CDN / GitHub Release or upload the matching official `cli-proxy-api` `linux_<arch>.tar.gz` so Runtime Supervisor prepares the pinned CPA engine (**`full`** already bundles CPA and skips this step); you may also configure the independent Control and Inference prefixes in the Upgrade wizard (pre-filled with separate 16-character CSPRNG prefixes, with an optional explicit shared-entry toggle). Then run `cpa-import`, `verify`, and `status` inside that running container:
+- **Correct recovery**: stop that manually mounted container, leave the original 1.x container and volume untouched, and upgrade the original Manager with `bin/upgrade-cpamp-v2.sh` from the same version. The script reads the original volume through a read-only source mount and a transient restricted worker, so the original file ownership does not need to change.
+- Do **not** run `chown` by hand on the original 1.x data, `/data`, or `/data/runtime`, and do not re-initialize the original installation or delete lock files to force the page open. If the standard flow cannot be restored, keep the original data unchanged and inspect the original deployment on its host.
 
-```text
-docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
-  -e CPAMP_RUNTIME_URL=http://127.0.0.1:9081 \
-  -e CPAMP_RUNTIME_TOKEN_FILE=/data/runtime-secret/token \
-  cpa-manager-plus cpa-manager-plus upgrade cpa-import \
-  --legacy <original-LEGACY_ROOT> --target /data \
-  --cpa-dir /legacy-cpa --cpa-auth-dir /legacy-cpa-auth \
-  --cpa-version <actual-source-CPA-v8-version-e.g.-8.0.55> --plugins false --json
-docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
-  -e CPAMP_RUNTIME_URL=http://127.0.0.1:9081 \
-  -e CPAMP_RUNTIME_TOKEN_FILE=/data/runtime-secret/token \
-  cpa-manager-plus cpa-manager-plus upgrade verify \
-  --legacy <original-LEGACY_ROOT> --target /data \
-  --control-base-path '/<your-control-prefix>' \
-  --inference-base-path '/<your-inference-prefix>' --json
-docker compose -f docker-compose.yml -f docker-compose.upgrade.yml exec -T -u 0:0 \
-  cpa-manager-plus cpa-manager-plus upgrade status \
-  --db-path /data/usage.sqlite --json
-```
+### Public origin and External network boundaries
 
-Replace every angle-bracket parameter before running. Managed requires both `--control-base-path` and `--inference-base-path` (independent prefixes are recommended; to share one prefix explicitly, pass the same path with `--shared-entry`, under which only supported model protocol subpaths are routed while `/v0`, `/v8`, and `/management.html` stay blocked). `--plugins false` explicitly disables plugins in this example; choose according to your intent. Stop on qualification or destination-proof refusals, retain the report, and do not manually copy credentials into `/data/runtime`. `upgrade verify` requires Runtime Supervisor and the destination CPA inside that container to remain running and Ready.
+- When access goes through a controlled TLS reverse proxy or a remote Docker daemon, declare the fixed http(s) origin the browser uses with `--public-origin 'https://<your-actual-origin>'` (or `CPAMP_PUBLIC_ORIGIN`; conflicting values are refused). The origin is persisted and bound to the target container environment; `--public-host` only shapes a displayed address and is not TLS authority. The server never trusts a spoofable `X-Forwarded-Proto`, so do not infer HTTPS or the origin from that header.
+- External sets the control prefix only, and model inference still connects directly to the externally operated CPA. If preparation used `--mode managed`, the script stopped the original CPA; switching to External then requires a separately running and reachable CPA, because the upgrade page cannot start Docker containers.
+- The External address must be reachable from both the target container and the actual clients. Across Docker networks, attach an existing network with `--network`; do not assume a Docker-internal DNS name resolves outside its network or on the host.
 
-Upgrade CLI uses `0:0` here to read the original root-private 1.x source and CPA credentials; a read-only mount does not make them readable by UID `10002`. Do not start the long-lived Manager as root. CLI writes may create root-owned Manager WAL/lock files, so the stopped-service ownership correction below is required. Do not change the old source's permissions to accommodate the target.
+### CLI engine and Native (manual path)
 
-Only after `upgrade status` confirms the persisted stage is `complete`, stop the temporary upgrade override, reapply Manager file ownership, and start the normal `docker-compose.yml` stack before restoring public traffic:
+The script covers Docker deployments only. Native or manually prepared installations are not promised to be upgradeable by the script, and Docker commands must not be copied verbatim as Native commands. The CLI upgrade engine remains a reusable advanced path, and these steps are self-contained:
 
-```bash
-docker compose -f docker-compose.yml -f docker-compose.upgrade.yml stop
-rm -f docker-compose.upgrade.yml
-fix_manager_ownership
-docker compose up -d
-```
-
-Retain original 1.x data and upgrade backups until full acceptance. After completion and restart, open the **control prefix** committed during upgrade (for example `http://<host>:18317/<your-control-prefix>` or the matching reverse-proxy path, with frontend APIs at `<control-prefix>/api/v2/*`) and sign in with the original 1.x Admin Key; completed v2 upgrades do not serve the console at `/management.html` or `/`. Check the public origin, Access Info and Client Keys (Managed model requests go to `<origin><inference-prefix>` + protocol path; External clients keep calling the External CPA's actual URL), history/coverage, account state, and real model requests; `/health` cannot replace these checks.
-
-### Exact rollback to original 1.x data
-
-Rollback never mounts v2 SQLite into the old image. Stop the **whole v2 service**, retain v2 data for diagnosis, and prepare under the same Compose project and identical read-only source mount:
-
-```bash
-docker compose stop
-upgrade_cli rollback --prepare --legacy "$LEGACY_ROOT" --target /data \
-  --volume "$LEGACY_MOUNT" --legacy-image seakee/cpa-manager-plus:v1.14.10
-```
-
-`--prepare` prints/saves a plan; it never controls Docker. Check every emitted precondition on the **Docker host**: the old volume/path is the copy-in source, v2 is stopped, and the rollback port is free. Default 1.x rollback port is **18318**, distinct from v2 public port 18317; checks inside a container cannot prove host port availability. Apply the printed Compose and invocation on the host, or restore the original 1.x Compose against the **original unchanged 1.x volume**, using the plan's exact image and port, and restore the original CPA configuration. Never use a floating tag or the v2 data copy.
-
-After 1.x starts, **complete the Docker-host container-identity and mount inspection gate before running `rollback --verify`**. The CLI has no Docker socket and cannot prove that the container answering health checks uses the original volume. Locate the unique container on the plan's actual rollback port, then set `ROLLBACK_CONTAINER_ID` to its real full ID:
-
-```bash
-docker ps --no-trunc --filter publish=18318 --format '{{.ID}} {{.Image}} {{.Names}}'
-export ROLLBACK_CONTAINER_ID='actual-full-container-id'
-docker inspect --format '{{.Id}} {{.Config.Image}} {{.Image}}' "$ROLLBACK_CONTAINER_ID"
-docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}} {{.Name}} {{.Source}} -> {{.Destination}}{{println}}{{end}}{{end}}' "$ROLLBACK_CONTAINER_ID"
-```
-
-Confirm the container ID belongs to the old Manager just restarted. `.Config.Image` must equal the plan's exact image reference; `.Image` is its actual image ID. For a named volume, `/data`'s `.Name` must equal the original `LEGACY_MOUNT`; run `docker volume inspect "$LEGACY_MOUNT"` and compare its returned `Mountpoint` with that container's `/data` `.Source`. For a bind mount, `.Source` must equal the original absolute host path. Where container-side paths differ, manually establish that this is the same source mounted read-only during copy-in. Stop on any mismatch or unproven correspondence; retain the inspection record with the plan.
-
-Only after that gate, run `--verify` with the plan's backup and port. Inside the one-shot CLI container above, the Docker host is not `127.0.0.1`; for the default port:
-
-```bash
-upgrade_cli rollback --verify --legacy "$LEGACY_ROOT" --target /data \
-  --legacy-image seakee/cpa-manager-plus:v1.14.10 \
-  --status-url http://host.docker.internal:18318/health
-upgrade_cli status --db-path /data/usage.sqlite --json
-```
-
-For custom backup/port settings, retain the emitted `--backup` and use the actual port. `rolled_back` records only the CLI's successful health-identity, source-directory, backup-integrity, and retained-data checks; **it contains neither automatic Docker container/mount proof nor a manual-confirmation field**. Consider rollback complete only together with the operator's saved container/mount inspection record above. An ordinary HTTP request exiting `0` is insufficient too. If refused, do not recreate the source volume or delete upgrade records to proceed.
-
-### Native and common diagnostics
-
-linux/amd64 Native uses the matching package's `bin/cpa-manager-plus upgrade ...`, but **not every step runs with the whole stack stopped**:
-
-1. Stop the old 1.x Manager / CPA being imported and the target Native launcher/systemd stack. Use the original absolute 1.x data directory for `--legacy` and the new package's absolute `data/` as target. Run offline `preflight --target-dir ...` → `run --target ...` → `reconcile --target ...`. `--target-dir` belongs only to `preflight`. Custom backup directories use `--bundle` with `run/reconcile` and the same path through `--backup` with `rollback --prepare/--verify`.
-2. External uses a private host credential file for `external-connect`, synchronizes `store-cpa-connection` if needed, then runs offline `verify --legacy ... --target ... --control-base-path '/<your-control-prefix>'`. For Managed, start the configured Native launcher/systemd service after reconciliation and keep public client traffic isolated. The unfinished Upgrade keeps Manager read-only with its lock released; Runtime Supervisor must remain running. Use the same `cpa-import` flags above with absolute host source/target/credential paths, supplying the actual `CPAMP_RUNTIME_URL` and `CPAMP_RUNTIME_TOKEN_FILE` to both import and subsequent `verify` (passing `--control-base-path` and `--inference-base-path` to `verify` as well). Import also needs `CPA_UPSTREAM_URL` or `--destination-url`. Defaults are `http://127.0.0.1:18318`, `<package-root>/run/runtime-token`, and `http://127.0.0.1:8317`, not Docker's `9081` and `/data/runtime-secret/token`. Run as the same root identity as Native Manager (for example `sudo env CPAMP_RUNTIME_URL=... CPAMP_RUNTIME_TOKEN_FILE=... CPA_UPSTREAM_URL=... ./bin/cpa-manager-plus upgrade cpa-import ...`).
-3. Run `verify` while Supervisor and Managed CPA are running and Ready. Only after `status --db-path <new-data-directory>/usage.sqlite --json` confirms `complete`, restart Native, restore traffic, and sign in at the committed control prefix (testing Managed requests through `<inference-prefix>`).
-4. Stop the entire target stack (including public Ingress) before Native rollback. `rollback --prepare` generates a **Docker Compose plan, not a systemd plan**; do not apply it directly to Native services. Bind `--volume` to the original absolute source directory and pass the actual `--manager-addr` (default `127.0.0.1:18319`) when preparing the plan. Independently restore the exact original 1.x binary/service and data, check the actual binary/data path and the plan's separate port, then run host-side `rollback --verify --legacy ... --target ... --backup ... --status-url http://127.0.0.1:18318/health --manager-addr 127.0.0.1:18319` as specified by the plan (substituting actual addresses). CLI health-identity and data checks do not replace inspection of the Native binary/service identity. Do not use container-only `host.docker.internal`.
+1. Stop the old 1.x Manager, the CPA to be imported, and the target Native launcher/systemd stack. Use the original 1.x absolute data directory as `--legacy` and the new package's absolute `data/` as the target; run `preflight --target-dir ...` → `run --target ...` → `reconcile --target ...` offline. `--target-dir` belongs to `preflight` only; a custom backup directory uses `--bundle` on `run/reconcile` and the same path as `--backup` on `rollback --prepare/--verify`. If host `TMPDIR` points inside `--legacy`, `--target`, or `--backup`, pass an explicit `--scratch-dir <dir>` on `preflight`, `run`, `reconcile`, `cpa-import`, `external-connect`, `verify`, `status`, or `rollback --prepare/--verify` to override `TMPDIR` (overlap checks against source, target, and backup roots still apply).
+2. For External, run `external-connect` with a private host credential file, synchronize `store-cpa-connection` when needed, and run `verify` offline. For Managed, start the configured Native launcher/systemd service after reconciliation succeeds while public traffic stays isolated; the Manager remains read-only and releases its lock until the upgrade completes, and the Runtime Supervisor must be running. Run `cpa-import --legacy <old-dir> --target <new-data-dir> --cpa-dir <old-CPA-dir> --cpa-auth-dir <old-CPA-auth-dir> --cpa-version <actual-CPA-v8-release> --plugins false`, pointing the actual `CPAMP_RUNTIME_URL` and `CPAMP_RUNTIME_TOKEN_FILE` at the running Supervisor (Native defaults are `http://127.0.0.1:18318` and `<package-root>/run/runtime-token`, not Docker's `9081` and `/data/runtime-secret/token`); `cpa-import` also needs `CPA_UPSTREAM_URL` or `--destination-url`. Then run `verify --legacy ... --target ... --control-base-path '/<control-prefix>' --inference-base-path '/<inference-prefix>'` (omit the inference prefix for External).
+3. Run `verify` only while the Supervisor and the Managed CPA are running and Ready. After `status --db-path <new-data-dir>/usage.sqlite --json` reports the `complete` stage, restart the Native service and restore traffic, then open the control entry submitted during the upgrade; for Managed, also prove model requests through the inference prefix.
+4. Before a Native rollback, stop the entire target stack, including the public Ingress. `rollback --prepare` generates a **Docker Compose plan, not a systemd service plan**, so do not apply it to a Native service. When generating the plan, bind `--volume` to the original absolute source directory and pass the real `--manager-addr` (default `127.0.0.1:18319`). Restore the exact original 1.x binary, service, and data independently, verify the actual binary, data path, and the plan's dedicated port, then run the planned `rollback --verify ... --status-url http://127.0.0.1:18318/health --manager-addr 127.0.0.1:18319` on the host. The CLI's health identity and data checks cannot replace the Native binary/service identity check; do not use the container-only `host.docker.internal`.
 
 | Report/exit code | Action |
 | --- | --- |
-| `0` | Current step succeeded; inspect its stage, not every step is complete |
-| `1` | Blocked/refused/acknowledgement required: read the report and stop automation |
-| `2` | Usage, environment, or retryable error: resolve the cause before retry |
-| `upgrade_source_version_unsupported` / `upgrade_source_version_undeclared` | Check the actual release and exact `v1.14.10` declaration |
-| `upgrade_cpa_version_unsupported` / `upgrade_cpa_version_required` / `external_cpa_version_unsupported` | Managed source or External CPA is below v8 (or outside major 8), or lacks an exact CPA v8 version declaration: upgrade CPA to CPA v8 first (inside the 1.x stack before stopping for Managed `cpa-import`; CPA v8 at `v8.0.55` or newer with qualification for External) and pass the exact `--cpa-version` when required |
-| `upgrade_source_busy` / `upgrade_store_locked` | Stop the actual source/target Manager; do not remove lock files to proceed |
-| `upgrade_source_changed` | Source is changing: stop all writers and reassess source/backup |
-| `upgrade_rollback_image_unpinned` / `upgrade_rollback_volume_unbound` | Provide the exact old image and original volume mapping, not a new empty volume |
-| `source_ownership_unavailable` (`/.well-known/cpamp-bootstrap`) | A 1.x data volume was mounted at `/data` (lock/key files are `0:0` while v2 Manager runs as `10002:10002`): stop the container and remount with a fresh `/data` plus read-only `/legacy:ro`; for read-only Upgrade entry inspection only, `chown 10002:10002` on `usage.sqlite*` and `data.key` only — never `chown -R /data` (`/data/runtime` must remain `0:0`) |
+| `0` | The current step succeeded; still check the stage, because it does not mean every step is complete |
+| `1` | Blocked, refused, or awaiting a decision: read the report and stop advancing automatically |
+| `2` | Usage, environment, or retryable error: remove the cause and retry |
+| `upgrade_source_version_unsupported` | Check whether the source belongs to the proven v1.14.x family/profile; `--source-version` only declares the actual release and cannot override the format decision |
+| `upgrade_cpa_version_unsupported` / `upgrade_cpa_version_required` / `external_cpa_version_unsupported` | CPA must be the v8 major (`8.0.0` and later, 9+ refused); a Managed source must already be CPA v8 inside the 1.x stack, and External must serve a v8 configuration document; when image tags cannot prove it, declare the actual `--cpa-version` |
+| `upgrade_source_busy` / `upgrade_store_locked` | Stop the real source/target Manager; do not remove lock files to evade the check |
+| `upgrade_source_changed` | The source is still changing; stop all writers and re-evaluate the source and backup |
+| `upgrade_worker_unavailable` | Keep the upgrade page and read the status again; for Docker recovery, re-run the script with the same `--state-dir` instead of re-initializing |
+| `source_ownership_unavailable` (`/.well-known/cpamp-bootstrap`) | The original 1.x volume was mounted directly into v2 at `/data`: stop that container, keep the original volume, and use the `bin/upgrade-cpamp-v2.sh` standard flow; do not change the original data ownership or re-initialize |
 
-### If a 1.x volume was mounted at `/data`
+## Patch updates for existing v2 installations and one-time inference-prefix completion
 
-1.x containers write `/data/usage.sqlite.manager.lock` and `/data/data.key` (`0600`) as `root` (`0:0`), whereas the v2 single-image Manager runs as unprivileged `10002:10002` and Runtime Supervisor requires `/data/runtime` to stay owned by `0:0`. If a 1.x volume is mounted at `/data`, v2 stays in read-only guidance mode (`/.well-known/cpamp-bootstrap/ui`) with `source_ownership_unavailable` and did not modify the 1.x database and key files:
+- **Ordinary patch updates keep the existing prefixes**: an installed v2 instance (including one that already committed `/console` as its control prefix) keeps its committed `controlBasePath` and `inferenceBasePath` unchanged across ordinary patch updates. The console and environment variables provide no second editing entry.
+- **Older Managed v2 instances missing an inference prefix**: if only a control prefix (for example `/console`) was committed before the upgrade and `inferenceBasePath` was never set, the model gateway stays closed after restart (`503`, with no fallback to `/` or prefixless `/v1`). After the administrator signs in to the existing control entry with the original administrator key, the UI triggers a **one-time inference-prefix completion**: enter a valid custom prefix or use the pre-filled 16-character random prefix, and optionally share the control entry after understanding the boundary. The existing control prefix stays unchanged after submission, and the gateway opens on the new inference prefix.
+- **Early completed upgrade databases with no recorded control prefix**: if an upgraded database is `complete` but no control prefix was ever committed, the service refuses to open silently. Stop the writing service and run `cpa-manager-plus upgrade verify --target <v2_data_dir> --control-base-path '/<your-control-prefix>' [--inference-base-path '/<your-inference-prefix>']` once (omit the inference prefix for External) to lock the prefix; the old 1.x source does not need to be mounted again.
 
-1. **Recommended (standard upgrade)**: stop the container, mount the original 1.x volume read-only at `/legacy:ro`, attach a new empty volume to `/data`, and run `upgrade preflight` and `upgrade run` above.
-2. **Read-only Upgrade entry inspection only**: a Docker named volume has no `/data` path on the host, so do not run `chown /data/...` from the host. Stop the v2 container that is running with this volume, run one one-off container that mounts the volume and changes ownership only on the database and key files, then start the v2 container again and re-check on the guidance page:
+## Offline derived indexes and data maintenance (`cleanup-derived`)
 
-   ```bash
-   docker stop <v2_container>
-   docker run --rm -u 0:0 --entrypoint sh -v <1x_volume>:/data seakee/cpa-manager-plus:<v2_tag> \
-     -c 'chown -h 10002:10002 /data/usage.sqlite* /data/data.key'
-   docker start <v2_container>
-   ```
-
-   Only `usage.sqlite*` and `data.key` change owner; ownership is file metadata, not the database content. Never run `chown -R 10002:10002 /data`, which invalidates the `0:0` owner requirement on `/data/runtime`.
-
-
-## Ordinary v2 updates and one-time missing inference completion
-
-- **Ordinary patches preserve committed prefixes**: existing v2 deployments (including installations that already committed `/console`) keep their committed `controlBasePath` and `inferenceBasePath` across normal updates; neither the settings page nor environment variables override or edit them.
-- **Older Managed v2 deployments without an inference prefix**: if an existing Managed v2 deployment committed a control prefix (such as `/console`) before inference prefixes existed, the model gateway stays closed after restart (`503`, with no `/` or unprefixed `/v1` fallback). Sign in with your Admin Key at the existing control path (such as `/console`) to complete the **one-time inference prefix completion** dialog—keep the pre-filled 16-character CSPRNG prefix or customize an independent path, or explicitly opt into sharing with the control prefix. Once submitted, the existing control prefix remains untouched and the gateway opens under the new inference prefix.
-- **Pre-existing completed upgrade stores missing a control prefix**: if a previously completed upgrade store has no committed control prefix, startup fails closed instead of falling back to `/`; stop writers and run a one-time `cpa-manager-plus upgrade verify --target <v2_data_dir> --control-base-path '/<your-control-prefix>' [--inference-base-path '/<your-inference-prefix>']` (omit `--inference-base-path` for External) without needing the old 1.x source mount.
-
-## Offline derived index and data maintenance (`cleanup-derived`)
-
-To keep startup bounded on large stores, missing large-table query indexes and legacy-derived cleanup jobs are deferred rather than blocking HTTP startup indefinitely. When the console displays the database maintenance banner (`databaseMaintenance.required = true`), stop the v2 service and run `cleanup-derived` as the Manager identity (`10002:10002`); it never deletes or rewrites authoritative `usage_events`:
+To keep startup bounded on large databases, missing indexes for large query tables and old derived-data cleanup are not performed without limit during startup. When the console shows the offline database-maintenance banner (`databaseMaintenance.required = true`), stop the entire v2 service and run `cleanup-derived` as the Manager user (it does not delete or rewrite the authoritative `usage_events`):
 
 ```bash
 docker compose stop
@@ -218,12 +115,12 @@ docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus \
 docker compose up -d
 ```
 
-For the `linux/amd64` Native package, stop the complete launcher / `systemd` service first, then run:
+For the `linux/amd64` native package, stop the complete launcher / `systemd` service first:
 
 ```bash
 sudo ./bin/cpa-manager-plus cleanup-derived --db-path "$PWD/data/usage.sqlite"
 ```
 
-## 1.X (before upgrading)
+## 1.x (before upgrading)
 
-Deployments on `<= v1.14.9` must first update within their original 1.x setup to the exact **`v1.14.10`** baseline and verify health before starting the v2 offline copy-in on this page. For 1.x-to-1.x update procedures, see the 1.x Stable documentation at [Upgrade CPA Manager Plus (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/update.html).
+Any 1.x release older than the supported family, or any 1.x source whose preflight has not proven compatibility, must first be updated inside its original 1.x deployment to a supported **v1.14.x** release and verified before the v2 upgrade on this page; do not merely change `--source-version`. For day-to-day updates that stay on the 1.x Stable line, see the 1.x Stable documentation: [Upgrade CPA Manager Plus (1.x Stable)](https://cpamp-docs.seakee.dev/en/operations/update.html).
