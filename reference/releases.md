@@ -23,6 +23,10 @@ v2 Beta 的 `release-info.json` 契约使用 `schema_version: 2`、`migration_re
 
 **应用内更新不会提供 v2：** `v1.14.10` 的 Stable 检查不会选择 v2 Beta；手工切到 beta 后也会拒绝 schema-2 的 ReleaseInfo，不会显示可用的 v2 更新。当前 v2 构建同样不会通过应用内更新提供 v2 目标，发布端契约不等于已新增 v2 消费端支持。安装或后续更新必须阅读对应发布说明并显式选择同版资产，不能依赖自动换镜像；从 1.x 迁移按 [离线 copy-in、对账与回滚](../operations/update.md)，备份 `data.key`、SQLite WAL/SHM 和 `usage-archives/`。
 
+### 当前源码变更（尚未发布）
+
+- 全新安装和升级完成页支持复制不含密钥的接入信息。忘记前缀时可从 Docker 宿主机运行只读的 [`access show`](../deployment/docker.md#忘记接入前缀)，无需重置前缀或重跑迁移。
+
 ## 当前许可证与可核验文件
 
 **当前仓库根 `LICENSE` 是 MIT**，镜像复制该文件；官方 CPA 的 MIT LICENSE 独立分发，第三方依赖保留各自许可证。不要把未来许可提案视为已生效，也不要仅根据 CPAMP 的 MIT 推断所有打包依赖均采用 MIT。实际分发内容与对应许可证文本是核验依据。
@@ -76,7 +80,7 @@ Native 包携带 CPAMP 根 `LICENSE`（及 `share/licenses/cpamp/LICENSE`）、�
 
 ## 相关维护入口
 
-- 从 1.x（精确基线 `v1.14.10`）离线迁移与回滚：[更新与升级](../operations/update.md)
+- 从 1.x（`v1.14.x` 兼容来源）迁移与回滚：[更新与升级](../operations/update.md)
 - 单一 `/data` 数据卷停机备份与恢复：[备份与恢复](../operations/backup.md)
 - 重置管理员凭证：[重置管理员密钥](../operations/reset-admin-key.md)
 - CPA 轻量面板缓存清理与 Beta 手动替换：[更新与缓存](../deployment/cpa-panel.md#更新与缓存)

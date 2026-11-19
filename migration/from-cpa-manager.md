@@ -5,7 +5,9 @@
 如果你没有使用过旧 `seakee/cpa-manager`，不需要阅读本页，直接使用[快速开始](../guide/getting-started.md)。
 
 ::: warning 本页迁移路径面向 1.x Stable，升级 v2 Beta 须分两步执行
-本页的直接挂卷/目录兼容迁移只把旧 `seakee/cpa-manager` 迁移到 **CPAMP 1.x Stable**（入口 `:18317/management.html`）。切勿将旧 `cpa-manager`（或 1.x）数据卷直接挂到 **v2 Beta** 的 `/data`，公开 Fresh 向导的 Adopt 也拒绝 `legacy_managed` 来源。若最终目标是 **v2 Beta**，请先按本页迁移到 **1.x Stable `v1.14.10`** 并验证运行正常，同时将 CPA 升级到 **CPA v8**（v2 仅支持 CPA v8，拒绝 `< 8` 且不承诺未来主版本：Embedded 固定 `v8.0.55`，Managed `cpa-import` 要求原 1.x 托管 CPA 来源已为 CPA v8，External 要求 CPA v8 且最低 `v8.0.55` 并通过真实资格检查），再按[更新 CPAMP](../operations/update.md) 执行离线 copy-in 与对账。
+本页的直接挂卷/目录兼容迁移只把旧 `seakee/cpa-manager` 迁移到 **CPAMP 1.x Stable**（入口 `:18317/management.html`）。切勿将旧 `cpa-manager`（或 1.x）数据卷直接挂到 **v2 Beta** 的 `/data`，公开 Fresh 向导的 Adopt 也拒绝 `legacy_managed` 来源。若最终目标是 **v2 Beta**，请先按本页迁移到受支持的 **v1.14.x**（v2 预检以实际物理 schema 与语义 profile 是否通过为准，不是只能停在精确 `v1.14.10`；更早的 1.x 先升级到受支持的 v1.14.x）并验证运行正常，同时把 CPA 升级到 **CPA v8 主版本**（`8.0.0` 起、含 8.x，拒绝 7.x 与 9+，不承诺未来主版本：`full` 内置 `v8.0.55`，Managed 导入要求原 1.x 托管 CPA 已是 CPA v8，External 要求 CPA v8 并提供 v8 配置文档），再按[更新 CPAMP](../operations/update.md) 运行升级脚本并在浏览器完成升级向导。
+
+完成并激活 v2 后，用原管理员密钥登录 `<origin><已提交控制前缀>`，不要添加 `/ui` 或再次打开安装向导。
 :::
 
 ## 关键变化
@@ -45,12 +47,12 @@ volumes:
   cpa-manager-data:
 ```
 
-迁移时可以让 Plus 直接挂载旧 volume：
+仅迁移到 **1.x Stable** 时，Plus 可以直接挂载旧 volume。以下模板中的 `<1.x-Stable-tag>` 必须替换为明确的 1.x 版本标签；不要使用可能转向 v2 的 `latest`：
 
 ```yaml
 services:
   cpa-manager-plus:
-    image: seakee/cpa-manager-plus:latest
+    image: 'seakee/cpa-manager-plus:<1.x-Stable-tag>'
     restart: unless-stopped
     ports:
       - '18317:18317'
@@ -82,7 +84,7 @@ docker run -d \
   -p 18317:18317 \
   -v /srv/cpa-manager-data:/data \
   -e CPA_MANAGER_ADMIN_KEY='replace-with-a-long-random-admin-key' \
-  seakee/cpa-manager-plus:latest
+  'seakee/cpa-manager-plus:<1.x-Stable-tag>'
 ```
 
 启动后打开（1.x Stable）`http://<host>:18317/management.html`，使用管理员密钥登录。

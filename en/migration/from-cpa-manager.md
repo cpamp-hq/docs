@@ -5,7 +5,9 @@ Use this guide when migrating from the old `seakee/cpa-manager` / CPA-Manager pr
 If you never used the old `seakee/cpa-manager`, skip this page and use [Quick Start](../guide/getting-started.md).
 
 ::: warning This direct migration targets 1.x Stable; reaching v2 Beta is a two-step path
-The direct volume/directory compatibility migration on this page moves legacy `seakee/cpa-manager` into **CPAMP 1.x Stable** (`:18317/management.html`). Never mount an old `cpa-manager` (or 1.x) data volume directly at **v2 Beta** `/data`, and note that public Fresh Adopt refuses `legacy_managed` sources. To move on to **v2 Beta**, first migrate to **1.x Stable `v1.14.10`** here and verify health, upgrade CPA to **CPA v8** (v2 supports CPA v8 only, rejecting `< 8` without promising future major versions: Embedded pins `v8.0.55`, Managed `cpa-import` requires the 1.x managed CPA source to already run CPA v8, and External requires CPA v8 at `v8.0.55` or newer within v8 plus actual qualification), then follow [Upgrade CPAMP](../operations/update.md) for offline copy-in and reconciliation.
+The direct volume/directory compatibility migration on this page moves legacy `seakee/cpa-manager` into **CPAMP 1.x Stable** (`:18317/management.html`). Never mount an old `cpa-manager` (or 1.x) data volume directly at **v2 Beta** `/data`, and note that public Fresh Adopt refuses `legacy_managed` sources. To move on to **v2 Beta**, first migrate here to a supported **v1.14.x** release (the v2 preflight qualifies the actual physical schema and semantic profile, so it does not require staying on the exact `v1.14.10` patch; older 1.x installations must first reach a supported v1.14.x) and verify health, upgrade CPA to the **CPA v8 major** (`8.0.0` and later 8.x; 7.x and 9+ are refused, and future major versions are not promised: `full` bundles `v8.0.55`, Managed import requires the 1.x managed CPA source to already run CPA v8, and External requires CPA v8 with a v8 configuration document), then follow [Upgrade CPAMP](../operations/update.md) to run the upgrade script and finish the wizard in the browser.
+
+After completing and activating v2, sign in at `<origin><committed-control-prefix>` with the original administrator key. Do not append `/ui` or reopen the setup wizard.
 :::
 
 ## Key changes
@@ -45,12 +47,12 @@ volumes:
   cpa-manager-data:
 ```
 
-During migration, Plus can mount the old volume directly:
+Only when migrating to **1.x Stable**, Plus can mount the old volume directly. Replace `<1.x-Stable-tag>` in these templates with an explicit 1.x version tag; do not use `latest`, which may later point to v2:
 
 ```yaml
 services:
   cpa-manager-plus:
-    image: seakee/cpa-manager-plus:latest
+    image: 'seakee/cpa-manager-plus:<1.x-Stable-tag>'
     restart: unless-stopped
     ports:
       - '18317:18317'
@@ -82,7 +84,7 @@ docker run -d \
   -p 18317:18317 \
   -v /srv/cpa-manager-data:/data \
   -e CPA_MANAGER_ADMIN_KEY='replace-with-a-long-random-admin-key' \
-  seakee/cpa-manager-plus:latest
+  'seakee/cpa-manager-plus:<1.x-Stable-tag>'
 ```
 
 After startup, open (1.x Stable) `http://<host>:18317/management.html` and log in with the admin key.
