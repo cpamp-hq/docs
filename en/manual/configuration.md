@@ -64,6 +64,8 @@ The proxy URL refuses a URL that embeds credentials. Every other bound stays CPA
 
 The read-only ownership area lists configuration owned by the API key, provider, account, log and system workspaces. Do not re-edit those fields here. Manage Client API Keys, gateway activation verification, recovery, and verified protocol endpoints in the **API Keys** workspace (see [Client Configuration](../gateway/clients.md)); committed Control and Managed Inference access prefixes persist across ordinary updates and have no generic editor here or environment-variable override.
 
+In a default managed installation, the global plugin runtime switch (`plugins.enabled`) is also managed on the gateway configuration page using the same baseline-checked save, read-back confirmation, and separate persisted-vs-running readout; see [Plugins](./plugins.md) for installing and managing individual plugins.
+
 ## Weighted round-robin routing
 
 To distribute requests proportionally across credentials in the same priority tier, select Weighted Round Robin in Visual Configuration. The equivalent source configuration is:

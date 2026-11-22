@@ -15,10 +15,11 @@ Use [System](./system.md) for version, runtime mode, and model-list checks.
 
 ## Page actions
 
-- Refresh logs.
+- Refresh, pause, or clear the log stream, search by keyword, and expand structured filters when needed.
 - Hide management-panel logs so model requests and runtime errors are easier to see.
-- Show raw logs for multi-line copying.
-- Open error request logs and download the file matching the time window.
+- Toggle the raw log view for multi-line copying.
+- Switch to Error Request Logs to search and paginate error log files, then click a filename or **View** to inspect the file inline in a preview modal (with word-wrap toggle, copy, and direct download; inline preview decodes up to 512 KB while downloading retrieves the full file).
+- Use the Log Settings tab to configure gateway log file persistence, request logging, and size limits.
 
 If request logging is enabled, CPA's separate error-request log list may be empty. That does not mean no request failed. Use [Monitoring](./monitoring.md) for sanitized failure summaries.
 
