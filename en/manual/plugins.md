@@ -18,11 +18,11 @@ When `plugins.enabled` is off, an individually enabled plugin still cannot run.
 
 The plugin entry appears only when the Manager proves that the current connection supports plugins (`X-CPA-SUPPORT-PLUGIN`). The Manager does not infer this from a route existing: it reads the saved CPA connection's own configuration document and requires the plugin section in it. A default managed installation satisfies that, so no extra configuration is required. If the entry disappears, the saved connection could not prove plugin support — typically an older CPA without the plugin namespace, or a connection the Manager cannot read.
 
-The entry stays visible while `plugins.enabled` is off, because that page holds the switch that turns plugins back on. Only the plugin's own menus disappear.
+The entry stays visible while `plugins.enabled` is off: the page shows a disabled banner with a shortcut to [Configuration](./configuration.md) to re-enable plugins, and only the plugins' own menus disappear.
 
 ## Plugin runtime switch
 
-In a default managed installation the Runtime Supervisor writes `plugins.enabled` and the plugin directory into the target CPA configuration, and the first-run wizard selection decides the initial value. After installation the managed installation can change the switch from the "Plugin runtime" control at the top of the Plugins page:
+In a default managed installation the Runtime Supervisor writes `plugins.enabled` and the plugin directory into the target CPA configuration, and the first-run wizard selection decides the initial value. After installation the managed installation can change the switch from the "Plugin runtime" control in [Configuration](./configuration.md) (Gateway configuration):
 
 - Each flip is one baseline-checked save through the same journal, CAS, and read-back path as the gateway configuration page (Manager API: `plugins/runtime`). External CPA connections and the private H1 profile are refused server-side, so those profiles never show the control.
 - The page shows the persisted value and the running value separately. CPA reloads configuration asynchronously, so a successful save only means the value is persisted. The running readout reports that it is unknown until CPA reloads; this release does not observe CPA's reload, so it does not update that readout afterwards either.
