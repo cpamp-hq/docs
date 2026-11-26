@@ -6,26 +6,28 @@ v2 Beta 是 **Prerelease**，不是 Stable；`releases/latest`、1.x 自动面�
 
 当前源码具备单镜像 `slim` / `full` 构建 target：`slim` 在向导中按固定摘要获取官方 CPA `v8.0.55`，`full` 内置同版 CPA。它们是构建能力，**不是单镜像正式发布、滚动标签或多架构已可用的证明**。从源码本地构建请自选 `cpa-manager-plus:full-local` / `slim-local`，不要覆盖本机 1.x 的 `:latest`；源码中的 `docker-compose.yml` 不是下载资产，部署示例见 [v2 Docker 安装](../deployment/docker.md)。
 
-当前发布脚本只允许显式 opt-in 的 v2 **`DRY_RUN=true`** 演练。`update-contract.mjs` 仍将平台限制为 **`linux/amd64`**，镜像角色仍为 `manager`、`ingress`、`runtime`；候选构建步骤已生成单镜像证据，不代表整个发布契约已经完成切换。不要从 Dockerfile 支持的 target/platform 推断已发布资产；也不要据此部署混合的新旧拓扑。安装前必须核对真实 Release 的同版镜像摘要、平台与 Compose 是否一致。
+当前发布流水线仅默认放行显式 opt-in 的 v2 **`DRY_RUN=true`** 演练，真实发布与线上索引写入仍受维护者门禁保护。`update-contract.mjs` 将平台固定为 **`linux/amd64`**，单镜像 Docker 变体角色统一为无 `v` 前缀标签的 `slim`（`<semver>`，如 `2.0.0-beta.1`）与 `full`（`<semver>-full`，如 `2.0.0-beta.1-full`），且严禁改写 1.x 的 `:latest`、`:preview`、`:1` 与 `:1.x` 标签。安装前必须核对真实 Release 的同版镜像 `@sha256` 摘要、平台与 Compose 是否一致。
 
-演练定义的六件套文件名为：
+v2 Beta 发布包资产清单如下：
 
 | 文件 | 用途 |
 | --- | --- |
 | `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` | linux/amd64 Native，`<tag>` 包含 `v` 前缀；不提供 v2 macOS、Windows 或 linux/arm64 原生包 |
+| `cpamp-slot_<tag>_linux_amd64.tar.gz` | `v2.0.0-beta.2` 起提供的离线 Ed25519 签名控制面槽位包（含 `slot-manifest.json` 与 `slot-manifest.json.sig`，由 `cpamp-launcher` 按内置根公钥 `cpamp-root-2026-01` 验签） |
 | `management.html` | 独立 CPA 轻量面板，不是 Embedded Full Web |
-| `docker-compose.v2-embedded.yml` | 生成的 Embedded Compose 模板，不能用仓库根 `docker-compose.yml` 冒充 |
-| `embedded-release-pairing.json` | 同次 Embedded 组合的配对证据 |
-| `release-info.json` | 同次发布元数据 |
-| `checksums.txt` | 同次资产校验和 |
+| `docker-compose.v2-embedded.yml` | 生成的 Embedded 单镜像 Compose 模板，不能用仓库根 `docker-compose.yml` 冒充 |
+| `embedded-release-pairing.json` | 同次单镜像 `slim` / `full` 摘要与构建配对证据 |
+| `release-info.json` | 同次发布元数据（`schema_version: 2`） |
+| `checksums.txt` | 同次资产 SHA-256 校验和 |
 
-v2 Beta 的 `release-info.json` 契约使用 `schema_version: 2`、`migration_required: true`、`minimum_direct_upgrade_version: v1.14.10`、`minimum_cpa_version: v8.0.55`。更新通道索引文件为 **`versions.json`**，外层保持 `schema_version: 1`，v2 的 `channels.beta` 条目使用 `schema_version: 2`，且只允许 Beta Prerelease。真实发布与索引写入仍受维护者门禁限制；不能据此声称 Beta 已发布、镜像标签已推送或线上索引已改变。Native 见 [原生部署](../deployment/native.md)，轻量面板的 Stable / Beta 取得方式见 [轻量面板](../deployment/cpa-panel.md)。
+v2 Beta 的 `release-info.json` 使用 `schema_version: 2`、`minimum_direct_upgrade_version: v1.14.10`、`minimum_cpa_version: v8.0.55`。发布通道物理隔离为两套索引：1.x 继续独占 `update-index.json`（`schema_version: 1`）与 `stable-version.txt`；v2 独立写入 **`update-index-v2.json`**（`schema_version: 2`，含单调递增 `revision`、`channels.beta` 及绑定的 `release_info_sha256`）。Native 见 [原生部署](../deployment/native.md)，轻量面板的 Stable / Beta 取得方式见 [轻量面板](../deployment/cpa-panel.md)。
 
-**应用内更新不会提供 v2：** `v1.14.10` 的 Stable 检查不会选择 v2 Beta；手工切到 beta 后也会拒绝 schema-2 的 ReleaseInfo，不会显示可用的 v2 更新。当前 v2 构建同样不会通过应用内更新提供 v2 目标，发布端契约不等于已新增 v2 消费端支持。安装或后续更新必须阅读对应发布说明并显式选择同版资产，不能依赖自动换镜像；从 1.x 迁移按 [离线 copy-in、对账与回滚](../operations/update.md)，备份 `data.key`、SQLite WAL/SHM 和 `usage-archives/`。
+**1.x 与 v2 应用内更新严格隔离：** 1.x 实例仅读取 `update-index.json`，即使切到 `beta` 通道也绝不会看到或误装 v2 Beta；从 1.x 升级到 v2 必须按 [离线预检、copy-in 与对账](../operations/update.md) 执行。已运行的 v2 实例读取 `update-index-v2.json`：`v2.0.0-beta.1` 在系统更新页提供变体匹配的 `@sha256` 镜像命令与 `cpa-manager-plusctl upgrade` 原生升级指引；自 `v2.0.0-beta.2` 起支持单容器与 Linux Native 面板一键签名槽位自更新、60 秒 Trial 看门狗自动回滚及 `:full` 内置 CPA 基线回归（详见 [既有 v2 实例升级](../operations/update.md#既有-v2-实例升级-签名槽位自更新、手动换版与-cpa-基线)）。
 
-### 当前源码变更（尚未发布）
+### 当前源码变更（尚未正式发布）
 
-- 全新安装和升级完成页支持复制不含密钥的接入信息。忘记前缀时可从 Docker 宿主机运行只读的 [`access show`](../deployment/docker.md#忘记接入前缀)，无需重置前缀或重跑迁移。
+- 全新安装和升级完成页支持复制不含密钥的接入信息；忘记前缀时可运行只读 [`access show`](../deployment/docker.md#忘记接入前缀) 查询。
+- 已合入单镜像 `update-index-v2.json` 隔离索引、SQLite `upgrade_schema_meta` 降级围栏、`seed-lineage.json` 谱系校验与 `cpa-manager-plusctl upgrade` 原子升级；签名槽位 `unix.Exec` 一键自更新、`restore-pre-migrate` 与内置 CPA `adopt-baseline` 正在 `v2` 集成分支验证中。
 
 ## 当前许可证与可核验文件
 
@@ -38,6 +40,8 @@ v2 Beta 的 `release-info.json` 契约使用 `schema_version: 2`、`migration_re
 | `/usr/local/share/licenses/cpamp/LICENSE` | 单镜像（`slim` 与 `full`）中的 CPAMP 项目许可证 |
 | `/usr/local/share/licenses/cli-proxy-api/LICENSE` | `full` 变体中随内置 CPA 分发的官方许可证（`slim` 不内置 CPA 二进制，因此不含该文件） |
 | `/usr/local/share/cpamp/runtime/cpa-artifact.json` | 镜像锁定的官方 CPA 版本（`8.0.55`）与 `artifactId` SHA256 清单 |
+| `/usr/local/share/cpamp/runtime/seed-lineage.json` | 兼容历史与当前网关 `config.seed.yaml` 引导指纹的只读谱系清单 |
+| `/usr/local/share/cpamp/release/base-abi.json` | 底座运行库与目录契约代际声明（`base_epoch`，供签名槽位校验 `min_base_epoch`） |
 | `/usr/local/share/cpamp/release/third-party-inventory.txt` | JSON 内容的聚合第三方收集清单（不要因 `.txt` 后缀当作纯文本列表） |
 | `/usr/local/share/licenses/<component>/inventory.json` | 单镜像各组件清单和原始 LICENSE/NOTICE 文件摘要 |
 | `/usr/local/share/cpamp/provenance.json` | 版本、源码、角色（`cpamp`）/平台、二进制与第三方清单的字节绑定记录（`slim` 标记 `"cpaBundled": false`） |
@@ -73,6 +77,8 @@ cat LICENSE
 cat share/licenses/cli-proxy-api/LICENSE
 cat share/cpamp/runtime/cpa-artifact.json
 cat share/cpamp/release/third-party-inventory.txt
+cat share/cpamp/runtime/seed-lineage.json
+cat share/cpamp/release/base-abi.json
 cat share/cpamp/provenance.json
 ```
 

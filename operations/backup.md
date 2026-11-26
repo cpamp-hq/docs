@@ -8,8 +8,8 @@ v2 Beta 从 **`v1.14.10`** 离线升级，且仅支持 **CPA v8**（拒绝低于
 
 `cpamp-data` 是 Compose 逻辑卷键，不是固定的 Docker 卷名；未覆盖卷名时实际名称为 `<project>_cpamp-data`。以下命令始终复用同一 Compose 项目，避免用裸 `docker run -v cpamp-data:/data` 误建空卷；需要直接挂卷时，先用运行容器的 `docker inspect` 核对实际 `.Mounts`。
 
-- **Manager 数据（`10002:10002`）**：`/data/usage.sqlite`、`/data/usage.sqlite-wal`、`/data/usage.sqlite-shm`、`/data/usage.sqlite-journal`（存在时）、`/data/usage.sqlite.manager.lock`、`/data/data.key`（`0600`）、`/data/usage-archives/`（存在时；含原始请求归档与清单，不可只备份 SQLite）以及升级生成的 `/data/upgrade-backup/`（存在时）。
-- **Embedded Runtime 状态（`/data/runtime`，根属主 `0:0`）**：`/data/runtime/.cpamp-v8-bootstrap`（`0:0`）、`/data/runtime/supervisor/`（`0:10001`，含 `operations.sqlite`、WAL/SHM、Managed 目标的 `destination/`，以及 `slim` 变体按需下载或上传校验后的 `artifacts/cpa/` 与激活状态）和 `/data/runtime/gateway/`（`10001:10001`，含 `config.yaml`、单数 `auth/`、`logs/` 与存在时的 `plugins/`）。不要只复制 CPA `config.yaml`。
+- **Manager 数据（`10002:10002`）**：`/data/usage.sqlite`、`/data/usage.sqlite-wal`、`/data/usage.sqlite-shm`、`/data/usage.sqlite-journal`（存在时）、`/data/usage.sqlite.manager.lock`、`/data/data.key`（`0600`）、`/data/usage-archives/`（存在时；含原始请求归档与清单，不可只备份 SQLite）、自动槽位/跨代迁移快照目录 `/data/backups/`（存在时）以及升级生成的 `/data/upgrade-backup/`（存在时）。
+- **Embedded Runtime 与控制面槽位状态（`/data/runtime`，根属主 `0:0`）**：`/data/runtime/.cpamp-v8-bootstrap`（`0:0`）、`/data/runtime/cpamp/`（存在时，`0:0`，含已验签控制面槽位 `slots/<ver>/` 与 `slot-state.json`）、`/data/runtime/supervisor/`（`0:10001`，含 `operations.sqlite`、WAL/SHM、Managed 目标的 `destination/`、CPA 制品 `artifacts/cpa/` 及 `active/cpa/selection-provenance.json`）和 `/data/runtime/gateway/`（`10001:10001`，含 `config.yaml`、单数 `auth/`、`logs/` 与存在时的 `plugins/`）。不要只复制 CPA `config.yaml`。
 - **Runtime 传输密钥（`0:10002`）**：`/data/runtime-secret/token`（`0640`）。
 - **部署配置**：固定摘要的 `docker-compose.yml`（`seakee/cpa-manager-plus:<tag>@sha256:<digest>`）、`CPAMP_PUBLIC_ORIGIN`、自定义环境变量与反向代理配置。备份归档应加密存储并限制访问权限。
 
@@ -121,6 +121,29 @@ sudo ./bin/cpa-manager-plus manager-data-snapshot restore \
 锁被占用时命令拒绝，先停止实际服务。Docker 可在 `docker compose stop` 后使用同一 Compose 的 `docker compose run --rm --no-deps -u 10002:10002 -v "$SNAPSHOT_PARENT":/snapshots --entrypoint cpa-manager-plus cpa-manager-plus manager-data-snapshot ...`（确保宿主机挂载目录对 UID `10002` 可写），指定 `/data/usage.sqlite`、`/data/data.key` 和尚不存在的快照子目录。Native 完整备份/恢复还要包括同次的 `data/runtime/` 及 `run/` 中的 secret，保留属主/权限。
 
 External 的 CPA 配置、OAuth 凭证及进程由操作者独立备份/恢复；Manager 快照不会备份远端主机。只保留配置的导出也不是 v2 完整升级路径。
+
+## 升级前自动快照与事后人工恢复（`restore-pre-migrate`）
+
+执行签名槽位激活或跨代际 SQLite schema 迁移前，Manager 会在 `<dataDir>/backups/` 下自动生成带完整性清单的快照目录（在线槽位切换前通过 `VACUUM INTO` 生成 `pre-slot-*`，跨代 schema 迁移前生成 `pre-migrate-gen*`），内含 `usage.sqlite`、WAL/SHM/journal、`data.key` 与 `snapshot-manifest.json`。
+
+仅在槽位进入 `recovery_required` 锁定态，或管理员明确决定**丢弃升级提交后新写入的业务数据**并回退数据库时，先停止完整服务再运行 `restore-pre-migrate`（必须显式传入 `--confirm`）：
+
+```bash
+docker compose stop
+docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus \
+  cpa-manager-plus restore-pre-migrate --latest --db-path /data/usage.sqlite \
+  --data-key-path /data/data.key --confirm
+```
+
+Linux `amd64` 原生包在停止 `systemd` 服务后执行（如需指定特定快照目录，将 `--latest` 替换为 `--snapshot-dir <绝对路径>`）：
+
+```bash
+sudo systemctl stop cpa-manager-plus.service
+sudo ./bin/cpa-manager-plus restore-pre-migrate --latest \
+  --db-path "$PWD/data/usage.sqlite" --data-key-path "$PWD/data/data.key" --confirm
+```
+
+恢复完成后，若此前跨越了 SQLite `schema_generation`，需同步将容器镜像或原生包切回匹配该数据库代际的旧版本再启动服务，否则新版本再次启动仍会重新执行前向迁移。该命令同样仅覆盖 SQLite 与 `data.key`，不能替代上文的全卷停机备份。
 
 ## 1.x（升级前）
 

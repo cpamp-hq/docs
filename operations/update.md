@@ -98,6 +98,40 @@ bash upgrade-cpamp-v2.sh --state-dir '/绝对路径/独立状态目录' --rollba
 | `upgrade_worker_unavailable` | 保留升级页面并重新读取状态；Docker 恢复用同一 `--state-dir` 重跑脚本，不要重新初始化 |
 | `source_ownership_unavailable`（`/.well-known/cpamp-bootstrap`） | 原 1.x 卷被直接挂到了 v2 的 `/data`：停止该容器、保留原卷，改用 `bin/upgrade-cpamp-v2.sh` 标准流程；不要修改原数据属主或重新初始化 |
 
+## 既有 v2 实例升级：签名槽位自更新、手动换版与 CPA 基线
+
+已完成初始化或迁移的 v2 实例通过独立的 `update-index-v2.json`（`schema_version: 2`）发现更新，不会读取或影响 1.x 的 `update-index.json` 与 `releases/latest`，并按内置 `provenance.json` 自动识别当前运行形态（`docker-full`、`docker-slim`、`native`）。
+
+### 面板一键签名槽位自更新与自动回滚（`v2.0.0-beta.2` 起）
+
+在单容器 Docker（`slim` / `full`）及以 root 运行的 Linux Native（`systemd`）部署中，v2 由 `cpamp-launcher` 在应用内完成控制面自更新，无需挂载 `/var/run/docker.sock` 或额外部署伴生容器：
+
+1. **离线 Ed25519 验签与只读槽位暂存**：在「系统管理 → 系统更新」中可在线拉取或离线上传同架构的 `cpamp-slot_<tag>_linux_amd64.tar.gz` 槽位包。`cpamp-launcher` 先使用编译期内置的离线根公钥（`cpamp-root-2026-01`）验证 `slot-manifest.json.sig`、校验 `min_base_epoch` 与全量成员 SHA-256，再将静态二进制与运行时种子写入 `/data/runtime/cpamp/slots/<ver>/`（属主 `0:0`、二进制 `0555`，Manager `10002`、Supervisor `10001` 与 Ingress `10003` 均无写权限）。
+2. **在线快照、写围栏与原地换代**：点击激活后，Manager 先通过 `VACUUM INTO` 在 `<dataDir>/backups/` 生成停机前在线 SQLite 快照并开启试运行写围栏（暂停外部与后台写入，保持只读查询可用）；`cpamp-launcher` 有序排空子进程后调用 `unix.Exec` 原地替换 `PID 1` 进程镜像（容器不退出），并启动 60 秒 Trial 看门狗与 5 秒零重启稳定期检查（验证 `/health` 返回 `200` 且子进程稳定存活）。
+3. **提交前自动回滚与同代际一键回退**：若新槽位在开放业务写入前未通过健康检查或稳定期，看门狗会自动还原停机前快照并切回上一可用槽位或底座版本；已提交且 SQLite `schema_generation` 未跨代变化的槽位，可在系统更新页一键回退。控制台顶栏、系统更新页与 `/health` 会同时展示当前运行版本（`version`）与底座镜像/原生包版本（`base_version`）。
+
+### 手动更新 Docker 镜像或 Native 底座包
+
+从 `v2.0.0-beta.1` 升级到 `v2.0.0-beta.2`、跨越 `base_epoch` 基础运行库代际，或按常规运维习惯手动换版时，系统更新页会生成匹配当前变体（无 `v` 前缀的 `<semver>` 对应 `slim`、`<semver>-full` 对应 `full`）且绑定 `@sha256:<digest>` 的升级命令：
+
+- **Docker 单镜像**：按页面给出的固定摘要引用更新 `docker-compose.yml` 或执行 `docker pull` 重建容器。冷启动时 `cpamp-launcher` 自动仲裁 `BaseVersion >= SlotVersion`：只要底座镜像版本不低于槽位版本，新镜像即自动优先接管并清理已被超越的旧槽位。
+- **Linux `amd64` 原生包**：将新版本 `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` 解压到现有安装目录**之外**的独立目录，进入解压目录执行原子升级命令（拒绝直接对 1.x 原生目录执行原地覆盖，自动保留自定义 `Environment=` / `EnvironmentFile=` / `ReadWritePaths=` 与 `150s` 停机排空预算，并在启动后健康检查失败时自动回滚二进制与 `systemd` 单元）：
+
+```bash
+sudo ./cpa-manager-plusctl upgrade --home /opt/cpa-manager-plus
+```
+
+### 跨代际数据库围栏与 `recovery_required` 人工恢复
+
+v2 在 SQLite 中维护单调递增的 `upgrade_schema_meta` 与 `PRAGMA user_version` 降级围栏：旧版本二进制检测到高代际数据库时会在零写入状态下拒绝启动，防止误回退损坏数据。新版本完成迁移并开放业务写入后，系统**不会**静默自动还原旧快照，以免无声丢弃升级后新产生的用量与配置记录。若自动回滚异常中断使槽位状态进入 `recovery_required` 横幅锁定态，或确需放弃升级后新增写入并人工回退数据库，请先停止服务再按[升级前自动快照与事后人工恢复](./backup.md#升级前自动快照与事后人工恢复-restore-pre-migrate)执行 `cpa-manager-plus restore-pre-migrate`。
+
+### 内置 CPA 引擎更新与切回内置基线
+
+Managed 模式的「系统更新 → CPA 引擎」仅接受官方 CPA `v8`（最低 `v8.0.55`），并在目标制品通过摘要与运行确认后记录来源血统（`selection-provenance.json`）：
+
+- **`:full` 切回内置基线（`adopt-baseline`）**：若此前通过面板将内置 CPA 热更新到了其他 `v8.x` 版本（标记为 `user_update`），可在 CPA 引擎卡片一键执行「切回内置基线」，清除外部覆盖选择并回归当前底座内置且校验通过的 CPA 基线。
+- **`:slim` 跨版本基线演进（`baseline_acquire`）**：当 `:slim` 实例更新底座镜像且新镜像锁定更高版本的官方 CPA 时，若当前仍处于初始基线（未由管理员手动覆写为 `user_update`），可在面板或向导中按固定摘要获取新基线 CPA 制品，不会覆盖管理员主动锁定的自定义 CPA 版本。
+
 ## 既有 v2 实例的补丁更新与推理前缀补全
 
 - **普通补丁更新保留既有前缀**：已部署的 v2 实例（包括此前已提交 `/console` 作为控制前缀的实例）在普通补丁更新后原样保留其已提交的 `controlBasePath` 与 `inferenceBasePath`；控制台与环境变量均不提供二次修改入口。
