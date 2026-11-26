@@ -8,8 +8,8 @@ v2 Beta upgrades offline from **`v1.14.10`** and supports **CPA v8** only (rejec
 
 `cpamp-data` is a Compose logical volume key, not a fixed Docker volume name. Without an explicit name override, Docker uses `<project>_cpamp-data`. The commands below reuse the same Compose project to avoid creating an empty volume with plain `docker run -v cpamp-data:/data`; inspect the running container's actual `.Mounts` with `docker inspect` before mounting a volume directly.
 
-- **Manager state (`10002:10002`)**: `/data/usage.sqlite`, `/data/usage.sqlite-wal`, `/data/usage.sqlite-shm`, `/data/usage.sqlite-journal` when present, `/data/usage.sqlite.manager.lock`, `/data/data.key` (`0600`), `/data/usage-archives/` when present (including raw request archives and manifests; SQLite alone is insufficient), and `/data/upgrade-backup/` when upgraded from 1.x.
-- **Embedded Runtime state (`/data/runtime`, root `0:0`)**: `/data/runtime/.cpamp-v8-bootstrap` (`0:0`), `/data/runtime/supervisor/` (`0:10001`, including `operations.sqlite`, WAL/SHM, Managed `destination/`, and on `slim` the verified CPA engine under `artifacts/cpa/` plus active state), and `/data/runtime/gateway/` (`10001:10001`, including `config.yaml`, singular `auth/`, `logs/`, and `plugins/` when present). Copying CPA `config.yaml` alone is insufficient.
+- **Manager state (`10002:10002`)**: `/data/usage.sqlite`, `/data/usage.sqlite-wal`, `/data/usage.sqlite-shm`, `/data/usage.sqlite-journal` when present, `/data/usage.sqlite.manager.lock`, `/data/data.key` (`0600`), `/data/usage-archives/` when present (including raw request archives and manifests; SQLite alone is insufficient), automatic slot/schema snapshot directories under `/data/backups/` when present, and `/data/upgrade-backup/` when upgraded from 1.x.
+- **Embedded Runtime and control-plane slot state (`/data/runtime`, root `0:0`)**: `/data/runtime/.cpamp-v8-bootstrap` (`0:0`), `/data/runtime/cpamp/` when present (`0:0`, holding Ed25519-verified control-plane `slots/<ver>/` and `slot-state.json`), `/data/runtime/supervisor/` (`0:10001`, including `operations.sqlite`, WAL/SHM, Managed `destination/`, verified CPA artifacts under `artifacts/cpa/`, and `active/cpa/selection-provenance.json`), and `/data/runtime/gateway/` (`10001:10001`, including `config.yaml`, singular `auth/`, `logs/`, and `plugins/` when present). Copying CPA `config.yaml` alone is insufficient.
 - **Runtime transport secret (`0:10002`)**: `/data/runtime-secret/token` (`0640`).
 - **Deployment configuration**: the digest-pinned `docker-compose.yml` (`seakee/cpa-manager-plus:<tag>@sha256:<digest>`), `CPAMP_PUBLIC_ORIGIN`, custom environment settings, and reverse-proxy configuration. Encrypt backup archives and restrict access.
 
@@ -121,6 +121,29 @@ sudo ./bin/cpa-manager-plus manager-data-snapshot restore \
 A held lock refuses the command: stop the actual service first. After `docker compose stop`, Docker can run `docker compose run --rm --no-deps -u 10002:10002 -v "$SNAPSHOT_PARENT":/snapshots --entrypoint cpa-manager-plus cpa-manager-plus manager-data-snapshot ...` (with a host directory writable by UID `10002`), naming `/data/usage.sqlite`, `/data/data.key`, and a non-existent snapshot subdirectory. A full Native backup/restore also includes the same backup's `data/runtime/` and secrets in `run/`, preserving ownership/permissions.
 
 For External, the operator separately backs up/restores CPA configuration, OAuth credentials, and process state. Manager snapshots do not back up the remote host. Configuration-only export is not a complete v2 upgrade path.
+
+## Automatic pre-upgrade snapshots and manual post-commit restore (`restore-pre-migrate`)
+
+Before activating a signed control-plane slot or running a cross-generation SQLite schema migration, Manager automatically writes a manifest-verified snapshot directory under `<dataDir>/backups/` (`pre-slot-*` via online `VACUUM INTO` before slot activation, and `pre-migrate-gen*` before schema-generation boundaries), capturing `usage.sqlite`, WAL/SHM/journal, `data.key`, and `snapshot-manifest.json`.
+
+Run `restore-pre-migrate` (which requires an explicit `--confirm` flag) only when a slot enters the `recovery_required` lockout state or when an administrator deliberately chooses to **discard business writes recorded after the upgrade committed** and revert the database after stopping the entire stack:
+
+```bash
+docker compose stop
+docker compose run --rm --no-deps -u 10002:10002 --entrypoint cpa-manager-plus \
+  cpa-manager-plus restore-pre-migrate --latest --db-path /data/usage.sqlite \
+  --data-key-path /data/data.key --confirm
+```
+
+For the Linux `amd64` native package, stop the `systemd` service first (replace `--latest` with `--snapshot-dir <absolute-path>` to target a specific snapshot directory):
+
+```bash
+sudo systemctl stop cpa-manager-plus.service
+sudo ./bin/cpa-manager-plus restore-pre-migrate --latest \
+  --db-path "$PWD/data/usage.sqlite" --data-key-path "$PWD/data/data.key" --confirm
+```
+
+If the reverted upgrade had crossed a SQLite `schema_generation` boundary, switch the container image or native installation back to the matching earlier release before starting the service again; otherwise starting the newer binary will re-apply forward migrations. Like `manager-data-snapshot`, this command covers SQLite and `data.key` only and does not replace a full offline volume backup.
 
 ## 1.X (before upgrading)
 

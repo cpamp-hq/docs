@@ -98,6 +98,40 @@ The script covers Docker deployments only. Native or manually prepared installat
 | `upgrade_worker_unavailable` | Keep the upgrade page and read the status again; for Docker recovery, re-run the script with the same `--state-dir` instead of re-initializing |
 | `source_ownership_unavailable` (`/.well-known/cpamp-bootstrap`) | The original 1.x volume was mounted directly into v2 at `/data`: stop that container, keep the original volume, and use the `bin/upgrade-cpamp-v2.sh` standard flow; do not change the original data ownership or re-initialize |
 
+## Updating an existing v2 installation: signed-slot self-updates, manual upgrades, and CPA baselines
+
+Initialized or migrated v2 installations discover updates through the isolated `update-index-v2.json` channel index (`schema_version: 2`), leaving 1.x `update-index.json` and `releases/latest` untouched, and detect the active deployment variant (`docker-full`, `docker-slim`, or `native`) from the bundled `provenance.json`.
+
+### One-click signed-slot updates and automatic rollback (built in from `v2.0.0-beta.1`)
+
+On single-container Docker (`slim` / `full`) and root-managed Linux Native (`systemd`) deployments, `cpamp-launcher` performs control-plane self-updates in-app without mounting `/var/run/docker.sock` or running a companion container:
+
+1. **Offline Ed25519 verification and read-only slot staging**: under `System -> Updates`, stage a matching `cpamp-slot_<tag>_linux_amd64.tar.gz` archive online or upload it offline. `cpamp-launcher` verifies `slot-manifest.json.sig` against its compile-time embedded root public key (`cpamp-root-2026-01`), checks `min_base_epoch` compatibility and every member SHA-256 digest, and extracts the static binaries and runtime seeds into `/data/runtime/cpamp/slots/<ver>/` (`0:0`, binaries `0555`, with zero write permissions for Manager `10002`, Supervisor `10001`, or Ingress `10003`).
+2. **Online snapshot, trial write fence, and in-place `unix.Exec` handoff**: upon activation, Manager creates a pre-stop online SQLite snapshot via `VACUUM INTO` under `<dataDir>/backups/` and enables the trial write fence (pausing external and background mutations while keeping read-only queries available). `cpamp-launcher` drains child processes in order, replaces `PID 1` in place via `unix.Exec` without exiting the container, and runs a 60-second Trial Watchdog plus a 5-second zero-restart stability soak (`GET /health == 200` and live child processes).
+3. **Pre-commit automatic rollback and same-schema one-click rollback**: if health or stability checks fail before user writes reopen, the watchdog automatically restores the pre-stop snapshot and switches back to the previous working slot or base version; committed slots on the same SQLite `schema_generation` also support one-click rollback from the update page. The top bar, System Updates page, and `/health` report both the active running version (`version`) and the underlying image or package version (`base_version`).
+
+### Manual Docker image or Native base-package upgrades
+
+When crossing a `base_epoch` boundary or updating the base image or native package manually, the System Updates page also renders `@sha256:<digest>` commands matched to your variant (prefixless `<semver>` for `slim`, `<semver>-full` for `full`):
+
+- **Single-image Docker**: update `docker-compose.yml` or run `docker pull` with the digest-pinned image reference and recreate the container. On cold start, `cpamp-launcher` arbitrates `BaseVersion >= SlotVersion`: whenever the base image version is greater than or equal to the staged slot, the base image automatically takes precedence and prunes superseded slots.
+- **Linux `amd64` native package**: extract the new `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` archive **outside** the existing installation root, then run the atomic upgrade command from the extracted directory (it refuses 1.x native directories, preserves custom `Environment=` / `EnvironmentFile=` / `ReadWritePaths=` settings alongside the `150s` stop-drain budget, and automatically rolls back binaries and the `systemd` unit if post-start health checks fail):
+
+```bash
+sudo ./cpa-manager-plusctl upgrade --home /opt/cpa-manager-plus
+```
+
+### Cross-generation database fences and `recovery_required` manual recovery
+
+v2 maintains monotonic `upgrade_schema_meta` and `PRAGMA user_version` downgrade fences inside SQLite: an older binary refuses to start with zero writes when encountering a newer schema generation, preventing accidental downgrade corruption. Once a new release finishes migrating and reopens business writes, CPAMP **never** silently restores an older snapshot automatically, avoiding silent loss of post-upgrade usage and configuration records. If an interrupted rollback leaves the slot state locked in `recovery_required`, or if you explicitly choose to discard post-upgrade writes and revert the database, stop the service first and run `cpa-manager-plus restore-pre-migrate` as documented in [Automatic pre-upgrade snapshots and manual post-commit restore](./backup.md#automatic-pre-upgrade-snapshots-and-manual-post-commit-restore-restore-pre-migrate).
+
+### Managed CPA engine updates and baseline adoption
+
+Under Managed mode, `System -> Updates -> CPA Engine` accepts official CPA `v8` releases only (minimum `v8.0.55`) and records selection provenance (`selection-provenance.json`) once verified:
+
+- **`:full` return to bundled baseline (`adopt-baseline`)**: if an instance previously applied an in-app CPA update (`user_update`), use "Adopt Bundled Baseline" on the CPA Engine card to clear the custom override and return to the verified CPA baseline bundled in the current base image or package.
+- **`:slim` baseline evolution (`baseline_acquire`)**: when a `:slim` base image upgrade advances the pinned official CPA version, instances still tracking the initial baseline (not overridden by an administrator `user_update`) can acquire the new digest-pinned CPA baseline from the panel or wizard without overwriting deliberate custom CPA selections.
+
 ## Patch updates for existing v2 installations and one-time inference-prefix completion
 
 - **Ordinary patch updates keep the existing prefixes**: an installed v2 instance (including one that already committed `/console` as its control prefix) keeps its committed `controlBasePath` and `inferenceBasePath` unchanged across ordinary patch updates. The console and environment variables provide no second editing entry.
