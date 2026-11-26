@@ -102,7 +102,7 @@ bash upgrade-cpamp-v2.sh --state-dir '/绝对路径/独立状态目录' --rollba
 
 已完成初始化或迁移的 v2 实例通过独立的 `update-index-v2.json`（`schema_version: 2`）发现更新，不会读取或影响 1.x 的 `update-index.json` 与 `releases/latest`，并按内置 `provenance.json` 自动识别当前运行形态（`docker-full`、`docker-slim`、`native`）。
 
-### 面板一键签名槽位自更新与自动回滚（`v2.0.0-beta.2` 起）
+### 面板一键签名槽位自更新与自动回滚（`v2.0.0-beta.1` 出厂内置）
 
 在单容器 Docker（`slim` / `full`）及以 root 运行的 Linux Native（`systemd`）部署中，v2 由 `cpamp-launcher` 在应用内完成控制面自更新，无需挂载 `/var/run/docker.sock` 或额外部署伴生容器：
 
@@ -112,7 +112,7 @@ bash upgrade-cpamp-v2.sh --state-dir '/绝对路径/独立状态目录' --rollba
 
 ### 手动更新 Docker 镜像或 Native 底座包
 
-从 `v2.0.0-beta.1` 升级到 `v2.0.0-beta.2`、跨越 `base_epoch` 基础运行库代际，或按常规运维习惯手动换版时，系统更新页会生成匹配当前变体（无 `v` 前缀的 `<semver>` 对应 `slim`、`<semver>-full` 对应 `full`）且绑定 `@sha256:<digest>` 的升级命令：
+跨越 `base_epoch` 基础运行库代际，或按常规运维习惯手动更新底座镜像/原生包时，系统更新页同样会生成匹配当前变体（无 `v` 前缀的 `<semver>` 对应 `slim`、`<semver>-full` 对应 `full`）且绑定 `@sha256:<digest>` 的升级命令：
 
 - **Docker 单镜像**：按页面给出的固定摘要引用更新 `docker-compose.yml` 或执行 `docker pull` 重建容器。冷启动时 `cpamp-launcher` 自动仲裁 `BaseVersion >= SlotVersion`：只要底座镜像版本不低于槽位版本，新镜像即自动优先接管并清理已被超越的旧槽位。
 - **Linux `amd64` 原生包**：将新版本 `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` 解压到现有安装目录**之外**的独立目录，进入解压目录执行原子升级命令（拒绝直接对 1.x 原生目录执行原地覆盖，自动保留自定义 `Environment=` / `EnvironmentFile=` / `ReadWritePaths=` 与 `150s` 停机排空预算，并在启动后健康检查失败时自动回滚二进制与 `systemd` 单元）：

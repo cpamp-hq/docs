@@ -102,7 +102,7 @@ The script covers Docker deployments only. Native or manually prepared installat
 
 Initialized or migrated v2 installations discover updates through the isolated `update-index-v2.json` channel index (`schema_version: 2`), leaving 1.x `update-index.json` and `releases/latest` untouched, and detect the active deployment variant (`docker-full`, `docker-slim`, or `native`) from the bundled `provenance.json`.
 
-### One-click signed-slot updates and automatic rollback (`v2.0.0-beta.2` and later)
+### One-click signed-slot updates and automatic rollback (built in from `v2.0.0-beta.1`)
 
 On single-container Docker (`slim` / `full`) and root-managed Linux Native (`systemd`) deployments, `cpamp-launcher` performs control-plane self-updates in-app without mounting `/var/run/docker.sock` or running a companion container:
 
@@ -112,7 +112,7 @@ On single-container Docker (`slim` / `full`) and root-managed Linux Native (`sys
 
 ### Manual Docker image or Native base-package upgrades
 
-When stepping from `v2.0.0-beta.1` to `v2.0.0-beta.2`, crossing a `base_epoch` boundary, or updating the base installation manually, the System Updates page renders `@sha256:<digest>` commands matched to your variant (prefixless `<semver>` for `slim`, `<semver>-full` for `full`):
+When crossing a `base_epoch` boundary or updating the base image or native package manually, the System Updates page also renders `@sha256:<digest>` commands matched to your variant (prefixless `<semver>` for `slim`, `<semver>-full` for `full`):
 
 - **Single-image Docker**: update `docker-compose.yml` or run `docker pull` with the digest-pinned image reference and recreate the container. On cold start, `cpamp-launcher` arbitrates `BaseVersion >= SlotVersion`: whenever the base image version is greater than or equal to the staged slot, the base image automatically takes precedence and prunes superseded slots.
 - **Linux `amd64` native package**: extract the new `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` archive **outside** the existing installation root, then run the atomic upgrade command from the extracted directory (it refuses 1.x native directories, preserves custom `Environment=` / `EnvironmentFile=` / `ReadWritePaths=` settings alongside the `150s` stop-drain budget, and automatically rolls back binaries and the `systemd` unit if post-start health checks fail):

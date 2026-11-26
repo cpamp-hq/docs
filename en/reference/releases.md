@@ -13,7 +13,7 @@ The v2 Beta release bundle defines the following assets:
 | File | Purpose |
 | --- | --- |
 | `cpa-manager-plus-native-v2_<tag>_linux_amd64.tar.gz` | linux/amd64 Native; `<tag>` includes its `v` prefix; no v2 macOS, Windows, or linux/arm64 native packages |
-| `cpamp-slot_<tag>_linux_amd64.tar.gz` | Offline Ed25519-signed control-plane slot archive starting in `v2.0.0-beta.2` (contains `slot-manifest.json` and `slot-manifest.json.sig` verified by `cpamp-launcher` against embedded root key `cpamp-root-2026-01`) |
+| `cpamp-slot_<tag>_linux_amd64.tar.gz` | Offline Ed25519-signed control-plane slot archive (emitted from `v2.0.0-beta.1` when the signing key is configured and required from `v2.0.0-beta.2` onward; contains `slot-manifest.json` and `slot-manifest.json.sig` verified by `cpamp-launcher` against embedded root key `cpamp-root-2026-01`) |
 | `management.html` | Independent CPA lightweight panel, not Embedded Full Web |
 | `docker-compose.v2-embedded.yml` | Generated single-image Embedded Compose template, not the repository's source `docker-compose.yml` |
 | `embedded-release-pairing.json` | Matching single-image `slim` / `full` digest and build pairing evidence |
@@ -22,12 +22,12 @@ The v2 Beta release bundle defines the following assets:
 
 The v2 Beta `release-info.json` contract uses `schema_version: 2`, `minimum_direct_upgrade_version: v1.14.10`, and `minimum_cpa_version: v8.0.55`. Update discovery is physically split across two channel indexes: 1.x exclusively uses `update-index.json` (`schema_version: 1`) and `stable-version.txt`, while v2 publishes to **`update-index-v2.json`** (`schema_version: 2`, carrying a monotonic `revision`, `channels.beta`, and `release_info_sha256`). See [Native Deployment](../deployment/native.md) and [Lightweight Panel](../deployment/cpa-panel.md) for Native and Stable/Beta panel download details.
 
-**Strict isolation between 1.x and v2 in-app updates:** 1.x instances read `update-index.json` only and never display or install v2 Beta releases even on the `beta` channel; migrating from 1.x requires [Offline Preflight, Copy-In, and Reconciliation](../operations/update.md). Running v2 instances read `update-index-v2.json`: `v2.0.0-beta.1` renders variant-matched `@sha256` Docker commands and `cpa-manager-plusctl upgrade` guidance, and `v2.0.0-beta.2` onward adds one-click Ed25519-verified slot updates, 60-second Trial Watchdog rollback, and `:full` bundled CPA baseline adoption (see [Updating an existing v2 installation](../operations/update.md#updating-an-existing-v2-installation-signed-slot-self-updates-manual-upgrades-and-cpa-baselines)).
+**Strict isolation between 1.x and v2 in-app updates:** 1.x instances read `update-index.json` only and never display or install v2 Beta releases even on the `beta` channel; migrating from 1.x requires [Offline Preflight, Copy-In, and Reconciliation](../operations/update.md). Running v2 instances read `update-index-v2.json` and ship from `v2.0.0-beta.1` onward with built-in one-click Ed25519-verified slot updates, 60-second Trial Watchdog rollback, and `:full` bundled CPA baseline adoption alongside variant-matched `@sha256` Docker commands and `cpa-manager-plusctl upgrade` guidance (see [Updating an existing v2 installation](../operations/update.md#updating-an-existing-v2-installation-signed-slot-self-updates-manual-upgrades-and-cpa-baselines)).
 
 ### Current source changes (unreleased)
 
 - Fresh installation and upgrade completion screens can copy access details without keys, and read-only [`access show`](../deployment/docker.md#recover-a-forgotten-access-prefix) recovers a forgotten prefix without rerunning migration.
-- Single-image `update-index-v2.json` channel isolation, SQLite `upgrade_schema_meta` downgrade fences, `seed-lineage.json` verification, and atomic `cpa-manager-plusctl upgrade` are merged on `v2`; signed-slot `unix.Exec` self-updates, `restore-pre-migrate`, and bundled CPA `adopt-baseline` are in `v2` integration review.
+- Single-image `update-index-v2.json` channel isolation, signed-slot `unix.Exec` self-updates with 60-second watchdog rollback, SQLite `upgrade_schema_meta` downgrade fences and `restore-pre-migrate`, `seed-lineage.json` verification, bundled CPA `adopt-baseline`, and atomic `cpa-manager-plusctl upgrade` are merged on `v2`.
 
 ## Current licensing and inspectable files
 
